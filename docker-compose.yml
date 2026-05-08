@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: intertek-crm-db
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - intertek-network
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: intertek-crm-api
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/intertek-crm?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key}
+      SERVER_PORT: 5000
+    depends_on:
+      - mongodb
+    networks:
+      - intertek-network
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: intertek-crm-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:5000/api
+    depends_on:
+      - backend
+    networks:
+      - intertek-network
+
+volumes:
+  mongodb-data:
+
+networks:
+  intertek-network:
+    driver: bridge

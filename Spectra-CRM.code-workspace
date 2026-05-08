@@ -1,0 +1,51 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Spectra CRM - Root"
+    },
+    {
+      "path": "server",
+      "name": "Backend"
+    },
+    {
+      "path": "client",
+      "name": "Frontend"
+    },
+    {
+      "path": "docs",
+      "name": "Documentation"
+    }
+  ],
+  "settings": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "search.exclude": {
+      "node_modules": true,
+      "dist": true,
+      ".next": true,
+      "build": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-vscode.vscode-typescript-next",
+      "mongodb.mongodb-vscode",
+      "ms-azuretools.vscode-docker",
+      "GitHub.copilot",
+      "eamodio.gitlens"
+    ]
+  }
+}

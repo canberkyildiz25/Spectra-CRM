@@ -1,0 +1,17 @@
+{
+  "name": "intertek-crm",
+  "version": "1.0.0",
+  "description": "Professional CRM System",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "start": "npm start --workspaces",
+    "client": "npm run dev --workspace=client",
+    "server": "npm run dev --workspace=server"
+  }
+}
