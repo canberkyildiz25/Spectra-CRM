@@ -1,65 +1,113 @@
-# Intertek CRM - Müşteri İlişkileri Yönetim Sistemi
+# Spectra CRM
 
-Profesyonel bir CRM (Customer Relationship Management) sistemi. Next.js, Node.js/Express ve MongoDB teknolojileriyle geliştirilmiştir.
+Modern, hızlı ve kullanımı kolay bir müşteri ilişkileri yönetim sistemi. Next.js 14, Node.js/Express ve MongoDB Atlas ile geliştirilmiştir.
 
-## 🎯 Proje Özellikleri
+---
 
-- **Müşteri Yönetimi**: Müşteri bilgileri, iletişim detayları
-- **Satış Funeli**: Fırsatlar, teklifler ve anlaşmalar
-- **Görev Yönetimi**: İşleri takip etme ve atama
-- **Raporlama**: Satış ve performans raporları
-- **Entegrasyonlar**: Email, SMS ve diğer kanallar
+## Özellikler
 
-## 📦 Proje Yapısı
+- **Müşteri Yönetimi** — Müşteri profilleri, iletişim bilgileri ve geçmiş kayıtlar
+- **Satış Pipeline** — Kanban tabanlı fırsat takibi ve satış hunisi yönetimi
+- **Teklif Oluşturma** — Profesyonel teklif hazırlama ve PDF çıktısı
+- **Görev Takibi** — Ekip içi görev atama ve ilerleme takibi
+- **Dashboard** — Gerçek zamanlı satış ve performans istatistikleri
+- **Kimlik Doğrulama** — JWT tabanlı güvenli giriş sistemi
+
+---
+
+## Teknoloji Yığını
+
+| Katman | Teknoloji |
+|--------|-----------|
+| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS |
+| Backend | Node.js, Express, TypeScript |
+| Veritabanı | MongoDB Atlas |
+| Auth | JWT (JSON Web Token) |
+| State | Zustand |
+| Deploy | Vercel (frontend) · Railway (backend) |
+
+---
+
+## Proje Yapısı
 
 ```
-Intertek CRM/
-├── client/          # Next.js Frontend
-├── server/          # Node.js/Express Backend
-├── shared/          # Paylaşılan tipler ve utilities
-├── docs/            # Dokümantasyon
-└── README.md
+Spectra CRM/
+├── client/          # Next.js frontend uygulaması
+│   ├── app/         # Sayfalar (App Router)
+│   ├── components/  # Yeniden kullanılabilir bileşenler
+│   ├── lib/         # API istemcisi, store, yardımcılar
+│   └── public/      # Statik dosyalar
+├── server/          # Express REST API
+│   └── src/
+│       ├── controllers/
+│       ├── models/
+│       ├── routes/
+│       └── middleware/
+├── shared/          # Ortak TypeScript tipleri
+└── docs/            # Teknik dokümantasyon
 ```
 
-## 🚀 Başlangıç
+---
+
+## Kurulum ve Çalıştırma
 
 ### Gereksinimler
+
 - Node.js 18+
-- MongoDB 6+
-- npm veya yarn
+- MongoDB Atlas hesabı (veya yerel MongoDB)
 
-### Kurulum
-
-```bash
-# Backend
-cd server
-npm install
-
-# Frontend
-cd client
-npm install
-```
-
-### Çalıştırma
+### 1. Repoyu klonla
 
 ```bash
-# Terminal 1 - Backend
-cd server
-npm run dev
-
-# Terminal 2 - Frontend
-cd client
-npm run dev
+git clone https://github.com/canberkyildiz25/Spectra-CRM.git
+cd Spectra-CRM
 ```
 
-## 🔧 Teknolojiler
+### 2. Bağımlılıkları kur
 
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
-- **Backend**: Node.js, Express, TypeScript
-- **Database**: MongoDB
-- **Authentication**: JWT
-- **State Management**: Zustand / Context API
+```bash
+cd server && npm install
+cd ../client && npm install
+```
 
-## 📝 Lisans
+### 3. Ortam değişkenlerini ayarla
 
-Intertek © 2026
+`server/.env` dosyası oluştur:
+
+```env
+MONGODB_URI=mongodb+srv://<kullanici>:<sifre>@cluster0.xxxx.mongodb.net/spectra-crm
+JWT_SECRET=guclu_bir_secret_key
+JWT_EXPIRE=7d
+SERVER_PORT=5000
+NODE_ENV=development
+```
+
+`client/.env.local` dosyası oluştur:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+```
+
+### 4. Geliştirme sunucularını başlat
+
+```bash
+# Terminal 1 — Backend (http://localhost:5000)
+cd server && npm run dev
+
+# Terminal 2 — Frontend (http://localhost:3000)
+cd client && npm run dev
+```
+
+---
+
+## Deployment
+
+- **Backend** → [Railway](https://railway.app) üzerinde çalışır
+- **Frontend** → [Vercel](https://vercel.com) üzerinde çalışır
+- **Veritabanı** → MongoDB Atlas (M0 ücretsiz tier)
+
+---
+
+## Lisans
+
+© 2026 Spectra CRM — Tüm hakları saklıdır.
