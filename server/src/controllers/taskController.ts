@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Task } from '../models/Task';
-import { ITask } from '../../types';
+import { ITask } from '../types';
 
 interface AuthRequest extends Request {
   userId?: string;
