@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { ITask } from '../../../shared/types';
+import { ITask } from '../types';
 
 interface ITaskDocument extends ITask, Document {}
 

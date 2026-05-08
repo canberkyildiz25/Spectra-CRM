@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcryptjs from 'bcryptjs';
-import { IUser } from '../../../shared/types';
+import { IUser } from '../types';
 
 interface IUserDocument extends IUser, Document {
   comparePassword(password: string): Promise<boolean>;

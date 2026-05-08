@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { IOpportunity } from '../../../shared/types';
+import { IOpportunity } from '../types';
 
 interface IOpportunityDocument extends IOpportunity, Document {}
 

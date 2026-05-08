@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { ICustomer } from '../../../shared/types';
+import { ICustomer } from '../types';
 
 interface ICustomerDocument extends ICustomer, Document {}
 
