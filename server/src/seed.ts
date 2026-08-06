@@ -7,6 +7,10 @@ import { Opportunity } from './models/Opportunity';
 
 dotenv.config();
 
+// Demo hesabı - giriş ekranında da bu bilgiler gösteriliyor.
+const DEMO_EMAIL = 'demo@spectra.com';
+const DEMO_PASSWORD = 'demo1234';
+
 const customers = [
   { firstName: 'Ahmet', lastName: 'Yılmaz', email: 'ahmet.yilmaz@abc.com', phone: '0532 111 2233', company: 'ABC Teknoloji', city: 'İstanbul', country: 'Türkiye', status: 'customer', source: 'Referans' },
   { firstName: 'Ayşe', lastName: 'Kaya', email: 'ayse.kaya@demir.com', phone: '0533 222 3344', company: 'Demir İnşaat', city: 'Ankara', country: 'Türkiye', status: 'customer', source: 'Web Sitesi' },
@@ -23,13 +27,24 @@ async function seed() {
     await mongoose.connect(process.env.MONGODB_URI!);
     console.log('✅ MongoDB bağlandı');
 
-    // Mevcut kullanıcıyı bul
-    const user = await User.findOne();
+    // Demo kullanıcısını hazırla. Portfolyoya bakan biri kayıt formuyla
+    // karşılaşmadan CRM'i gezebilmeli, bu yüzden sabit bir hesap oluşturuyoruz.
+    // Parola User modelindeki pre('save') kancasında hash'leniyor, o yüzden
+    // insertMany değil new User(...).save() kullanmak şart.
+    let user = await User.findOne({ email: DEMO_EMAIL });
     if (!user) {
-      console.log('❌ Önce register sayfasından bir kullanıcı oluştur!');
-      process.exit(1);
+      user = await new User({
+        username: 'demo',
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD,
+        firstName: 'Demo',
+        lastName: 'Kullanıcı',
+        role: 'admin',
+      }).save();
+      console.log(`👤 Demo kullanıcı oluşturuldu: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
+    } else {
+      console.log(`👤 Demo kullanıcı zaten var: ${DEMO_EMAIL}`);
     }
-    console.log(`👤 Kullanıcı bulundu: ${user.firstName} ${user.lastName}`);
 
     // Müşterileri ekle
     await Customer.deleteMany({});

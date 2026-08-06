@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
 import Link from 'next/link';
 
+// seed.ts bu hesabı oluşturuyor - ikisi birlikte değişmeli.
+const DEMO_CREDENTIALS = { email: 'demo@spectra.com', password: 'demo1234' };
+
 export default function Login() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
@@ -19,15 +22,16 @@ export default function Login() {
     setError('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Demo girişi state güncellemesini beklemeden gönderebilsin diye
+  // kimlik bilgileri parametre olarak geçiliyor.
+  const login = async (credentials: { email: string; password: string }) => {
     setLoading(true);
     setError('');
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(credentials),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Giriş başarısız');
@@ -38,6 +42,16 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await login(formData);
+  };
+
+  const handleDemoLogin = async () => {
+    setFormData(DEMO_CREDENTIALS);
+    await login(DEMO_CREDENTIALS);
   };
 
   return (
@@ -124,9 +138,32 @@ export default function Login() {
               <span className="font-bold text-white">Spectra CRM</span>
             </div>
 
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="text-2xl font-bold text-white tracking-tight">Tekrar hoşgeldiniz</h1>
               <p className="text-white/50 text-sm mt-1.5">Hesabınıza giriş yapın</p>
+            </div>
+
+            {/* Demo erişimi - portfolyoya bakan biri kayıt olmadan gezebilsin */}
+            <div className="mb-6 rounded-2xl border border-brand-400/30 bg-brand-400/10 p-4">
+              <div className="flex items-center justify-between gap-3 mb-2.5">
+                <span className="text-[11px] font-semibold text-brand-300 uppercase tracking-widest">
+                  Demo hesabı
+                </span>
+                <button
+                  type="button"
+                  onClick={handleDemoLogin}
+                  disabled={loading}
+                  className="text-xs font-semibold text-brand-300 hover:text-white transition-colors disabled:opacity-40"
+                >
+                  Tek tıkla gir →
+                </button>
+              </div>
+              <p className="text-[13px] text-white/60 leading-relaxed">
+                Kayıt olmadan incelemek için:{' '}
+                <span className="text-white/90 font-mono">{DEMO_CREDENTIALS.email}</span>
+                {' / '}
+                <span className="text-white/90 font-mono">{DEMO_CREDENTIALS.password}</span>
+              </p>
             </div>
 
             {error && (
