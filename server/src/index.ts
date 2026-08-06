@@ -21,9 +21,18 @@ const PORT = process.env.PORT || process.env.SERVER_PORT || 5000;
 connectDB();
 
 // Middleware
+// CLIENT_URL may hold a single origin or a comma-separated list. If it is unset
+// we reflect whatever origin asks, so a fresh deployment still works before the
+// variable is filled in. Auth is a Bearer token from localStorage, never a
+// cookie, so there are no credentials to protect by pinning the origin.
+const allowedOrigins = (process.env.CLIENT_URL ?? '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
-  credentials: true,
+  origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+  credentials: false,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
