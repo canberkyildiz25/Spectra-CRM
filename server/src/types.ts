@@ -1,3 +1,9 @@
+import type { Types } from 'mongoose';
+
+// Referans alanları veritabanında ObjectId, API'den dönerken string oluyor.
+// İkisini de kabul etmezsek şema tanımı arayüzle çakışıyor ve tsc build'i düşüyor.
+export type ObjectIdLike = string | Types.ObjectId;
+
 // User/Customer Types
 export interface ICustomer {
   _id?: string;
@@ -20,7 +26,7 @@ export interface ICustomer {
 export interface IOpportunity {
   _id?: string;
   title: string;
-  customerId: string;
+  customerId: ObjectIdLike;
   amount: number;
   stage: 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'closed-won' | 'closed-lost';
   probability: number;
@@ -35,10 +41,10 @@ export interface ITask {
   _id?: string;
   title: string;
   description?: string;
-  assignedTo: string;
+  assignedTo: ObjectIdLike;
   relatedTo: {
     type: 'customer' | 'opportunity' | 'general';
-    id?: string;
+    id?: ObjectIdLike;
   };
   priority: 'low' | 'medium' | 'high';
   status: 'pending' | 'in-progress' | 'completed';

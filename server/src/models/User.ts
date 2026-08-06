@@ -2,7 +2,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcryptjs from 'bcryptjs';
 import { IUser } from '../types';
 
-interface IUserDocument extends IUser, Document {
+interface IUserDocument extends Omit<IUser, '_id'>, Document {
+  password: string;
   comparePassword(password: string): Promise<boolean>;
 }
 

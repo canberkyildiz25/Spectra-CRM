@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { ITask } from '../types';
 
-interface ITaskDocument extends ITask, Document {}
+interface ITaskDocument extends Omit<ITask, '_id'>, Document {}
 
 const taskSchema = new Schema<ITaskDocument>(
   {
