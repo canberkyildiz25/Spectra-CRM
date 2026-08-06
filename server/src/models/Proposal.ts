@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import type { ObjectIdLike } from '../types';
 
 export interface IProposalItem {
   name: string;
@@ -11,8 +12,8 @@ export interface IProposalItem {
 export interface IProposal {
   _id?: string;
   proposalNumber: string;
-  customerId: string;
-  opportunityId?: string;
+  customerId: ObjectIdLike;
+  opportunityId?: ObjectIdLike;
   title: string;
   validUntil: Date;
   items: IProposalItem[];
@@ -24,7 +25,7 @@ export interface IProposal {
   updatedAt?: Date;
 }
 
-interface IProposalDocument extends IProposal, Document {}
+interface IProposalDocument extends Omit<IProposal, '_id'>, Document {}
 
 const proposalSchema = new Schema<IProposalDocument>(
   {

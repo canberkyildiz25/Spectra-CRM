@@ -1,7 +1,9 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { ICustomer } from '../types';
 
-interface ICustomerDocument extends ICustomer, Document {}
+// _id'yi dışarıda bırakıyoruz: Document kendi _id tipini getiriyor ve
+// ICustomer'daki string tanımıyla çakışıyor.
+interface ICustomerDocument extends Omit<ICustomer, '_id'>, Document {}
 
 const customerSchema = new Schema<ICustomerDocument>(
   {

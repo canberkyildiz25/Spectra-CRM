@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { IOpportunity } from '../types';
 
-interface IOpportunityDocument extends IOpportunity, Document {}
+interface IOpportunityDocument extends Omit<IOpportunity, '_id'>, Document {}
 
 const opportunitySchema = new Schema<IOpportunityDocument>(
   {
