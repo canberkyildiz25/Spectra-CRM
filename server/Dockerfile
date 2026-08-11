@@ -13,8 +13,14 @@ RUN npm install
 # Copy source code
 COPY src ./src
 
-# Build (allow type errors, dist is still generated)
-RUN npm run build || true
+# Build. This must fail loudly: `|| true` used to swallow tsc errors, which
+# produced an image that built fine and then died at startup on a missing
+# dist/index.js — and a crashed container is exactly what makes Railway answer
+# every path with its fallback 404, which is very hard to read backwards.
+RUN npm run build
+
+# Fail here rather than at runtime if the compile somehow emitted nothing
+RUN test -f dist/index.js
 
 # Production stage
 FROM node:18-alpine
