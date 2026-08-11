@@ -17,8 +17,10 @@ dotenv.config();
 const app: Express = express();
 const PORT = process.env.PORT || process.env.SERVER_PORT || 5000;
 
-// Connect to database
-connectDB();
+// Veritabanı bağlantısı burada kurulmuyor. Serverless'ta modül yüklenirken
+// başlatılan ve beklenmeyen bir bağlantı, isteklerin bağlantı hazır olmadan
+// gelmesine yol açıyor. Bağlanmayı çağıran taraf üstleniyor: yerelde aşağıdaki
+// blok, Vercel'de api/index.ts.
 
 // Middleware
 // CLIENT_URL may hold a single origin or a comma-separated list. If it is unset
@@ -58,9 +60,21 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`🔗 API available at http://localhost:${PORT}/api`);
-});
+// Yalnızca doğrudan çalıştırıldığında dinle — `ts-node-dev src/index.ts` ya da
+// `node dist/index.js`. Serverless giriş noktası bu dosyayı içe aktardığında
+// burası çalışmaz; orada dinlenecek bir port yoktur.
+if (require.main === module) {
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`✅ Server running on http://localhost:${PORT}`);
+        console.log(`🔗 API available at http://localhost:${PORT}/api`);
+      });
+    })
+    .catch((error) => {
+      console.error('❌ MongoDB connection failed:', error);
+      process.exit(1);
+    });
+}
 
 export default app;
