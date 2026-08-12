@@ -1,7 +1,7 @@
 {
-  "name": "intertek-crm",
+  "name": "spectra-crm",
   "version": "1.0.0",
-  "description": "Professional CRM System",
+  "description": "Spectra CRM — professional customer relationship management",
   "private": true,
   "workspaces": [
     "client",
