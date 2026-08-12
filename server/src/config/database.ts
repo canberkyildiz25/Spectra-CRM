@@ -27,7 +27,7 @@ export const connectDB = async () => {
   if (cache.conn) return cache.conn;
 
   if (!cache.promise) {
-    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/intertek-crm';
+    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/spectra-crm';
 
     cache.promise = mongoose.connect(uri, {
       // Bağlı değilken sorguları tamponlamak yerine hemen hata ver. Tamponlama

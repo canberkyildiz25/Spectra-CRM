@@ -1,7 +1,7 @@
 {
-  "name": "intertek-crm-client",
+  "name": "spectra-crm-client",
   "version": "1.0.0",
-  "description": "Intertek CRM Frontend",
+  "description": "Spectra CRM frontend",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

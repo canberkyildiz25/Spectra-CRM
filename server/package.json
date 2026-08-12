@@ -1,7 +1,7 @@
 {
-  "name": "intertek-crm-server",
+  "name": "spectra-crm-server",
   "version": "1.0.0",
-  "description": "Intertek CRM Backend API",
+  "description": "Spectra CRM backend API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
