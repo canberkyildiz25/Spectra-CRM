@@ -62,33 +62,54 @@ export default function Sidebar() {
     href === '/dashboard' ? pathname === href : pathname.startsWith(href);
 
   return (
-    <aside className="w-[230px] shrink-0 flex flex-col h-screen sticky top-0" style={{
-      background: 'linear-gradient(180deg, #0d1117 0%, #0f172a 100%)',
-      borderRight: '1px solid rgba(255,255,255,0.06)',
-    }}>
-
-      {/* Emerald glow top accent */}
-      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, #10b981, transparent)' }} />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 pointer-events-none" style={{ background: 'radial-gradient(ellipse at top, rgba(16,185,129,.12) 0%, transparent 70%)' }} />
+    <aside
+      className="w-[230px] shrink-0 flex flex-col h-screen sticky top-0"
+      style={{
+        background: 'var(--color-rail)',
+        borderRight: '1px solid var(--color-rail-rule)',
+      }}
+    >
+      {/* The emerald hairline and the radial bloom that used to sit here are
+          gone: a glow behind a wordmark is decoration the rail does not need,
+          and the accent budget belongs to the active nav item. */}
 
       {/* Logo */}
       <div className="relative px-5 pt-6 pb-5">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #059669, #10b981)', boxShadow: '0 0 12px rgba(16,185,129,.4)' }}>
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <div
+            className="w-8 h-8 flex items-center justify-center shrink-0"
+            style={{
+              background: 'var(--color-accent)',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="var(--color-paper)" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
           <div>
-            <span className="font-bold text-white text-[15px] tracking-tight">Spectra</span>
-            <span className="block text-[10px] text-emerald-400/70 tracking-widest uppercase font-medium -mt-0.5">CRM</span>
+            <span
+              className="text-[15px] font-semibold tracking-tight"
+              style={{ color: 'var(--color-rail-ink-strong)' }}
+            >
+              Spectra
+            </span>
+            <span
+              className="block -mt-0.5 text-[10px] font-medium uppercase tracking-widest"
+              style={{ color: 'var(--color-rail-ink)', fontFamily: 'var(--font-mono)' }}
+            >
+              CRM
+            </span>
           </div>
         </Link>
       </div>
 
       {/* Nav */}
       <nav className="relative flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
-        <p className="text-[10px] font-semibold px-3 mb-3 uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
+        <p
+          className="px-3 mb-3 text-[10px] font-medium uppercase tracking-widest"
+          style={{ color: 'var(--color-rail-ink)', opacity: 0.6, fontFamily: 'var(--font-mono)' }}
+        >
           Navigasyon
         </p>
         {navItems.map(item => {
@@ -97,52 +118,63 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className="relative group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150"
-              style={active ? {
-                background: 'rgba(16,185,129,0.12)',
-                color: '#34d399',
-              } : {
-                color: 'rgba(255,255,255,0.4)',
+              className="relative group flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium"
+              style={{
+                borderRadius: 'var(--radius-md)',
+                background: active ? 'var(--color-rail-2)' : 'transparent',
+                color: active ? 'var(--color-rail-ink-strong)' : 'var(--color-rail-ink)',
+                transition: 'background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out)',
               }}
             >
+              {/* The active marker is the one place the accent appears in the
+                  rail — a 2px edge, not a glowing pill plus a glowing dot. */}
               {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full" style={{ background: '#10b981' }} />
+                <span
+                  aria-hidden
+                  className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2"
+                  style={{ background: 'var(--color-accent)', borderRadius: '0 2px 2px 0' }}
+                />
               )}
-              <span style={{ color: active ? '#34d399' : 'rgba(255,255,255,0.3)', transition: 'color 0.15s' }}
-                    className="group-hover:!text-white/70 transition-colors">
-                {item.icon}
-              </span>
-              <span className="group-hover:text-white/80 transition-colors">{item.label}</span>
-
-              {active && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
-              )}
+              <span style={{ color: 'inherit' }}>{item.icon}</span>
+              <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
       {/* Bottom */}
-      <div className="relative p-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="relative p-3 space-y-1" style={{ borderTop: '1px solid var(--color-rail-rule)' }}>
         {/* User card */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-[11px] shrink-0"
-               style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+        <div
+          className="flex items-center gap-3 px-3 py-2.5"
+          style={{ background: 'var(--color-rail-2)', borderRadius: 'var(--radius-md)' }}
+        >
+          <div
+            className="flex h-7 w-7 shrink-0 items-center justify-center text-[11px]"
+            style={{
+              background: 'var(--color-rail)',
+              color: 'var(--color-rail-ink-strong)',
+              borderRadius: 'var(--radius-sm)',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
             {user?.firstName?.[0]}{user?.lastName?.[0]}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold text-white truncate">{user?.firstName} {user?.lastName}</p>
-            <p className="text-[11px] capitalize truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{user?.role}</p>
+            <p
+              className="truncate text-[13px] font-medium"
+              style={{ color: 'var(--color-rail-ink-strong)' }}
+            >
+              {user?.firstName} {user?.lastName}
+            </p>
+            <p className="truncate text-[11px] capitalize" style={{ color: 'var(--color-rail-ink)' }}>{user?.role}</p>
           </div>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150"
-          style={{ color: 'rgba(255,255,255,0.3)' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171'; (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-        >
+        {/* Signing out is a normal action, not a hazard — no red. The hover was
+            also being applied by mutating style in mouse handlers, which skips
+            :focus-visible entirely; a keyboard user got no feedback at all. */}
+        <button onClick={handleLogout} className="rail-signout">
           <svg className="w-[17px] h-[17px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
