@@ -1,0 +1,80 @@
+/* Hallmark · macrostructure: Workbench · tone: soft · anchor hue: 40–60° warm
+ * theme: Coral · genre: modern-minimal · nav: N3 side-rail
+ * Locked system lives in design.md at the client root. Do not inline raw
+ * colour or font values anywhere in the app — reference these tokens by name.
+ */
+
+:root {
+  /* ── Paper ─────────────────────────────────────────────── */
+  --color-paper: oklch(97.5% 0.006 60);
+  --color-paper-2: oklch(95% 0.008 58);
+  --color-paper-3: oklch(92% 0.01 56);
+
+  /* ── Ink ───────────────────────────────────────────────── */
+  --color-ink: oklch(23% 0.014 45);
+  --color-ink-2: oklch(46% 0.012 48);
+  --color-ink-3: oklch(62% 0.01 50);
+
+  /* ── Rule ──────────────────────────────────────────────── */
+  --color-rule: oklch(89% 0.008 55);
+  --color-rule-strong: oklch(82% 0.01 55);
+
+  /* ── Accent — coral. Budget: ≤ 3% of any viewport ──────── */
+  --color-accent: oklch(66% 0.152 32);
+  --color-accent-hover: oklch(61% 0.155 32);
+  --color-accent-ink: oklch(51% 0.155 32);
+  --color-accent-wash: oklch(95% 0.03 34);
+  --color-focus: oklch(58% 0.15 32);
+
+  /* ── Data states. Low chroma on purpose — lost is grey, ──
+       not red, so the accent stays the only loud thing.     */
+  --color-positive: oklch(56% 0.085 160);
+  --color-positive-wash: oklch(95% 0.025 160);
+  --color-caution: oklch(72% 0.095 80);
+  --color-caution-wash: oklch(96% 0.03 80);
+  --color-quiet: oklch(52% 0.02 45);
+  --color-quiet-wash: oklch(94% 0.006 50);
+
+  /* ── Sidebar rail — ink ground, warm not slate ─────────── */
+  --color-rail: oklch(26% 0.016 48);
+  --color-rail-2: oklch(31% 0.016 48);
+  --color-rail-ink: oklch(78% 0.012 55);
+  --color-rail-ink-strong: oklch(97% 0.006 60);
+  --color-rail-rule: oklch(36% 0.014 48);
+
+  /* ── Type ──────────────────────────────────────────────── */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --text-display: clamp(2rem, 1.4rem + 2vw, 2.75rem);
+  --text-xl: 1.375rem;
+  --text-lg: 1.0625rem;
+  --text-md: 0.9375rem;
+  --text-sm: 0.8125rem;
+  --text-xs: 0.75rem;
+  --text-label: 0.6875rem;
+
+  --tracking-display: -0.02em;
+  --tracking-label: 0.08em;
+
+  /* ── Space — 4pt ───────────────────────────────────────── */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  /* ── Radii — soft, but not uniform ─────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* ── Motion ────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+}
