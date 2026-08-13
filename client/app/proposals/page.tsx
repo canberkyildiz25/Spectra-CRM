@@ -90,7 +90,7 @@ export default function Proposals() {
                 { key: 'rejected', label: 'Red',        count: proposals.filter(p => p.status === 'rejected').length, value: proposals.filter(p => p.status === 'rejected').reduce((s, p) => s + calcTotal(p), 0), color: '#f43f5e', light: '#fff1f2' },
               ].map(s => (
                 <button key={s.key} onClick={() => setStatusFilter(statusFilter === s.key ? 'all' : s.key)}
-                  className="card px-4 py-3 text-left transition-all"
+                  className="card px-4 py-3 text-left transition-colors"
                   style={statusFilter === s.key ? { borderColor: s.color, boxShadow: `0 0 0 2px ${s.color}22` } : {}}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: s.color }}>{s.label}</span>

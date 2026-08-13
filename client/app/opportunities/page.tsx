@@ -219,7 +219,7 @@ export default function Opportunities() {
                     <span className="text-xs text-slate-400">{fmt(colTotal)}</span>
                   </div>
                   <div
-                    className={`rounded-xl p-2 min-h-32 space-y-2 transition-all ${dragOverStage === stage.key ? 'bg-brand-50 ring-2 ring-brand-300 ring-offset-1' : 'bg-slate-100'}`}
+                    className={`rounded-xl p-2 min-h-32 space-y-2 transition-colors ${dragOverStage === stage.key ? 'bg-brand-50 ring-2 ring-brand-300 ring-offset-1' : 'bg-slate-100'}`}
                     onDragOver={e => handleDragOver(e, stage.key)}
                     onDragLeave={() => setDragOverStage(null)}
                     onDrop={e => handleDrop(e, stage.key)}
