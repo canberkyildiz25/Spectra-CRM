@@ -35,6 +35,30 @@
   --color-quiet: oklch(52% 0.02 45);
   --color-quiet-wash: oklch(94% 0.006 50);
 
+  /* ── Chart palettes ───────────────────────────────────────
+     Both ramps were run through the data-viz validator against
+     the paper surface (#faf6f3) rather than eyeballed.
+
+     Ordinal — pipeline stage, one hue, monotone lightness.
+     Checks: monotone L · adjacent ΔL ≥ 0.06 · light end 2.23:1
+     vs surface · hue spread 1°. All pass.                     */
+  --chart-stage-1: oklch(74% 0.09 33);
+  --chart-stage-2: oklch(66% 0.125 33);
+  --chart-stage-3: oklch(58% 0.148 32);
+  --chart-stage-4: oklch(50% 0.14 32);
+  --chart-stage-5: oklch(42% 0.115 32);
+
+  /* Categorical — won vs lost. The UI badge palette could not be
+     reused here: `--color-quiet` sits at chroma 0.019, under the
+     0.10 floor, and paired with `--color-positive` it measured
+     ΔE 3.9 under deutan and 10.2 under normal vision — two
+     colours nobody could tell apart. This pair measures ΔE 17.6
+     (protan) and 29.6 (normal). Badges stay grey; series do not. */
+  --chart-won: oklch(66% 0.152 32);
+  --chart-lost: oklch(53% 0.13 250);
+
+  --chart-grid: oklch(91% 0.008 55);
+
   /* ── Sidebar rail — ink ground, warm not slate ─────────── */
   --color-rail: oklch(26% 0.016 48);
   --color-rail-2: oklch(31% 0.016 48);

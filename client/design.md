@@ -44,6 +44,34 @@ noise, and red would compete with the accent.
 - `--color-caution`    oklch(72% 0.095 80)   — pending, due soon
 - `--color-quiet`      oklch(52% 0.020 45)   — lost, inactive, archived
 
+## Charts
+
+Charts are hand-built SVG. No charting library — a library would fight these
+tokens and add a dependency for three figures.
+
+Both palettes were **computed and validated**, not chosen by eye. The values and
+their check results live in `tokens.css`.
+
+- **Ordinal** (pipeline by stage) — one hue, five monotone lightness steps.
+- **Categorical** (won vs lost) — coral and blue, ΔE 17.6 under protanopia.
+
+### The badge palette is not the chart palette
+
+`--color-quiet` is right for a "lost" badge and wrong for a "lost" series. At
+chroma 0.019 it is under the 0.10 floor a categorical colour needs, and paired
+with `--color-positive` it measures ΔE 3.9 under deutan vision — indistinguishable.
+Lost stays grey in badges and becomes blue in charts. Two different jobs.
+
+### Honesty rules
+
+- Never invent a data point to fill a chart. If the dataset cannot support a
+  form, change the form. The demo carries one opportunity per stage, so a
+  *count* chart of stages would be six identical bars — the stage chart plots
+  **value**, which is real and varied. There is no won/lost time series because
+  one win and one loss is not a series.
+- A headline number is a stat tile, not a chart.
+- Every figure is `--font-mono`, tabular.
+
 ## Typography
 
 Two families, inside the 2+1 rule.
