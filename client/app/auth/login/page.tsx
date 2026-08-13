@@ -55,30 +55,23 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex relative" style={{ backgroundColor: '#0f172a' }}>
-
-      {/* ── Tam ekran video arka plan ── */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        style={{
-          position: 'fixed',
-          top: 0, left: 0,
-          width: '100%', height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center center',
-          zIndex: 0,
-        }}
-      >
-        <source src="/demo.mp4" type="video/mp4" />
-      </video>
-      {/* Genel koyu overlay */}
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 1 }} />
+    <div className="min-h-screen flex relative" style={{ backgroundColor: 'var(--color-rail)' }}>
+      {/* The autoplaying background video is gone. It was a 13.9 MB download on
+          the first screen anyone sees, looping behind a form — motion competing
+          with the one thing the page asks you to do. */}
 
       {/* Sol panel — yarı şeffaf koyu */}
-      <div className="hidden lg:flex flex-col w-[480px] shrink-0 px-14 py-16" style={{ position: 'relative', zIndex: 2, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(2px)' }}>
+      {/* Translucency and a backdrop blur existed to let the video through.
+          With nothing behind it, the panel is simply the rail tone. */}
+      <div
+        className="hidden lg:flex flex-col w-[480px] shrink-0 px-14 py-16"
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          background: 'var(--color-rail)',
+          borderRight: '1px solid var(--color-rail-rule)',
+        }}
+      >
         <div className="relative flex-1 flex flex-col">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-16">
@@ -123,51 +116,76 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Sağ panel — form, video arkada görünür */}
-      <div className="flex-1 flex items-center justify-center px-6" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="w-full max-w-sm animate-slide-up">
-          {/* Cam kart */}
-          <div className="bg-slate-900/60 backdrop-blur-lg border border-white/10 rounded-3xl p-8 shadow-2xl">
+      {/* Right panel — the form sits on paper. It used to be a dark glass card
+          floating on the video; with the video gone, glass over nothing is just
+          a blurred rectangle. */}
+      <div
+        className="flex-1 flex items-center justify-center px-6 py-16"
+        style={{ position: 'relative', zIndex: 2, background: 'var(--color-paper)' }}
+      >
+        <div className="w-full max-w-sm animate-fade-in">
+          <div>
             {/* Mobil logo */}
             <div className="flex items-center gap-2 mb-8 lg:hidden">
-              <div className="w-8 h-8 bg-gradient-brand rounded-xl flex items-center justify-center">
-                <svg className="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <div
+                className="w-8 h-8 flex items-center justify-center"
+                style={{ background: 'var(--color-accent)', borderRadius: 'var(--radius-md)' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="var(--color-paper)" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <span className="font-bold text-white">Spectra CRM</span>
+              <span className="font-semibold">Spectra CRM</span>
             </div>
 
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-white tracking-tight">Tekrar hoşgeldiniz</h1>
-              <p className="text-white/50 text-sm mt-1.5">Hesabınıza giriş yapın</p>
+            <div className="mb-7">
+              <p className="label mb-2">Giriş</p>
+              <h1 className="text-2xl">Tekrar hoş geldiniz</h1>
+              <p className="mt-1.5 text-sm text-ink-2">Hesabınıza giriş yapın.</p>
             </div>
 
             {/* Demo erişimi - portfolyoya bakan biri kayıt olmadan gezebilsin */}
-            <div className="mb-6 rounded-2xl border border-brand-400/30 bg-brand-400/10 p-4">
-              <div className="flex items-center justify-between gap-3 mb-2.5">
-                <span className="text-[11px] font-semibold text-brand-300 uppercase tracking-widest">
+            <div
+              className="mb-6 p-4"
+              style={{
+                background: 'var(--color-accent-wash)',
+                border: '1px solid color-mix(in oklch, var(--color-accent) 25%, transparent)',
+                borderRadius: 'var(--radius-lg)',
+              }}
+            >
+              <div className="mb-2.5 flex items-center justify-between gap-3">
+                <span className="label" style={{ color: 'var(--color-accent-ink)' }}>
                   Demo hesabı
                 </span>
                 <button
                   type="button"
                   onClick={handleDemoLogin}
                   disabled={loading}
-                  className="text-xs font-semibold text-brand-300 hover:text-white transition-colors disabled:opacity-40"
+                  className="btn-ghost text-xs disabled:opacity-40"
+                  style={{ color: 'var(--color-accent-ink)' }}
                 >
-                  Tek tıkla gir →
+                  Tek tıkla gir
                 </button>
               </div>
-              <p className="text-[13px] text-white/60 leading-relaxed">
+              <p className="text-[13px] leading-relaxed text-ink-2">
                 Kayıt olmadan incelemek için:{' '}
-                <span className="text-white/90 font-mono">{DEMO_CREDENTIALS.email}</span>
+                <span className="figure text-ink">{DEMO_CREDENTIALS.email}</span>
                 {' / '}
-                <span className="text-white/90 font-mono">{DEMO_CREDENTIALS.password}</span>
+                <span className="figure text-ink">{DEMO_CREDENTIALS.password}</span>
               </p>
             </div>
 
             {error && (
-              <div className="flex items-start gap-2.5 bg-rose-500/15 border border-rose-400/30 text-rose-300 text-sm px-4 py-3 rounded-xl mb-5">
+              <div
+                role="alert"
+                className="mb-5 flex items-start gap-2.5 px-4 py-3 text-sm"
+                style={{
+                  background: 'var(--color-accent-wash)',
+                  border: '1px solid color-mix(in oklch, var(--color-accent) 35%, transparent)',
+                  color: 'var(--color-accent-ink)',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
                 <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -177,19 +195,19 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-[11px] font-semibold text-white/50 mb-1.5 uppercase tracking-widest">E-posta</label>
+                <label className="label block mb-1.5">E-posta</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="ornek@email.com"
-                  className="w-full px-3.5 py-2.5 bg-white/10 border border-white/15 rounded-xl text-sm text-white placeholder-white/25 outline-none transition-all focus:border-brand-400 focus:bg-white/15"
+                  className="input"
                   required
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-white/50 mb-1.5 uppercase tracking-widest">Şifre</label>
+                <label className="label block mb-1.5">Şifre</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -197,13 +215,13 @@ export default function Login() {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="••••••••"
-                    className="w-full px-3.5 py-2.5 bg-white/10 border border-white/15 rounded-xl text-sm text-white placeholder-white/25 outline-none transition-all focus:border-brand-400 focus:bg-white/15 pr-10"
+                    className="input pr-10"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink-2 transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? (
@@ -232,9 +250,9 @@ export default function Login() {
               </button>
             </form>
 
-            <p className="text-center text-white/40 text-sm mt-7">
+            <p className="mt-7 text-center text-sm text-ink-2">
               Hesabınız yok mu?{' '}
-              <Link href="/auth/register" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">
+              <Link href="/auth/register" className="font-medium transition-colors" style={{ color: 'var(--color-accent-ink)' }}>
                 Kayıt olun
               </Link>
             </p>

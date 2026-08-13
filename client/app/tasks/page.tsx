@@ -137,7 +137,7 @@ export default function Tasks() {
                       {/* Quick complete checkbox */}
                       <button
                         onClick={() => task.status !== 'completed' && updateStatus(task._id!, 'completed')}
-                        className={`shrink-0 w-4.5 h-4.5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        className={`shrink-0 w-4.5 h-4.5 rounded-md border-2 flex items-center justify-center transition-colors ${
                           task.status === 'completed'
                             ? 'bg-emerald-500 border-emerald-500'
                             : 'border-slate-300 hover:border-emerald-400 hover:bg-emerald-50'

@@ -151,13 +151,22 @@ h4 {
     border: 1px solid transparent;
     border-radius: var(--radius-pill);
     cursor: pointer;
-    transition: background-color var(--dur-fast) var(--ease-out);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-press) var(--ease-out);
   }
-  .btn-primary:hover:not(:disabled) {
-    background: var(--color-accent-hover);
+  /* Hover only where a pointer can actually hover — a touch device fires it on
+     tap and leaves the state stuck after the finger lifts. */
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover:not(:disabled) {
+      background: var(--color-accent-hover);
+    }
   }
+  /* Press feedback. The button does not lift on hover — it sits still — but it
+     must answer the press, or the interface feels like it did not hear you. */
   .btn-primary:active:not(:disabled) {
     background: var(--color-accent-ink);
+    transform: scale(0.97);
   }
   .btn-primary:disabled {
     background: var(--color-paper-3);
@@ -180,11 +189,17 @@ h4 {
     cursor: pointer;
     transition:
       background-color var(--dur-fast) var(--ease-out),
-      border-color var(--dur-fast) var(--ease-out);
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-press) var(--ease-out);
   }
-  .btn-secondary:hover:not(:disabled) {
-    background: var(--color-paper-3);
-    border-color: var(--color-ink-3);
+  @media (hover: hover) and (pointer: fine) {
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--color-paper-3);
+      border-color: var(--color-ink-3);
+    }
+  }
+  .btn-secondary:active:not(:disabled) {
+    transform: scale(0.97);
   }
   .btn-secondary:disabled {
     color: var(--color-ink-3);
@@ -204,11 +219,31 @@ h4 {
     border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background-color var(--dur-fast) var(--ease-out);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-press) var(--ease-out);
   }
-  .btn-ghost:hover:not(:disabled) {
-    background: var(--color-paper-3);
-    color: var(--color-ink);
+  @media (hover: hover) and (pointer: fine) {
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--color-paper-3);
+      color: var(--color-ink);
+    }
+  }
+  .btn-ghost:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* A card that is a link is a pressable surface too — it should answer the
+     press like a button, just more gently. */
+  a.card:active,
+  a.card-flush:active {
+    transform: scale(0.995);
+  }
+  a.card,
+  a.card-flush {
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-press) var(--ease-out);
   }
 
   /* ─── Badge ───────────────────────────────────────────── */
@@ -342,13 +377,26 @@ h4 {
   }
 }
 
+/* Reduced motion is not "no motion". Movement goes; the colour and opacity
+   changes that tell you a control responded stay, because removing those
+   removes feedback rather than removing discomfort. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
+    /* Kill translation and scale, keep the rest. */
+    transform: none !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  }
+
+  /* Colour and opacity still transition, just briefly. */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, opacity, fill,
+      stroke;
+    transition-duration: 120ms;
   }
 }
 
