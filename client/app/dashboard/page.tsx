@@ -74,6 +74,29 @@ export default function Dashboard() {
     ? Math.round((stats.tasks.completed / stats.tasks.total) * 100)
     : 0;
 
+  // The stat blocks below reach through `stats!`, which only silences the
+  // compiler — at runtime a failed /stats request left it null and took the
+  // whole page down. Nothing renders until there is something to render.
+  if (loading || !stats) {
+    return (
+      <AppShell>
+        <div className="flex min-h-[60vh] items-center justify-center px-6">
+          {loading ? (
+            <p className="label animate-pulse-soft">Veriler yükleniyor</p>
+          ) : (
+            <div className="max-w-sm text-center">
+              <p className="label mb-3">Veri yok</p>
+              <h1 className="mb-3 text-xl">Özet alınamadı</h1>
+              <p className="text-sm leading-relaxed text-ink-2">
+                Sunucu yanıt vermedi. Sayfayı yenilemeyi deneyin.
+              </p>
+            </div>
+          )}
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <div className="animate-fade-in">
