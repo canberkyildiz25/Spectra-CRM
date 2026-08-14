@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const navItems = [
   {
@@ -174,6 +175,8 @@ export default function Sidebar() {
         {/* Signing out is a normal action, not a hazard — no red. The hover was
             also being applied by mutating style in mouse handlers, which skips
             :focus-visible entirely; a keyboard user got no feedback at all. */}
+        <ThemeToggle />
+
         <button onClick={handleLogout} className="rail-signout">
           <svg className="w-[17px] h-[17px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

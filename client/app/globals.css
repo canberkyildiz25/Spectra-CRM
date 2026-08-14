@@ -23,7 +23,7 @@ body {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-paper);
+  background-color: var(--color-bg);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -54,16 +54,14 @@ h4 {
   color: var(--color-ink);
 }
 
-/* Page titles and any heading that opts in with `.display` take the serif.
-   Instrument Serif ships one weight, so the weight is pinned to 400 —
-   asking for 600 makes the browser synthesise a bold, which smears the
-   contrast the face is chosen for. Size and colour carry the hierarchy. */
+/* Space Grotesk ships real weights, so hierarchy can use them — no synthetic
+   bold, and the weight jump from 500 body to 600 display is deliberate. */
 h1,
 h2,
 .display {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: -0.015em;
+  font-weight: 600;
+  letter-spacing: var(--tracking-display);
   color: var(--color-ink);
 }
 
@@ -102,13 +100,13 @@ h2,
      were how the old build separated things; rules are
      quieter and hold up at density.                       */
   .card {
-    background: var(--color-paper-2);
+    background: var(--color-surface);
     border: 1px solid var(--color-rule);
     border-radius: var(--radius-lg);
   }
 
   .card-flush {
-    background: var(--color-paper-2);
+    background: var(--color-surface);
     border: 1px solid var(--color-rule);
     border-radius: var(--radius-lg);
     overflow: hidden;
@@ -279,23 +277,46 @@ h2,
   }
   .badge-positive {
     background: var(--color-positive-wash);
-    color: var(--color-positive-ink);
+    color: var(--ink-on-positive);
     border-color: color-mix(in oklch, var(--color-positive) 22%, transparent);
   }
   .badge-caution {
     background: var(--color-caution-wash);
-    color: oklch(48% 0.09 80);
+    color: var(--ink-on-caution);
     border-color: color-mix(in oklch, var(--color-caution) 30%, transparent);
   }
   .badge-quiet {
     background: var(--color-quiet-wash);
-    color: var(--color-quiet);
+    color: var(--ink-on-quiet);
     border-color: var(--color-rule-strong);
   }
   .badge-accent {
     background: var(--color-accent-wash);
-    color: var(--color-accent-ink);
+    color: var(--ink-on-accent);
     border-color: color-mix(in oklch, var(--color-accent) 25%, transparent);
+  }
+
+  /* ─── Skip link ───────────────────────────────────────
+     Off-screen until focused, then a real control. Never
+     `display: none` — that takes it out of the tab order and
+     defeats the point.                                       */
+  .skip-link {
+    position: absolute;
+    top: var(--space-xs);
+    left: var(--space-xs);
+    z-index: 60;
+    padding: 0.5rem 0.875rem;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transform: translateY(calc(-100% - var(--space-md)));
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .skip-link:focus-visible {
+    transform: translateY(0);
   }
 
   /* ─── Segmented filter ────────────────────────────────
@@ -317,6 +338,7 @@ h2,
     border-radius: calc(var(--radius-md) - 3px);
     background: transparent;
     color: var(--color-ink-2);
+    font-weight: 500;
     font-family: inherit;
     font-size: var(--text-xs);
     font-weight: 500;
@@ -390,7 +412,7 @@ h2,
     border-collapse: collapse;
   }
   .data-table th {
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--row-y) var(--space-md);
     text-align: left;
     font-family: var(--font-mono);
     font-size: var(--text-label);
@@ -403,7 +425,7 @@ h2,
     white-space: nowrap;
   }
   .data-table td {
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--row-y) var(--space-md);
     font-size: var(--text-md);
     color: var(--color-ink);
     border-bottom: 1px solid var(--color-rule);
