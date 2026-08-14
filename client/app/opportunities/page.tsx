@@ -143,7 +143,7 @@ export default function Opportunities() {
 
         {/* Search */}
         <div className="relative mb-5 max-w-sm">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Başlık veya müşteri ara..." className="input pl-10" />
@@ -158,36 +158,36 @@ export default function Opportunities() {
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="md:col-span-2">
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Fırsat Başlığı *</label>
+                  <label className="label block mb-1.5">Fırsat Başlığı *</label>
                   <input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Örn: ABC Teknoloji - Yazılım Lisansı" className="input" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Müşteri *</label>
+                  <label className="label block mb-1.5">Müşteri *</label>
                   <select required value={formData.customerId} onChange={e => setFormData({ ...formData, customerId: e.target.value })} className="input">
                     <option value="">Müşteri seçin...</option>
                     {customers.map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName} {c.company ? `(${c.company})` : ''}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Tutar (₺) *</label>
+                  <label className="label block mb-1.5">Tutar (₺) *</label>
                   <input required type="number" min="0" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} className="input" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Aşama</label>
+                  <label className="label block mb-1.5">Aşama</label>
                   <select value={formData.stage} onChange={e => setFormData({ ...formData, stage: e.target.value as Stage })} className="input">
                     {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Olasılık (%)</label>
+                  <label className="label block mb-1.5">Olasılık (%)</label>
                   <input type="number" min="0" max="100" value={formData.probability} onChange={e => setFormData({ ...formData, probability: e.target.value })} className="input" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Tahmini Kapanış</label>
+                  <label className="label block mb-1.5">Tahmini Kapanış</label>
                   <input type="date" value={formData.expectedCloseDate} onChange={e => setFormData({ ...formData, expectedCloseDate: e.target.value })} className="input" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Açıklama</label>
+                  <label className="label block mb-1.5">Açıklama</label>
                   <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={2} className="input resize-none" />
                 </div>
               </div>
@@ -230,7 +230,7 @@ export default function Opportunities() {
                         <p className="text-xs font-semibold text-slate-900 mb-1 leading-snug">{o.title}</p>
                         <p className="text-xs text-slate-400 mb-2 truncate">{o.customerId.firstName} {o.customerId.lastName}</p>
                         <p className="text-sm font-bold text-brand-600 mb-2">{fmt(o.amount)}</p>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1">
                           <button onClick={() => handleEdit(o)} className="text-xs text-brand-600 hover:underline">Düzenle</button>
                           <span className="text-slate-200">·</span>
                           <button onClick={() => handleDelete(o._id)} className="text-xs text-rose-500 hover:underline">Sil</button>
@@ -275,9 +275,9 @@ export default function Opportunities() {
                       <td className="text-sm text-slate-500">%{o.probability}</td>
                       <td className="text-sm text-slate-500">{o.expectedCloseDate ? new Date(o.expectedCloseDate).toLocaleDateString('tr-TR') : '—'}</td>
                       <td className="text-right">
-                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleEdit(o)} className="px-3 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition">Düzenle</button>
-                          <button onClick={() => handleDelete(o._id)} className="px-3 py-1.5 text-xs font-medium text-rose-500 hover:bg-rose-50 rounded-lg transition">Sil</button>
+                        <div className="flex justify-end gap-1">
+                          <button onClick={() => handleEdit(o)} className="btn-ghost text-xs">Düzenle</button>
+                          <button onClick={() => handleDelete(o._id)} className="btn-ghost text-xs">Sil</button>
                         </div>
                       </td>
                     </tr>

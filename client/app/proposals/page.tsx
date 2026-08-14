@@ -105,7 +105,7 @@ export default function Proposals() {
           {/* ── Filters ─────────────────────────────── */}
           <div className="flex gap-3">
             <div className="relative flex-1 max-w-sm">
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input value={search} onChange={e => setSearch(e.target.value)}
@@ -174,10 +174,10 @@ export default function Proposals() {
                           {isExpired && <div className="text-[10px] text-rose-400">Süresi doldu</div>}
                         </td>
                         <td className="text-right">
-                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex justify-end gap-1">
                             <Link href={`/proposals/${p._id}`} className="px-3 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition">Görüntüle</Link>
                             <Link href={`/proposals/${p._id}/edit`} className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition">Düzenle</Link>
-                            <button onClick={() => handleDelete(p._id)} className="px-3 py-1.5 text-xs font-medium text-rose-500 hover:bg-rose-50 rounded-lg transition">Sil</button>
+                            <button onClick={() => handleDelete(p._id)} className="btn-ghost text-xs">Sil</button>
                           </div>
                         </td>
                       </tr>

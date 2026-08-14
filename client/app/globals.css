@@ -279,7 +279,7 @@ h2,
   }
   .badge-positive {
     background: var(--color-positive-wash);
-    color: var(--color-positive);
+    color: var(--color-positive-ink);
     border-color: color-mix(in oklch, var(--color-positive) 22%, transparent);
   }
   .badge-caution {
@@ -296,6 +296,64 @@ h2,
     background: var(--color-accent-wash);
     color: var(--color-accent-ink);
     border-color: color-mix(in oklch, var(--color-accent) 25%, transparent);
+  }
+
+  /* ─── Segmented filter ────────────────────────────────
+     Selection is carried by fill and ink weight, not by a
+     white chip on a shadow. `aria-pressed` drives the style,
+     so the accessible state and the visible state cannot
+     drift apart.                                            */
+  .segmented {
+    display: inline-flex;
+    padding: 2px;
+    gap: 2px;
+    background: var(--color-paper-3);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-md);
+  }
+  .segmented-item {
+    padding: 0.3125rem 0.75rem;
+    border: none;
+    border-radius: calc(var(--radius-md) - 3px);
+    background: transparent;
+    color: var(--color-ink-2);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .segmented-item:hover[aria-pressed='false'] {
+      color: var(--color-ink);
+    }
+  }
+  .segmented-item[aria-pressed='true'] {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 1px solid var(--color-rule);
+  }
+  .segmented-item:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 1px;
+  }
+
+  /* ─── Notice ──────────────────────────────────────────
+     One inline message style. Not red: an error in a form is
+     a normal event, and the page already has one accent.    */
+  .notice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-xs);
+    padding: 0.75rem 1rem;
+    background: var(--color-accent-wash);
+    border: 1px solid color-mix(in oklch, var(--color-accent) 30%, transparent);
+    border-radius: var(--radius-md);
+    color: var(--color-accent-ink);
+    font-size: var(--text-md);
   }
 
   /* ─── Rail sign-out ───────────────────────────────────── */

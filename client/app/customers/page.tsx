@@ -15,15 +15,16 @@ interface Customer {
 
 const statusLabel: Record<string, string> = { customer: 'Müşteri', prospect: 'Aday', inactive: 'Pasif' };
 const statusBadge: Record<string, string> = {
-  customer: 'bg-emerald-50 text-emerald-700',
-  prospect: 'bg-blue-50 text-blue-700',
-  inactive: 'bg-slate-100 text-slate-500',
+  customer: 'badge-positive',
+  prospect: 'badge-accent',
+  inactive: 'badge-quiet',
 };
 
 const emptyForm = { firstName: '', lastName: '', email: '', phone: '', company: '', city: '', country: 'Türkiye', status: 'prospect' as const, source: '', notes: '' };
 
-const avatarColors = ['bg-gradient-brand', 'bg-gradient-info', 'bg-gradient-success', 'bg-gradient-warning', 'bg-gradient-rose'];
-const avatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length];
+/* Initials on a flat well. Five gradients keyed off the first letter meant a
+   list of ten customers carried ten competing colours, none of which meant
+   anything — the accent budget spent on decoration. */
 
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -73,22 +74,29 @@ export default function Customers() {
   return (
     <AppShell>
       <div className="px-8 py-8 max-w-6xl mx-auto animate-fade-in">
-        <div className="flex justify-between items-start mb-8">
+        <div className="mb-8 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Müşteriler</h1>
-            <p className="text-slate-500 text-sm mt-1">{customers.length} müşteri kayıtlı</p>
+            <p className="label mb-2">Kayıtlar</p>
+            <h1 className="text-2xl sm:text-3xl">Müşteriler</h1>
+            <p className="mt-1.5 text-sm text-ink-2">
+              <span className="figure">{customers.length}</span> kayıt
+            </p>
           </div>
-          <button onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm); }} className="btn-primary">
-            + Yeni Müşteri
+          <button onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm); }} className="btn-primary shrink-0">
+            Müşteri ekle
           </button>
         </div>
 
-        {error && <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-700 text-sm px-4 py-3 rounded-xl mb-5">{error}</div>}
+        {error && (
+          <div role="alert" className="notice mb-5">
+            {error}
+          </div>
+        )}
 
         {/* Form */}
         {showForm && (
           <div className="card p-6 mb-6 animate-slide-up">
-            <h2 className="text-sm font-semibold text-slate-900 mb-5 uppercase tracking-wide">{editingId ? 'Müşteri Düzenle' : 'Yeni Müşteri'}</h2>
+            <h2 className="label mb-5">{editingId ? 'Müşteri Düzenle' : 'Yeni Müşteri'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {[
@@ -101,12 +109,12 @@ export default function Customers() {
                   { label: 'Kaynak', field: 'source', placeholder: 'Fuar, Referans, Web...' },
                 ].map(({ label, field, type, required, placeholder }) => (
                   <div key={field}>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">{label}</label>
+                    <label className="label block mb-1.5">{label}</label>
                     <input type={type || 'text'} required={required} value={(formData as any)[field]} onChange={e => setFormData({ ...formData, [field]: e.target.value })} placeholder={placeholder} className="input" />
                   </div>
                 ))}
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Durum</label>
+                  <label className="label block mb-1.5">Durum</label>
                   <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as any })} className="input">
                     <option value="prospect">Aday</option>
                     <option value="customer">Müşteri</option>
@@ -115,7 +123,7 @@ export default function Customers() {
                 </div>
               </div>
               <div className="mb-5">
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Notlar</label>
+                <label className="label block mb-1.5">Notlar</label>
                 <textarea value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} rows={2} className="input resize-none" />
               </div>
               <div className="flex gap-2">
@@ -129,15 +137,19 @@ export default function Customers() {
         {/* Filtreler */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <div className="relative flex-1">
-            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Ad, şirket veya e-posta ara..." className="input pl-10" />
           </div>
-          <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+          <div className="segmented" role="group" aria-label="Duruma göre filtrele">
             {['all', 'customer', 'prospect', 'inactive'].map(s => (
-              <button key={s} onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${statusFilter === s ? 'bg-white text-slate-900 shadow-card' : 'text-slate-500 hover:text-slate-700'}`}>
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                aria-pressed={statusFilter === s}
+                className="segmented-item"
+              >
                 {s === 'all' ? 'Tümü' : statusLabel[s]}
               </button>
             ))}
@@ -148,9 +160,12 @@ export default function Customers() {
         {loading ? (
           <div className="card overflow-hidden">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-slate-50 animate-pulse">
-                <div className="w-9 h-9 rounded-xl bg-slate-100" />
-                <div className="flex-1 space-y-2"><div className="h-3 bg-slate-100 rounded w-1/3" /><div className="h-2.5 bg-slate-100 rounded w-1/4" /></div>
+              <div key={i} className="animate-pulse-soft flex items-center gap-4 border-b border-rule px-5 py-4">
+                <div className="h-9 w-9 rounded-md" style={{ background: 'var(--color-paper-3)' }} />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-1/3 rounded" style={{ background: 'var(--color-paper-3)' }} />
+                  <div className="h-2.5 w-1/4 rounded" style={{ background: 'var(--color-paper-3)' }} />
+                </div>
               </div>
             ))}
           </div>
@@ -171,23 +186,44 @@ export default function Customers() {
                   <tr key={c._id} className="group">
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl ${avatarColor(c.firstName)} flex items-center justify-center text-white font-bold text-xs shrink-0`}>
+                        <span
+                          aria-hidden
+                          className="figure flex h-9 w-9 shrink-0 items-center justify-center text-[11px]"
+                          style={{
+                            background: 'var(--color-paper-3)',
+                            color: 'var(--color-ink-2)',
+                            borderRadius: 'var(--radius-md)',
+                          }}
+                        >
                           {c.firstName[0]}{c.lastName[0]}
-                        </div>
+                        </span>
                         <div>
-                          <Link href={`/customers/${c._id}`} className="text-sm font-semibold text-slate-800 hover:text-brand-600 transition-colors">{c.firstName} {c.lastName}</Link>
-                          {c.company && <p className="text-xs text-slate-400">{c.company}</p>}
+                          <Link
+                            href={`/customers/${c._id}`}
+                            className="text-sm font-medium transition-colors hover:text-accent-ink"
+                          >
+                            {c.firstName} {c.lastName}
+                          </Link>
+                          {c.company && <p className="text-xs text-ink-3">{c.company}</p>}
                         </div>
                       </div>
                     </td>
-                    <td className="text-sm text-slate-600">{c.email}{c.phone && <div className="text-xs text-slate-400">{c.phone}</div>}</td>
-                    <td className="text-sm text-slate-500">{c.city || '—'}</td>
+                    <td className="text-sm text-ink-2">
+                      {c.email}
+                      {c.phone && <div className="figure text-xs text-ink-3">{c.phone}</div>}
+                    </td>
+                    <td className="text-sm text-ink-2">{c.city || '—'}</td>
                     <td><span className={`badge ${statusBadge[c.status]}`}>{statusLabel[c.status]}</span></td>
-                    <td className="text-sm text-slate-500">{c.source || '—'}</td>
+                    <td className="text-sm text-ink-2">{c.source || '—'}</td>
                     <td className="text-right">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => handleEdit(c)} className="px-3 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition">Düzenle</button>
-                        <button onClick={() => handleDelete(c._id)} className="px-3 py-1.5 text-xs font-medium text-rose-500 hover:bg-rose-50 rounded-lg transition">Sil</button>
+                      {/* These were hidden behind ``,
+                          which put both actions out of reach of a keyboard and of
+                          every touch device. They are quiet, not hidden. Delete is
+                          not red — it is confirmed before it runs, and an alarm
+                          colour on every row is noise. */}
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => handleEdit(c)} className="btn-ghost text-xs">Düzenle</button>
+                        <button onClick={() => handleDelete(c._id)} className="btn-ghost text-xs">Sil</button>
                       </div>
                     </td>
                   </tr>
