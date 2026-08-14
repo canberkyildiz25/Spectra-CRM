@@ -266,7 +266,7 @@ export default function Dashboard() {
         <div className="mb-8 grid gap-4 lg:grid-cols-2">
           <section className="card-flush">
             <div className="flex items-center justify-between border-b border-rule px-5 py-4">
-              <h2 className="text-sm font-semibold">Son görevler</h2>
+              <h2 className="ui-heading text-sm">Son görevler</h2>
               <Link
                 href="/tasks"
                 className="label transition-colors hover:text-accent-ink"
@@ -300,7 +300,7 @@ export default function Dashboard() {
 
           <section className="card-flush">
             <div className="flex items-center justify-between border-b border-rule px-5 py-4">
-              <h2 className="text-sm font-semibold">Son müşteriler</h2>
+              <h2 className="ui-heading text-sm">Son müşteriler</h2>
               <Link
                 href="/customers"
                 className="label transition-colors hover:text-accent-ink"

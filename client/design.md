@@ -17,6 +17,10 @@ paper, generous radii, hairline rules instead of shadows.
   vary only in how the working surface is composed (board / table / detail).
 - **Auth pages** (login, register): **Letter** — a single narrow column, no
   marketing furniture.
+- **Landing page:** **Long Document** — a statement, a plain account of what the
+  tool does as a numbered list separated by rules, and a door into the running
+  app. Not a hero-with-three-cards; the running demo is the proof, so the page's
+  job is to get out of the way and link to it.
 
 ## Theme — Coral
 
@@ -74,10 +78,19 @@ Lost stays grey in badges and becomes blue in charts. Two different jobs.
 
 ## Typography
 
-Two families, inside the 2+1 rule.
+Three faces, which is the ceiling under the 2+1 rule.
 
-- **Display:** Geist, 500–600, tracking `-0.02em`
-- **Body:** Geist, 400–500
+- **Display:** Instrument Serif 400, tracking `-0.015em`. Headings only — `h1`,
+  `h2`, or anything with `.display`. One weight ships, so the weight is pinned
+  at 400: asking for 600 makes the browser synthesise a bold and smears the
+  contrast the face was chosen for. Size and colour carry the hierarchy.
+- **Body and controls:** Geist 400–500.
+
+Geist was doing both jobs and carried no voice at heading size — and on a
+Next.js app on Vercel it is the most predictable typeface there is. Serif for
+headings, sans for the dense data, never the reverse. Small headings inside
+data panels stay in the sans via `.ui-heading`; a serif at 14px semibold in a
+table header reads as a mistake.
 - **Mono:** Geist Mono, 400–500 — every figure, currency amount, date, ID and
   table numeral. Tabular numerals are mandatory in tables so columns align.
 - Type scale anchor: `--text-display` = `clamp(2rem, 1.4rem + 2vw, 2.75rem)`
@@ -154,3 +167,12 @@ Carried over from what the previous build got wrong:
 - `rounded-2xl` applied uniformly to every surface.
 - Drop shadows as the card-separation device.
 - Emoji as icons.
+- **Gradient text** (`bg-clip-text text-transparent`). It was on the landing
+  headline and half the words fell to ink-on-ink — unreadable as well as a tell.
+- **Radial colour blooms** behind headings and rails.
+- **Glass** — `backdrop-blur` over a solid background is a blurred rectangle.
+- **Invented numbers.** The landing page claimed "3.2x more sales · 94%
+  satisfaction · 2 min setup" for a demo with one account. If a figure cannot be
+  read out of the database, it does not go on the page.
+- CTA copy that promises something that does not exist. "Ücretsiz Başla" implied
+  a signup product; the honest label is "Demoyu aç".

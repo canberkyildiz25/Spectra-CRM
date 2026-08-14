@@ -38,12 +38,32 @@ td .figure,
   font-feature-settings: 'tnum' 1;
 }
 
-h1,
-h2,
+/* Small headings are UI labels and stay in the sans — a serif at 14px
+   semibold in a data panel just reads as a mistake. `.ui-heading` opts an
+   h1/h2 out of the serif for the same reason. */
+.ui-heading {
+  font-family: var(--font-sans) !important;
+  font-weight: 600;
+  letter-spacing: var(--tracking-display);
+}
+
 h3,
 h4 {
   font-weight: 600;
   letter-spacing: var(--tracking-display);
+  color: var(--color-ink);
+}
+
+/* Page titles and any heading that opts in with `.display` take the serif.
+   Instrument Serif ships one weight, so the weight is pinned to 400 —
+   asking for 600 makes the browser synthesise a bold, which smears the
+   contrast the face is chosen for. Size and colour carry the hierarchy. */
+h1,
+h2,
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
   color: var(--color-ink);
 }
 
@@ -144,7 +164,7 @@ h4 {
     justify-content: center;
     gap: var(--space-xs);
     padding: 0.5rem 1.125rem;
-    background: var(--color-accent);
+    background: var(--color-accent-fill);
     color: var(--color-paper);
     font-size: var(--text-md);
     font-weight: 500;
@@ -159,13 +179,13 @@ h4 {
      tap and leaves the state stuck after the finger lifts. */
   @media (hover: hover) and (pointer: fine) {
     .btn-primary:hover:not(:disabled) {
-      background: var(--color-accent-hover);
+      background: var(--color-accent-fill-hover);
     }
   }
   /* Press feedback. The button does not lift on hover — it sits still — but it
      must answer the press, or the interface feels like it did not hear you. */
   .btn-primary:active:not(:disabled) {
-    background: var(--color-accent-ink);
+    background: var(--color-accent-fill-active);
     transform: scale(0.97);
   }
   .btn-primary:disabled {

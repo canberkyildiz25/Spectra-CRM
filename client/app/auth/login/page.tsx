@@ -129,7 +129,7 @@ export default function Login() {
             <div className="flex items-center gap-2 mb-8 lg:hidden">
               <div
                 className="w-8 h-8 flex items-center justify-center"
-                style={{ background: 'var(--color-accent)', borderRadius: 'var(--radius-md)' }}
+                style={{ background: 'var(--color-accent-fill)', borderRadius: 'var(--radius-md)' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="var(--color-paper)" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

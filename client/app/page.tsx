@@ -1,144 +1,151 @@
 import Link from 'next/link';
 
-const features = [
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    title: 'Pipeline Yönetimi',
-    desc: 'Kanban görünümüyle fırsatlarınızı aşama aşama takip edin, sürükle-bırak ile taşıyın.',
-    gradient: 'bg-gradient-brand',
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
-    title: 'Teklif Oluşturma',
-    desc: 'Profesyonel teklifler oluşturun, PDF olarak indirin ve müşterilerinize gönderin.',
-    gradient: 'bg-gradient-success',
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    title: 'Müşteri Takibi',
-    desc: 'Tüm müşteri bilgilerini, iletişim geçmişini ve ilişkili fırsatları tek yerde görün.',
-    gradient: 'bg-gradient-info',
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-      </svg>
-    ),
-    title: 'Görev Yönetimi',
-    desc: 'Görevler oluşturun, öncelik belirleyin ve tek tıkla tamamlandı olarak işaretleyin.',
-    gradient: 'bg-gradient-warning',
-  },
-];
+/* The landing page.
+ *
+ * What was here before was the generated-SaaS template in full: a dark hero
+ * with a green radial bloom behind it, a headline half of which was set in a
+ * coral-to-green gradient (the unlit half was ink-on-ink and genuinely
+ * unreadable), four glass cards each with its own gradient icon, and a stats
+ * row claiming "3.2x more sales · 94% satisfaction · 2 min setup".
+ *
+ * Those numbers were invented. This is a demo CRM with one demo account; there
+ * is no cohort to measure. On a portfolio piece a made-up metric reads either
+ * as carelessness or as dishonesty, and both are worse than saying nothing.
+ *
+ * What replaces it is a typographic page on paper: a serif statement, a plain
+ * account of what the thing does, and a door into the running app — which is
+ * the only proof that matters here.
+ */
 
-const stats = [
-  { value: '3.2x', label: 'Daha Fazla Satış' },
-  { value: '%94', label: 'Müşteri Memnuniyeti' },
-  { value: '2dk', label: 'Kurulum Süresi' },
+const CAPABILITIES = [
+  {
+    n: '01',
+    title: 'Satış hattı',
+    body: 'Fırsatlar aşamalara ayrılır, panoda sürükle-bırak ile taşınır. Her aşamanın toplam değeri anlık hesaplanır.',
+  },
+  {
+    n: '02',
+    title: 'Teklifler',
+    body: 'Kalem kalem teklif hazırlanır, PDF olarak çıkarılır ve durumu kabul edilene kadar takip edilir.',
+  },
+  {
+    n: '03',
+    title: 'Müşteriler',
+    body: 'İletişim geçmişi, ilişkili fırsatlar ve açık görevler tek kayıtta toplanır.',
+  },
+  {
+    n: '04',
+    title: 'Görevler',
+    body: 'Öncelik ve son tarih ile atanır, panelde bekleyenler önce görünür.',
+  },
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
-
-      {/* Emerald glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] opacity-25 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at center, #10b981 0%, transparent 65%)' }} />
-
-      {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-5 max-w-6xl mx-auto">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-brand flex items-center justify-center shadow-stat">
-            <svg className="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '18px', height: '18px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+    <div className="min-h-screen" style={{ background: 'var(--color-paper)' }}>
+      {/* ── Nav ───────────────────────────────────────────────
+          Two destinations, so two links. No mega-menu on a page
+          that has one thing to offer. */}
+      <header className="border-b border-rule">
+        <nav className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5 sm:px-8">
+          <div className="flex items-center gap-2.5">
+            <span
+              aria-hidden
+              className="flex h-7 w-7 items-center justify-center"
+              style={{ background: 'var(--color-accent-fill)', borderRadius: 'var(--radius-sm)' }}
+            >
+              <svg className="h-4 w-4" fill="none" stroke="var(--color-paper)" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </span>
+            <span className="text-[15px] font-medium">Spectra CRM</span>
           </div>
-          <span className="font-bold text-lg tracking-tight">Spectra CRM</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/auth/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Giriş Yap</Link>
-          <Link href="/auth/register" className="px-4 py-2 bg-white text-slate-900 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-colors">Ücretsiz Başla</Link>
-        </div>
-      </nav>
 
-      {/* Hero */}
-      <section className="relative z-10 text-center px-6 pt-20 pb-24 max-w-4xl mx-auto">
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
-          Satışlarınızı{' '}
-          <span className="bg-gradient-to-r from-brand-400 to-emerald-300 bg-clip-text text-transparent">
-            bir üst seviyeye
-          </span>
-          {' '}taşıyın
-        </h1>
-        <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-          Pipeline yönetimi, profesyonel teklif aracı ve müşteri takibini tek platformda birleştiren modern CRM çözümü.
-        </p>
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Link href="/auth/register" className="px-6 py-3 bg-gradient-brand text-white rounded-xl font-semibold text-sm hover:opacity-90 transition shadow-stat">
-            Hemen Başla →
+          <Link
+            href="/auth/login"
+            className="text-sm text-ink-2 transition-colors hover:text-ink"
+          >
+            Giriş
           </Link>
-          <Link href="/auth/login" className="px-6 py-3 bg-white/10 border border-white/10 text-white rounded-xl font-semibold text-sm hover:bg-white/15 transition backdrop-blur-sm">
-            Giriş Yap
-          </Link>
-        </div>
+        </nav>
+      </header>
 
-        {/* Stats */}
-        <div className="flex items-center justify-center gap-10 mt-14 flex-wrap">
-          {stats.map(s => (
-            <div key={s.label} className="text-center">
-              <p className="text-3xl font-bold text-white">{s.value}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <main className="mx-auto max-w-4xl px-5 sm:px-8">
+        {/* ── Statement ───────────────────────────────────────
+            One weight, one colour. The old headline split itself
+            across a gradient and lost half its words to the
+            background. */}
+        <section className="border-b border-rule py-20 sm:py-28">
+          <p className="label mb-6">Satış yönetimi</p>
 
-      {/* Features */}
-      <section className="relative z-10 max-w-6xl mx-auto px-8 pb-24">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl font-bold text-white mb-3">İhtiyacınız olan her şey</h2>
-          <p className="text-slate-400 text-sm">Satış sürecinizi uçtan uca yönetmek için tasarlandı</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {features.map(f => (
-            <div key={f.title} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/8 transition backdrop-blur-sm group">
-              <div className={`w-10 h-10 rounded-xl ${f.gradient} flex items-center justify-center text-white mb-4`}>
-                {f.icon}
-              </div>
-              <h3 className="text-base font-semibold text-white mb-2">{f.title}</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+          <h1 className="mb-8 max-w-2xl text-4xl leading-[1.1] sm:text-5xl md:text-[3.5rem]">
+            Hangi işin nerede durduğunu bilmeden satış yönetilmez.
+          </h1>
 
-      {/* CTA */}
-      <section className="relative z-10 max-w-2xl mx-auto px-8 pb-24 text-center">
-        <div className="bg-brand-500/8 border border-brand-500/15 rounded-3xl p-10 backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-white mb-3">Bugün başlayın</h2>
-          <p className="text-slate-400 text-sm mb-6">Dakikalar içinde kurulum yapın, hemen kullanmaya başlayın.</p>
-          <Link href="/auth/register" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-brand text-white rounded-xl font-semibold text-sm hover:opacity-90 transition shadow-stat">
-            Ücretsiz Hesap Oluştur
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-          </Link>
-        </div>
-      </section>
+          <p className="mb-10 max-w-xl text-lg leading-relaxed text-ink-2">
+            Spectra, müşteriyi, açık fırsatı, gönderilen teklifi ve bekleyen görevi
+            aynı ekranda tutar. Hattaki para tek bakışta görünür.
+          </p>
 
-      {/* Footer */}
-      <footer className="relative z-10 text-center pb-8 text-xs text-slate-600">
-        © 2026 Spectra CRM · Tüm hakları saklıdır.
+          <div className="flex flex-wrap items-center gap-4">
+            <Link href="/dashboard" className="btn-primary">
+              Demoyu aç
+            </Link>
+            <Link href="/auth/login" className="btn-secondary">
+              Giriş ekranı
+            </Link>
+          </div>
+
+          <p className="mt-6 text-sm text-ink-3">
+            Kayıt gerekmez — demo hesabı hazır, bütün ekranlar açık.
+          </p>
+        </section>
+
+        {/* ── Capabilities ────────────────────────────────────
+            A numbered list separated by rules. Four identical
+            glass cards in a row is the shape every generated
+            landing page arrives in. */}
+        <section className="py-16 sm:py-20">
+          <h2 className="mb-10 text-2xl sm:text-3xl">Ne yapar</h2>
+
+          <ol>
+            {CAPABILITIES.map((c) => (
+              <li
+                key={c.n}
+                className="grid gap-2 border-t border-rule py-7 sm:grid-cols-[3rem_1fr] sm:gap-8"
+              >
+                <span className="figure pt-1 text-sm text-ink-3">{c.n}</span>
+                <div className="max-w-xl">
+                  <h3 className="mb-1.5 text-base">{c.title}</h3>
+                  <p className="leading-relaxed text-ink-2">{c.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </main>
+
+      {/* ── Footer ────────────────────────────────────────────
+          Says plainly what this is. An employer reading a
+          portfolio should not have to guess. */}
+      <footer className="border-t border-rule">
+        <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
+          <p className="mb-3 max-w-xl text-sm leading-relaxed text-ink-2">
+            Bu bir portfolyo projesidir. Uçtan uca çalışır: Next.js istemci,
+            Express ve MongoDB üzerinde REST API, JWT ile kimlik doğrulama.
+          </p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <span className="label">Canberk Yıldız</span>
+            <a
+              href="https://github.com/canberkyildiz25/Spectra-CRM"
+              target="_blank"
+              rel="noreferrer"
+              className="label transition-colors hover:text-accent-ink"
+            >
+              Kaynak kodu
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );
