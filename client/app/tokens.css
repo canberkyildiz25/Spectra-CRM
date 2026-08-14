@@ -13,10 +13,12 @@
   /* ── Ink ───────────────────────────────────────────────── */
   --color-ink: oklch(23% 0.014 45);
   --color-ink-2: oklch(46% 0.012 48);
-  /* Was 62%, which measured 3.39:1 on paper. This token is not decorative —
-     `.label`, table headers, meta text and placeholders all use it, and 3.39
-     fails WCAG AA for body text. 54% measures 4.72:1. */
-  --color-ink-3: oklch(54% 0.01 50);
+  /* Was 62%, measuring 3.39:1 on paper. Not a decorative token — `.label`,
+     table headers, meta text and placeholders all use it. Stepped to 50%,
+     which clears AA against the *darkest* surface it lands on rather than
+     the lightest: 5.18:1 on paper-2, 4.73:1 on paper-3. Grading it against
+     paper alone was the mistake the first time. */
+  --color-ink-3: oklch(50% 0.01 50);
 
   /* ── Rule ──────────────────────────────────────────────── */
   --color-rule: oklch(89% 0.008 55);
@@ -42,6 +44,9 @@
        not red, so the accent stays the only loud thing.     */
   --color-positive: oklch(56% 0.085 160);
   --color-positive-wash: oklch(95% 0.025 160);
+  /* Badge label. The 56% swatch on its own wash measures 3.88:1 — fine as a
+     dot, short of AA as 12px text. 48% measures 5.47:1. */
+  --color-positive-ink: oklch(48% 0.085 160);
   --color-caution: oklch(72% 0.095 80);
   --color-caution-wash: oklch(96% 0.03 80);
   --color-quiet: oklch(52% 0.02 45);

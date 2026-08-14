@@ -85,22 +85,22 @@ export default function Tasks() {
             <h2 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wide">Yeni Görev</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Başlık *</label>
+                <label className="label block mb-1.5">Başlık *</label>
                 <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="input" required />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Açıklama</label>
+                <label className="label block mb-1.5">Açıklama</label>
                 <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="input resize-none" rows={2} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Öncelik</label>
+                  <label className="label block mb-1.5">Öncelik</label>
                   <select value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value as any })} className="input">
                     <option value="low">Düşük</option><option value="medium">Orta</option><option value="high">Yüksek</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Bitiş Tarihi</label>
+                  <label className="label block mb-1.5">Bitiş Tarihi</label>
                   <input type="date" value={formData.dueDate} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} className="input" />
                 </div>
               </div>
@@ -161,13 +161,13 @@ export default function Tasks() {
                       {task.dueDate && <span className="text-xs text-slate-400">{new Date(task.dueDate).toLocaleDateString('tr-TR')}</span>}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-2 shrink-0">
                     <select value={task.status} onChange={e => updateStatus(task._id!, e.target.value)} className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none text-slate-600 bg-white">
                       <option value="pending">Beklemede</option>
                       <option value="in-progress">Devam</option>
                       <option value="completed">Tamamlandı</option>
                     </select>
-                    <button onClick={() => deleteTask(task._id!)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition">
+                    <button onClick={() => deleteTask(task._id!)} className="p-1.5 text-slate-400 hover:text-ink-2 hover:bg-paper-3 rounded-lg transition">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
