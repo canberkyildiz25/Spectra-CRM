@@ -13,7 +13,10 @@
   /* ── Ink ───────────────────────────────────────────────── */
   --color-ink: oklch(23% 0.014 45);
   --color-ink-2: oklch(46% 0.012 48);
-  --color-ink-3: oklch(62% 0.01 50);
+  /* Was 62%, which measured 3.39:1 on paper. This token is not decorative —
+     `.label`, table headers, meta text and placeholders all use it, and 3.39
+     fails WCAG AA for body text. 54% measures 4.72:1. */
+  --color-ink-3: oklch(54% 0.01 50);
 
   /* ── Rule ──────────────────────────────────────────────── */
   --color-rule: oklch(89% 0.008 55);
@@ -21,6 +24,15 @@
 
   /* ── Accent — coral. Budget: ≤ 3% of any viewport ──────── */
   --color-accent: oklch(66% 0.152 32);
+
+  /* A mark and a fill are different jobs. At 66% the coral is right for a bar,
+     an active edge, a chart series — nothing sits on top of it. Put paper-
+     coloured text on that same 66% and it measures 3.09:1, which fails AA.
+     The fill step is darker so its label clears 4.5:1 (measured 5.06). */
+  --color-accent-fill: oklch(54% 0.15 32);
+  --color-accent-fill-hover: oklch(49% 0.15 32);
+  --color-accent-fill-active: oklch(44% 0.14 32);
+
   --color-accent-hover: oklch(61% 0.155 32);
   --color-accent-ink: oklch(51% 0.155 32);
   --color-accent-wash: oklch(95% 0.03 34);
@@ -67,6 +79,7 @@
   --color-rail-rule: oklch(36% 0.014 48);
 
   /* ── Type ──────────────────────────────────────────────── */
+  --font-display: var(--font-display-face), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
 

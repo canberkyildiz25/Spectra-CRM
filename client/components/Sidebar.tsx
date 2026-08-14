@@ -79,7 +79,7 @@ export default function Sidebar() {
           <div
             className="w-8 h-8 flex items-center justify-center shrink-0"
             style={{
-              background: 'var(--color-accent)',
+              background: 'var(--color-accent-fill)',
               borderRadius: 'var(--radius-md)',
             }}
           >
@@ -132,7 +132,7 @@ export default function Sidebar() {
                 <span
                   aria-hidden
                   className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2"
-                  style={{ background: 'var(--color-accent)', borderRadius: '0 2px 2px 0' }}
+                  style={{ background: 'var(--color-accent-fill)', borderRadius: '0 2px 2px 0' }}
                 />
               )}
               <span style={{ color: 'inherit' }}>{item.icon}</span>
