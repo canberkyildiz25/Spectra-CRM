@@ -26,6 +26,24 @@ module.exports = {
         sans: ['var(--font-geist-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
+      /* Named rather than written as arbitrary values at call sites: Tailwind
+         cannot tell whether `duration-[var(--dur-fast)]` means transition- or
+         animation-duration, and a bare `cubic-bezier(...)` reads as a class
+         with commas in it. Both emitted ambiguity warnings on every build.
+         `out` deliberately overrides Tailwind's built-in easing — the house
+         curve is the only one this app uses. */
+      backgroundColor: {
+        well: 'var(--well)',
+        'well-active': 'var(--well-active)',
+      },
+      transitionDuration: {
+        press: 'var(--dur-press)',
+        fast: 'var(--dur-fast)',
+        base: 'var(--dur-base)',
+      },
+      transitionTimingFunction: {
+        out: 'var(--ease-out)',
+      },
       colors: {
         /* shadcn/ui contract. Components from the registry address colour
            through these names; everything below is the previous palette kept

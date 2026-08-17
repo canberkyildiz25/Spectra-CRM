@@ -15,11 +15,11 @@ interface Proposal {
 }
 
 const statusLabel: Record<string, string> = { draft: 'Taslak', sent: 'Gönderildi', accepted: 'Kabul', rejected: 'Red' };
-const statusStyle: Record<string, { bg: string; color: string; dot: string }> = {
-  draft:    { bg: 'bg-slate-100',   color: 'text-slate-600',   dot: 'bg-slate-400' },
-  sent:     { bg: 'bg-blue-50',     color: 'text-blue-700',    dot: 'bg-blue-500' },
-  accepted: { bg: 'bg-emerald-50',  color: 'text-emerald-700', dot: 'bg-emerald-500' },
-  rejected: { bg: 'bg-rose-50',     color: 'text-rose-700',    dot: 'bg-rose-400' },
+const statusStyle: Record<string, { badge: string; dot: string }> = {
+  draft:    { badge: 'badge-quiet',    dot: 'var(--quiet)' },
+  sent:     { badge: 'badge-accent',   dot: 'var(--chart-2)' },
+  accepted: { badge: 'badge-positive', dot: 'var(--positive)' },
+  rejected: { badge: 'badge-quiet',    dot: 'var(--quiet)' },
 };
 
 const fmt = (n: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(n);
@@ -68,9 +68,9 @@ export default function Proposals() {
             style={{ background: 'radial-gradient(ellipse at top right, rgba(167,139,250,.1) 0%, transparent 65%)' }} />
           <div className="relative max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <p className="text-violet-400 text-xs font-semibold uppercase tracking-widest mb-1">Belgeler</p>
+              <p className="label mb-1">Belgeler</p>
               <h1 className="text-2xl font-bold text-white tracking-tight">Satış Teklifleri</h1>
-              <p className="text-slate-500 text-sm mt-1">{proposals.length} teklif · {fmt(acceptedTotal)} kabul edildi</p>
+              <p className="text-muted-foreground text-sm mt-1">{proposals.length} teklif · {fmt(acceptedTotal)} kabul edildi</p>
             </div>
             <Link href="/proposals/new" className="btn-primary self-start md:self-auto">
               + Yeni Teklif
@@ -83,20 +83,30 @@ export default function Proposals() {
           {/* ── Summary pills ───────────────────────── */}
           {!loading && proposals.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {/* Hex literals — #3b82f6, #10b981 — could not follow the theme,
+                  and colouring each label a different hue turned four filter
+                  buttons into a rainbow that carried no information. Selection
+                  is shown by the ring, which is what selection means everywhere
+                  else in the app. */}
               {[
-                { key: 'all',      label: 'Toplam',     count: proposals.length,                                        value: proposals.reduce((s, p) => s + calcTotal(p), 0),  color: '#64748b', light: '#f1f5f9' },
-                { key: 'sent',     label: 'Gönderildi', count: proposals.filter(p => p.status === 'sent').length,     value: sentTotal,                                          color: '#3b82f6', light: '#eff6ff' },
-                { key: 'accepted', label: 'Kabul',      count: proposals.filter(p => p.status === 'accepted').length, value: acceptedTotal,                                      color: '#10b981', light: '#ecfdf5' },
-                { key: 'rejected', label: 'Red',        count: proposals.filter(p => p.status === 'rejected').length, value: proposals.filter(p => p.status === 'rejected').reduce((s, p) => s + calcTotal(p), 0), color: '#f43f5e', light: '#fff1f2' },
+                { key: 'all',      label: 'Toplam',     count: proposals.length,                                      value: proposals.reduce((s, p) => s + calcTotal(p), 0) },
+                { key: 'sent',     label: 'Gönderildi', count: proposals.filter(p => p.status === 'sent').length,     value: sentTotal },
+                { key: 'accepted', label: 'Kabul',      count: proposals.filter(p => p.status === 'accepted').length, value: acceptedTotal },
+                { key: 'rejected', label: 'Red',        count: proposals.filter(p => p.status === 'rejected').length, value: proposals.filter(p => p.status === 'rejected').reduce((s, p) => s + calcTotal(p), 0) },
               ].map(s => (
-                <button key={s.key} onClick={() => setStatusFilter(statusFilter === s.key ? 'all' : s.key)}
-                  className="card px-4 py-3 text-left transition-colors"
-                  style={statusFilter === s.key ? { borderColor: s.color, boxShadow: `0 0 0 2px ${s.color}22` } : {}}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: s.color }}>{s.label}</span>
-                    <span className="text-lg font-bold text-slate-900">{s.count}</span>
+                <button
+                  key={s.key}
+                  onClick={() => setStatusFilter(statusFilter === s.key ? 'all' : s.key)}
+                  aria-pressed={statusFilter === s.key}
+                  className={`card px-4 py-3 text-left transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    statusFilter === s.key ? 'border-ring ring-1 ring-ring' : 'hover:border-ring/40'
+                  }`}
+                >
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="label">{s.label}</span>
+                    <span className="figure text-lg font-medium text-foreground">{s.count}</span>
                   </div>
-                  <p className="text-xs text-slate-400">{fmt(s.value)}</p>
+                  <p className="figure text-xs text-muted-foreground">{fmt(s.value)}</p>
                 </button>
               ))}
             </div>
@@ -117,10 +127,10 @@ export default function Proposals() {
           {loading ? (
             <div className="card overflow-hidden">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex gap-6 px-5 py-4 border-b border-slate-50 animate-pulse">
-                  <div className="h-3 bg-slate-100 rounded w-24" />
-                  <div className="h-3 bg-slate-100 rounded flex-1" />
-                  <div className="h-3 bg-slate-100 rounded w-20" />
+                <div key={i} className="flex gap-6 px-5 py-4 border-b border-border animate-pulse">
+                  <div className="h-3 bg-muted rounded w-24" />
+                  <div className="h-3 bg-muted rounded flex-1" />
+                  <div className="h-3 bg-muted rounded w-20" />
                 </div>
               ))}
             </div>
@@ -154,29 +164,38 @@ export default function Proposals() {
                           </Link>
                         </td>
                         <td>
-                          <p className="text-sm font-medium text-slate-800">{p.title}</p>
+                          <p className="text-sm font-medium text-foreground">{p.title}</p>
                         </td>
-                        <td className="text-sm text-slate-600">
+                        <td className="text-sm text-muted-foreground">
                           {p.customerId.firstName} {p.customerId.lastName}
-                          {p.customerId.company && <div className="text-xs text-slate-400">{p.customerId.company}</div>}
+                          {p.customerId.company && <div className="text-xs text-muted-foreground">{p.customerId.company}</div>}
                         </td>
-                        <td className="text-sm font-bold text-slate-900">{fmt(calcTotal(p))}</td>
+                        <td className="figure text-sm font-medium text-foreground">{fmt(calcTotal(p))}</td>
                         <td>
-                          <select value={p.status} onChange={e => handleStatusChange(p._id, e.target.value)}
-                            className={`badge border-0 cursor-pointer ${s.bg} ${s.color}`}>
-                            {Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                          </select>
+                          {/* Dot for the status, plain control for the change —
+                              the same split as the opportunities table. */}
+                          <div className="flex items-center gap-2">
+                            <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.dot }} />
+                            <select
+                              value={p.status}
+                              onChange={e => handleStatusChange(p._id, e.target.value)}
+                              aria-label={`${p.title} durumu`}
+                              className="cursor-pointer rounded-md border border-border bg-transparent py-0.5 pl-1.5 pr-6 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              {Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                            </select>
+                          </div>
                         </td>
                         <td>
-                          <span className={`text-sm ${isExpired ? 'text-rose-500 font-medium' : 'text-slate-500'}`}>
+                          <span className={`text-sm ${isExpired ? 'text-[var(--caution)] font-medium' : 'text-muted-foreground'}`}>
                             {new Date(p.validUntil).toLocaleDateString('tr-TR')}
                           </span>
-                          {isExpired && <div className="text-[10px] text-rose-400">Süresi doldu</div>}
+                          {isExpired && <div className="text-[10px] text-[var(--caution)]">Süresi doldu</div>}
                         </td>
                         <td className="text-right">
                           <div className="flex justify-end gap-1">
-                            <Link href={`/proposals/${p._id}`} className="px-3 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition">Görüntüle</Link>
-                            <Link href={`/proposals/${p._id}/edit`} className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition">Düzenle</Link>
+                            <Link href={`/proposals/${p._id}`} className="btn-ghost text-xs">Görüntüle</Link>
+                            <Link href={`/proposals/${p._id}/edit`} className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-lg transition">Düzenle</Link>
                             <button onClick={() => handleDelete(p._id)} className="btn-ghost text-xs">Sil</button>
                           </div>
                         </td>

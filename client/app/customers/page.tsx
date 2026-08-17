@@ -6,6 +6,15 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { toast } from '@/components/Toast';
 import EmptyState from '@/components/EmptyState';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import ConfirmDelete from '@/components/ConfirmDelete';
 
 interface Customer {
   _id: string; firstName: string; lastName: string; email: string;
@@ -20,7 +29,14 @@ const statusBadge: Record<string, string> = {
   inactive: 'badge-quiet',
 };
 
-const emptyForm = { firstName: '', lastName: '', email: '', phone: '', company: '', city: '', country: 'Türkiye', status: 'prospect' as const, source: '', notes: '' };
+const emptyForm = {
+  firstName: '', lastName: '', email: '', phone: '', company: '',
+  city: '', country: 'Türkiye',
+  /* Widened to the union deliberately: `as const` pinned the field to the literal
+     'prospect', so loading an existing customer for editing failed to type-check. */
+  status: 'prospect' as Customer['status'],
+  source: '', notes: '',
+};
 
 /* Initials on a flat well. Five gradients keyed off the first letter meant a
    list of ten customers carried ten competing colours, none of which meant
@@ -36,6 +52,7 @@ export default function Customers() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Customer | null>(null);
 
   useEffect(() => { fetchCustomers(); }, []);
 
@@ -61,9 +78,20 @@ export default function Customers() {
     setEditingId(c._id); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Bu müşteriyi silmek istediğinize emin misiniz?')) return;
-    try { await api.delete(`/customers/${id}`); toast.success('Müşteri silindi'); fetchCustomers(); } catch { setError('Silme başarısız'); }
+  /* `confirm()` is gone. It cannot be styled, cannot name the record it is about
+     to destroy, and some browsers let the user suppress it — at which point the
+     delete fired with no confirmation at all. */
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    const { _id } = pendingDelete;
+    setPendingDelete(null);
+    try {
+      await api.delete(`/customers/${_id}`);
+      toast.success('Müşteri silindi');
+      fetchCustomers();
+    } catch {
+      setError('Silme başarısız');
+    }
   };
 
   const filtered = customers.filter(c => {
@@ -216,15 +244,42 @@ export default function Customers() {
                     <td><span className={`badge ${statusBadge[c.status]}`}>{statusLabel[c.status]}</span></td>
                     <td className="text-sm text-ink-2">{c.source || '—'}</td>
                     <td className="text-right">
-                      {/* These were hidden behind ``,
-                          which put both actions out of reach of a keyboard and of
-                          every touch device. They are quiet, not hidden. Delete is
-                          not red — it is confirmed before it runs, and an alarm
-                          colour on every row is noise. */}
-                      <div className="flex justify-end gap-1">
-                        <button onClick={() => handleEdit(c)} className="btn-ghost text-xs">Düzenle</button>
-                        <button onClick={() => handleDelete(c._id)} className="btn-ghost text-xs">Sil</button>
-                      </div>
+                      {/* One trigger instead of two buttons per row. Radix gives it
+                          keyboard navigation, Escape, click-outside and focus return
+                          — none of which the previous hover-only buttons had. */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`${c.firstName} ${c.lastName} için işlemler`}
+                          >
+                            <MoreHorizontal />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={() => handleEdit(c)}>
+                            <Pencil />
+                            Düzenle
+                          </DropdownMenuItem>
+                          {/* Deferred by a frame. Opening the dialog inside
+                              `onSelect` puts two focus-managing layers on screen
+                              in the same tick — the menu's focus-return to the
+                              trigger then races the dialog's focus trap, and
+                              Escape lands on whichever won. Letting the menu
+                              unmount first makes the handoff deterministic.
+                              A timer, not `requestAnimationFrame` — rAF does not
+                              fire in a backgrounded tab, so the dialog would
+                              never open there. */}
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => setTimeout(() => setPendingDelete(c), 0)}
+                          >
+                            <Trash2 />
+                            Sil
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 ))}
@@ -233,6 +288,18 @@ export default function Customers() {
           </div>
         )}
       </div>
+
+      <ConfirmDelete
+        target={pendingDelete}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={handleDelete}
+        name={(c) => `${c.firstName} ${c.lastName}`}
+        detail={(c) =>
+          c.company
+            ? `${c.company} kaydı ve bu müşteriye bağlı geçmiş kalıcı olarak kaldırılır.`
+            : 'Kayıt ve bu müşteriye bağlı geçmiş kalıcı olarak kaldırılır.'
+        }
+      />
     </AppShell>
   );
 }

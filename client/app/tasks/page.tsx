@@ -9,8 +9,8 @@ import EmptyState from '@/components/EmptyState';
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const statusLabel: Record<string, string> = { pending: 'Beklemede', 'in-progress': 'Devam', completed: 'Tamamlandı' };
-const statusBadge: Record<string, string> = { pending: 'bg-amber-50 text-amber-700', 'in-progress': 'bg-blue-50 text-blue-700', completed: 'bg-emerald-50 text-emerald-700' };
-const priorityDot: Record<string, string> = { high: 'bg-rose-500', medium: 'bg-amber-400', low: 'bg-emerald-500' };
+const statusBadge: Record<string, string> = { pending: 'badge-caution', 'in-progress': 'badge-accent', completed: 'badge-positive' };
+const priorityDot: Record<string, string> = { high: 'bg-[var(--destructive)]', medium: 'bg-[var(--caution)]', low: 'bg-[var(--quiet)]' };
 const priorityLabel: Record<string, string> = { high: 'Yüksek', medium: 'Orta', low: 'Düşük' };
 
 export default function Tasks() {
@@ -72,17 +72,17 @@ export default function Tasks() {
       <div className="px-8 py-8 max-w-4xl mx-auto animate-fade-in">
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Görevler</h1>
-            <p className="text-slate-500 text-sm mt-1">{tasks.length} görev listeleniyor</p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Görevler</h1>
+            <p className="text-muted-foreground text-sm mt-1">{tasks.length} görev listeleniyor</p>
           </div>
           <button onClick={() => setShowForm(!showForm)} className="btn-primary">+ Yeni Görev</button>
         </div>
 
-        {error && <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm px-4 py-3 rounded-xl mb-4">{error}</div>}
+        {error && <div role="alert" className="notice mb-5">{error}</div>}
 
         {showForm && (
           <div className="card p-6 mb-6 animate-slide-up">
-            <h2 className="text-sm font-semibold text-slate-900 mb-4 uppercase tracking-wide">Yeni Görev</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wide">Yeni Görev</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="label block mb-1.5">Başlık *</label>
@@ -112,10 +112,10 @@ export default function Tasks() {
           </div>
         )}
 
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit mb-5">
+        <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit mb-5">
           {filters.map(f => (
             <button key={f.key} onClick={() => setFilter(f.key as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${filter === f.key ? 'bg-white text-slate-900 shadow-card' : 'text-slate-500 hover:text-slate-700'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${filter === f.key ? 'bg-card text-foreground shadow-card' : 'text-muted-foreground hover:text-foreground'}`}>
               {f.label}
             </button>
           ))}
@@ -139,8 +139,8 @@ export default function Tasks() {
                         onClick={() => task.status !== 'completed' && updateStatus(task._id!, 'completed')}
                         className={`shrink-0 w-4.5 h-4.5 rounded-md border-2 flex items-center justify-center transition-colors ${
                           task.status === 'completed'
-                            ? 'bg-emerald-500 border-emerald-500'
-                            : 'border-slate-300 hover:border-emerald-400 hover:bg-emerald-50'
+                            ? 'bg-[var(--positive)] border-[var(--positive)]'
+                            : 'border-border hover:border-[var(--positive)]'
                         }`}
                         style={{ width: '18px', height: '18px', minWidth: '18px' }}
                         title={task.status === 'completed' ? 'Tamamlandı' : 'Tamamla'}
@@ -152,22 +152,22 @@ export default function Tasks() {
                         )}
                       </button>
                       <span className={`w-2 h-2 rounded-full shrink-0 ${priorityDot[task.priority]}`} />
-                      <span className={`text-sm font-semibold text-slate-800 ${task.status === 'completed' ? 'line-through text-slate-400' : ''}`}>{task.title}</span>
+                      <span className={`text-sm font-semibold text-foreground ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>{task.title}</span>
                     </div>
-                    {task.description && <p className="text-xs text-slate-500 ml-4 mb-2 line-clamp-1">{task.description}</p>}
+                    {task.description && <p className="text-xs text-muted-foreground ml-4 mb-2 line-clamp-1">{task.description}</p>}
                     <div className="flex items-center gap-2 ml-4">
                       <span className={`badge ${statusBadge[task.status]}`}>{statusLabel[task.status]}</span>
-                      <span className="text-xs text-slate-400">{priorityLabel[task.priority]} öncelik</span>
-                      {task.dueDate && <span className="text-xs text-slate-400">{new Date(task.dueDate).toLocaleDateString('tr-TR')}</span>}
+                      <span className="text-xs text-muted-foreground">{priorityLabel[task.priority]} öncelik</span>
+                      {task.dueDate && <span className="text-xs text-muted-foreground">{new Date(task.dueDate).toLocaleDateString('tr-TR')}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <select value={task.status} onChange={e => updateStatus(task._id!, e.target.value)} className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none text-slate-600 bg-white">
+                    <select value={task.status} onChange={e => updateStatus(task._id!, e.target.value)} className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none text-muted-foreground bg-card">
                       <option value="pending">Beklemede</option>
                       <option value="in-progress">Devam</option>
                       <option value="completed">Tamamlandı</option>
                     </select>
-                    <button onClick={() => deleteTask(task._id!)} className="p-1.5 text-slate-400 hover:text-ink-2 hover:bg-paper-3 rounded-lg transition">
+                    <button onClick={() => deleteTask(task._id!)} className="p-1.5 text-muted-foreground hover:text-ink-2 hover:bg-paper-3 rounded-lg transition">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>

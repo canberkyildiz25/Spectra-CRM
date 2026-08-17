@@ -15,36 +15,39 @@ export const toast = {
   warning: (msg: string) => _add?.(msg, 'warning'),
 };
 
-// ── Styles
+/* Toast colour is the one place status hues earn their keep: the toast is
+   transient and the colour is the only thing that distinguishes success from
+   failure at a glance. Tokens, not Tailwind literals, so they follow the
+   theme. */
 const cfg: Record<ToastType, { bar: string; icon: JSX.Element }> = {
   success: {
-    bar: 'bg-emerald-500',
+    bar: 'bg-[var(--positive)]',
     icon: (
-      <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 text-[var(--positive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
       </svg>
     ),
   },
   error: {
-    bar: 'bg-rose-500',
+    bar: 'bg-[var(--destructive)]',
     icon: (
-      <svg className="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 text-[var(--destructive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
       </svg>
     ),
   },
   info: {
-    bar: 'bg-blue-500',
+    bar: 'bg-[var(--quiet)]',
     icon: (
-      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 text-[var(--quiet)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
   warning: {
-    bar: 'bg-amber-500',
+    bar: 'bg-[var(--caution)]',
     icon: (
-      <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 text-[var(--caution)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
       </svg>
     ),
@@ -62,7 +65,7 @@ function ToastCard({ item, onClose }: { item: ToastItem; onClose: () => void }) 
 
   return (
     <div
-      className="relative flex items-start gap-3 bg-white border border-slate-100 rounded-2xl shadow-card-hover px-4 py-3.5 w-80 overflow-hidden pointer-events-auto animate-slide-up"
+      className="relative flex items-start gap-3 bg-card border border-border rounded-2xl shadow-card-hover px-4 py-3.5 w-80 overflow-hidden pointer-events-auto animate-slide-up"
       style={{ boxShadow: '0 8px 30px rgb(0 0 0 / .12)' }}
     >
       {/* Progress bar */}
@@ -71,13 +74,13 @@ function ToastCard({ item, onClose }: { item: ToastItem; onClose: () => void }) 
         style={{ animation: 'toastProgress 3.8s linear forwards' }}
       />
       {/* Icon */}
-      <div className="shrink-0 mt-0.5 w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center">
+      <div className="shrink-0 mt-0.5 w-6 h-6 rounded-lg bg-muted flex items-center justify-center">
         {icon}
       </div>
       {/* Message */}
-      <p className="flex-1 text-sm font-medium text-slate-800 leading-snug pt-0.5">{item.message}</p>
+      <p className="flex-1 text-sm font-medium text-foreground leading-snug pt-0.5">{item.message}</p>
       {/* Close */}
-      <button onClick={onClose} className="shrink-0 text-slate-300 hover:text-slate-500 transition mt-0.5">
+      <button onClick={onClose} className="shrink-0 text-muted-foreground hover:text-muted-foreground transition mt-0.5">
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
         </svg>
