@@ -1,144 +1,197 @@
-/* Hallmark · macrostructure: Workbench · tone: technical · anchor hue: cool 250°
- * theme: Cobalt-adjacent, dark-first · genre: modern-minimal · nav: N3 side-rail
- * Locked system in design.md. Never inline a raw colour or font value.
+/* Spectra CRM — design tokens
  *
- * Two themes, not one with a filter over it. Dark is the primary register; the
- * light theme re-steps every token against its own ground rather than
- * inverting, because an inverted dark palette always reads muddy.
+ * shadcn/ui variable names, stone ramp, monochrome. The primary is near-black
+ * rather than a brand hue: the surface carries no colour, so colour means
+ * something the moment it appears. That is the whole idea, and it is the
+ * opposite of the previous palette, which spent an accent on every panel.
  *
- * The ground is cool and near-neutral. The accent is warm and used sparingly —
- * that temperature split is what stops a dark tool looking like every other
- * dark tool, and it is the one thing carried over from the previous palette.
- * What went was the warm *ground*: beige is soft, and this is a sales desk.
+ * Font is Geist, not Inter. Visually near-identical at UI sizes, but Inter is
+ * the single most recognisable default in generated interfaces and this is a
+ * portfolio piece. See design.md.
+ *
+ * Colour is reserved for: charts, status badges, focus, destructive confirm.
+ * Nothing else gets to be coloured.
  */
 
 :root {
-  /* ── Light ───────────────────────────────────────────── */
-  --color-bg: oklch(98.5% 0.003 250);
-  --color-surface: oklch(100% 0 0);
-  --color-surface-2: oklch(96.5% 0.004 250);
-  --color-surface-3: oklch(93.5% 0.006 250);
+  /* ── shadcn surface + ink ─────────────────────────────── */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.147 0.004 49.25);
 
-  --color-ink: oklch(21% 0.012 255);
-  --color-ink-2: oklch(45% 0.010 255);
-  /* Graded against surface-3, the darkest ground it lands on, not against the
-     page. At 56% it measured 3.83:1 there; 48% measures 5.40:1. */
-  --color-ink-3: oklch(48% 0.009 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.147 0.004 49.25);
 
-  --color-rule: oklch(91% 0.005 250);
-  --color-rule-strong: oklch(85% 0.007 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.147 0.004 49.25);
 
-  --color-accent: oklch(62% 0.16 45);
-  --color-accent-hover: oklch(57% 0.165 45);
-  --color-accent-ink: oklch(48% 0.155 45);
-  --color-accent-wash: oklch(96% 0.028 48);
-  --color-focus: oklch(58% 0.16 45);
+  /* Monochrome primary — the button is ink, not a brand colour. */
+  --primary: oklch(0.216 0.006 56.043);
+  --primary-foreground: oklch(0.985 0.001 106.423);
 
-  --color-positive: oklch(52% 0.10 155);
-  --color-positive-wash: oklch(95.5% 0.025 155);
-  --color-caution: oklch(58% 0.11 75);
-  --color-caution-wash: oklch(96% 0.03 78);
-  --color-quiet: oklch(50% 0.012 255);
-  --color-quiet-wash: oklch(94.5% 0.005 250);
+  --secondary: oklch(0.97 0.001 106.424);
+  --secondary-foreground: oklch(0.216 0.006 56.043);
 
-  /* Badge labels are 12px text on their own wash, so they need their own step
-     per theme. Writing one as a literal in globals.css was the bug: it stayed
-     dark when the wash went dark and measured 2.06:1. */
-  --ink-on-positive: oklch(42% 0.10 155);
-  --ink-on-caution: oklch(42% 0.09 75);
-  --ink-on-quiet: oklch(42% 0.012 255);
-  --ink-on-accent: oklch(45% 0.155 45);
+  --muted: oklch(0.97 0.001 106.424);
+  --muted-foreground: oklch(0.48 0.013 58.071);
 
-  /* Rail is the ink end of the same cool ramp, not a separate colour. */
-  --color-rail: oklch(24% 0.014 255);
-  --color-rail-2: oklch(29% 0.014 255);
-  --color-rail-ink: oklch(72% 0.010 255);
-  --color-rail-ink-strong: oklch(97% 0.004 250);
-  --color-rail-rule: oklch(34% 0.012 255);
+  --accent: oklch(0.97 0.001 106.424);
+  --accent-foreground: oklch(0.216 0.006 56.043);
 
-  /* Elevation. Cards do not use these — only things that float above the page
-     (menus, dialogs, the toast stack). A shadow under every panel is how the
-     old build separated things, and it flattens into mush at density. */
-  --shadow-pop:
-    0 1px 2px oklch(21% 0.012 255 / 0.06),
-    0 8px 24px -8px oklch(21% 0.012 255 / 0.18);
+  --destructive: oklch(0.51 0.19 27.5);
+  --destructive-foreground: oklch(0.985 0.001 106.423);
 
-  --chart-grid: oklch(92% 0.005 250);
+  --border: oklch(0.923 0.003 48.717);
+  --input: oklch(0.923 0.003 48.717);
+  --ring: oklch(0.42 0.012 56);
+
+  --radius: 0.625rem;
+
+  /* ── Status. Reserved meanings, never reused as "series 4". ── */
+  --positive: oklch(0.50 0.11 155);
+  --positive-wash: oklch(0.955 0.025 155);
+  --caution: oklch(0.52 0.10 75);
+  --caution-wash: oklch(0.96 0.03 78);
+  --quiet: oklch(0.48 0.008 56);
+  --quiet-wash: oklch(0.955 0.002 106);
+
+  /* ── Charts. One hue for ordinal, a validated pair for
+       categorical. Slate against amber so the two survive
+       protanopia — see design.md § Charts.                  */
+  --chart-1: oklch(0.45 0.02 250);
+  --chart-2: oklch(0.55 0.025 250);
+  --chart-3: oklch(0.65 0.03 250);
+  --chart-4: oklch(0.74 0.035 250);
+  --chart-5: oklch(0.82 0.03 250);
+
+  --chart-won: oklch(0.55 0.14 250);
+  --chart-lost: oklch(0.68 0.13 65);
+  --chart-grid: oklch(0.92 0.003 48);
 }
 
 .dark {
-  /* ── Dark — the primary register ─────────────────────── */
-  --color-bg: oklch(17.5% 0.010 255);
-  --color-surface: oklch(21% 0.011 255);
-  --color-surface-2: oklch(24.5% 0.012 255);
-  --color-surface-3: oklch(28.5% 0.013 255);
+  --background: oklch(0.147 0.004 49.25);
+  --foreground: oklch(0.985 0.001 106.423);
 
-  --color-ink: oklch(96% 0.004 250);
-  --color-ink-2: oklch(76% 0.008 253);
-  --color-ink-3: oklch(63% 0.009 253);
+  --card: oklch(0.216 0.006 56.043);
+  --card-foreground: oklch(0.985 0.001 106.423);
 
-  --color-rule: oklch(29% 0.012 255);
-  --color-rule-strong: oklch(36% 0.013 255);
+  --popover: oklch(0.216 0.006 56.043);
+  --popover-foreground: oklch(0.985 0.001 106.423);
 
-  /* Per the colour rules: on dark, lift lightness and drop chroma slightly.
-     The hue never moves between modes. */
-  --color-accent: oklch(72% 0.145 48);
-  --color-accent-hover: oklch(77% 0.14 48);
-  --color-accent-ink: oklch(78% 0.135 48);
-  --color-accent-wash: oklch(30% 0.045 45);
-  --color-focus: oklch(74% 0.145 48);
+  /* On dark the primary inverts to near-white — the fill is still ink, the
+     ink is just the other end of the ramp. */
+  --primary: oklch(0.923 0.003 48.717);
+  --primary-foreground: oklch(0.216 0.006 56.043);
 
-  --color-positive: oklch(70% 0.11 155);
-  --color-positive-wash: oklch(28% 0.035 155);
-  --color-caution: oklch(76% 0.10 78);
-  --color-caution-wash: oklch(30% 0.032 78);
-  --color-quiet: oklch(65% 0.010 255);
-  --color-quiet-wash: oklch(26% 0.008 255);
+  --secondary: oklch(0.268 0.007 34.298);
+  --secondary-foreground: oklch(0.985 0.001 106.423);
 
-  /* On dark the wash is dark, so the label goes light — the same reason the
-     accent lifts. Never inherited from the light theme. */
-  --ink-on-positive: oklch(85% 0.10 155);
-  --ink-on-caution: oklch(88% 0.09 78);
-  --ink-on-quiet: oklch(80% 0.010 255);
-  --ink-on-accent: oklch(86% 0.11 48);
+  --muted: oklch(0.268 0.007 34.298);
+  --muted-foreground: oklch(0.72 0.01 56.259);
 
-  --color-rail: oklch(14.5% 0.010 255);
-  --color-rail-2: oklch(20% 0.011 255);
-  --color-rail-ink: oklch(68% 0.009 253);
-  --color-rail-ink-strong: oklch(97% 0.004 250);
-  --color-rail-rule: oklch(25% 0.011 255);
+  --accent: oklch(0.268 0.007 34.298);
+  --accent-foreground: oklch(0.985 0.001 106.423);
 
-  --shadow-pop:
-    0 1px 2px oklch(0% 0 0 / 0.4),
-    0 8px 24px -8px oklch(0% 0 0 / 0.6);
+  --destructive: oklch(0.65 0.16 25);
+  --destructive-foreground: oklch(0.985 0.001 106.423);
 
-  --chart-grid: oklch(30% 0.012 255);
+  --border: oklch(0.30 0.008 56);
+  --input: oklch(0.32 0.008 56);
+  --ring: oklch(0.72 0.01 56.259);
+
+  --positive: oklch(0.78 0.13 155);
+  --positive-wash: oklch(0.28 0.035 155);
+  --caution: oklch(0.83 0.11 78);
+  --caution-wash: oklch(0.30 0.032 78);
+  --quiet: oklch(0.75 0.008 56);
+  --quiet-wash: oklch(0.26 0.005 56);
+
+  --chart-1: oklch(0.88 0.02 250);
+  --chart-2: oklch(0.78 0.025 250);
+  --chart-3: oklch(0.68 0.03 250);
+  --chart-4: oklch(0.58 0.03 250);
+  --chart-5: oklch(0.48 0.025 250);
+
+  --chart-won: oklch(0.72 0.13 250);
+  --chart-lost: oklch(0.78 0.12 65);
+  --chart-grid: oklch(0.30 0.008 56);
 }
 
+/* ── Type ──────────────────────────────────────────────────
+   Two faces plus mono. Geist throughout — display and body are
+   the same family at different weights, which counts as one.  */
 :root {
-  /* ── Type ──────────────────────────────────────────────
-     Space Grotesk for headings — a grotesque with enough of a
-     drawn quality to carry a wordmark, and no serif anywhere
-     near a data table. Geist for body and controls; Geist Mono
-     for every figure. Three faces, the ceiling.               */
-  --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, 'SFMono-Regular', monospace;
 
-  /* Tighter than before. The old scale left the app looking sparse; these
-     steps put more on screen without crowding it. */
-  --text-display: clamp(1.75rem, 1.3rem + 1.6vw, 2.25rem);
-  --text-xl: 1.25rem;
-  --text-lg: 1rem;
-  --text-md: 0.875rem;
-  --text-sm: 0.8125rem;
-  --text-xs: 0.75rem;
+  --text-display: clamp(1.5rem, 1.2rem + 1.2vw, 1.875rem);
   --text-label: 0.6875rem;
+  --tracking-label: 0.06em;
 
-  --tracking-display: -0.02em;
-  --tracking-label: 0.09em;
+  --row-y: 0.625rem;
 
-  /* ── Space — 4pt, one step tighter at the top ─────────── */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 140ms;
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+}
+
+/* ── Aliases ───────────────────────────────────────────────
+   The pages were written against the previous palette's names.
+   Pointing them at the shadcn variables lets both systems run
+   side by side while the components migrate, and they inherit
+   the theme switch for free.                                  */
+:root,
+.dark {
+  --color-bg: var(--background);
+  --color-paper: var(--background);
+  --color-surface: var(--card);
+  --color-paper-2: var(--card);
+  --color-surface-2: var(--muted);
+  --color-paper-3: var(--muted);
+  --color-surface-3: var(--muted);
+
+  --color-ink: var(--foreground);
+  --color-ink-2: var(--muted-foreground);
+  --color-ink-3: var(--muted-foreground);
+
+  --color-rule: var(--border);
+  --color-rule-strong: var(--input);
+
+  --color-accent: var(--primary);
+  --color-accent-fill: var(--primary);
+  --color-accent-fill-hover: var(--primary);
+  --color-accent-fill-active: var(--primary);
+  --color-accent-hover: var(--primary);
+  --color-accent-ink: var(--foreground);
+  --color-accent-wash: var(--muted);
+  --color-focus: var(--ring);
+
+  --color-positive: var(--positive);
+  --color-positive-wash: var(--positive-wash);
+  --color-positive-ink: var(--positive);
+  --ink-on-positive: var(--positive);
+  --color-caution: var(--caution);
+  --color-caution-wash: var(--caution-wash);
+  --ink-on-caution: var(--caution);
+  --color-quiet: var(--quiet);
+  --color-quiet-wash: var(--quiet-wash);
+  --ink-on-quiet: var(--quiet);
+  --ink-on-accent: var(--foreground);
+
+  --color-rail: var(--card);
+  --color-rail-2: var(--muted);
+  --color-rail-ink: var(--muted-foreground);
+  --color-rail-ink-strong: var(--foreground);
+  --color-rail-rule: var(--border);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-pill: 999px;
+
   --space-2xs: 0.25rem;
   --space-xs: 0.5rem;
   --space-sm: 0.625rem;
@@ -147,64 +200,20 @@
   --space-xl: 1.75rem;
   --space-2xl: 2.5rem;
 
-  /* Row rhythm for tables and lists — denser than the old 0.75rem. */
-  --row-y: 0.5rem;
+  --text-xl: 1.25rem;
+  --text-lg: 1rem;
+  --text-md: 0.875rem;
+  --text-sm: 0.8125rem;
+  --text-xs: 0.75rem;
+  --tracking-display: -0.015em;
 
-  /* ── Radii — tight. Uniform 14px everywhere read soft; an
-       instrument has edges.                                   */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-pill: 999px;
+  --chart-stage-1: var(--chart-5);
+  --chart-stage-2: var(--chart-4);
+  --chart-stage-3: var(--chart-3);
+  --chart-stage-4: var(--chart-2);
+  --chart-stage-5: var(--chart-1);
 
-  /* ── Motion ────────────────────────────────────────────
-       Curves from the animate skill, not hand-rolled.        */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --dur-press: 140ms;
-  --dur-fast: 120ms;
-  --dur-base: 180ms;
-}
-
-/* ── Aliases ─────────────────────────────────────────────
-   The components were written against paper/ink names from the
-   warm palette. Rather than rename across a dozen files in one
-   pass, the old names point at the new ones — they inherit the
-   theme switch for free. New code uses the names above.       */
-:root,
-.dark {
-  --color-paper: var(--color-bg);
-  --color-paper-2: var(--color-surface);
-  --color-paper-3: var(--color-surface-2);
-  --color-accent-fill: var(--color-accent);
-  --color-accent-fill-hover: var(--color-accent-hover);
-  --color-accent-fill-active: var(--color-accent-ink);
-  --color-positive-ink: var(--color-positive);
-}
-
-/* ── Charts ──────────────────────────────────────────────
-   Re-stepped for the new accent and re-validated per mode; the
-   ordinal ramp is one hue with monotone lightness, the
-   categorical pair is the warm accent against a cool blue so the
-   two stay separable under protanopia.                        */
-:root {
-  --chart-stage-1: oklch(78% 0.09 48);
-  --chart-stage-2: oklch(70% 0.125 47);
-  --chart-stage-3: oklch(62% 0.155 46);
-  --chart-stage-4: oklch(54% 0.145 45);
-  --chart-stage-5: oklch(46% 0.12 44);
-
-  --chart-won: oklch(62% 0.16 45);
-  --chart-lost: oklch(53% 0.13 250);
-}
-
-.dark {
-  --chart-stage-1: oklch(85% 0.075 50);
-  --chart-stage-2: oklch(78% 0.11 49);
-  --chart-stage-3: oklch(71% 0.14 48);
-  --chart-stage-4: oklch(63% 0.135 47);
-  --chart-stage-5: oklch(55% 0.115 46);
-
-  --chart-won: oklch(74% 0.145 48);
-  --chart-lost: oklch(68% 0.12 250);
+  --shadow-pop:
+    0 1px 2px oklch(0.147 0.004 49.25 / 0.08),
+    0 8px 24px -8px oklch(0.147 0.004 49.25 / 0.16);
 }

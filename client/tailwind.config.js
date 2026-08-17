@@ -11,6 +11,7 @@
 const path = require('path');
 
 module.exports = {
+  darkMode: 'class',
   /* Resolved against this file, not the working directory. Relative globs
    * silently match nothing when the dev server is started from the monorepo
    * root, and an empty `content` set means Tailwind emits no utilities at all
@@ -26,33 +27,53 @@ module.exports = {
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       colors: {
-        /* Coral — the single accent. Budget: ≤ 3% of any viewport. */
+        /* shadcn/ui contract. Components from the registry address colour
+           through these names; everything below is the previous palette kept
+           alive so unmigrated pages keep rendering. */
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        card: { DEFAULT: 'var(--card)', foreground: 'var(--card-foreground)' },
+        popover: { DEFAULT: 'var(--popover)', foreground: 'var(--popover-foreground)' },
+        primary: { DEFAULT: 'var(--primary)', foreground: 'var(--primary-foreground)' },
+        secondary: { DEFAULT: 'var(--secondary)', foreground: 'var(--secondary-foreground)' },
+        muted: { DEFAULT: 'var(--muted)', foreground: 'var(--muted-foreground)' },
+        accent: { DEFAULT: 'var(--accent)', foreground: 'var(--accent-foreground)' },
+        destructive: { DEFAULT: 'var(--destructive)', foreground: 'var(--destructive-foreground)' },
+        border: 'var(--border)',
+        input: 'var(--input)',
+        ring: 'var(--ring)',
+
+        /* `brand` used to be a coral ramp. There is no brand hue any more —
+           the primary is ink. Every step folds into the monochrome system so
+           an unmigrated `bg-brand-600` renders as the primary rather than
+           reintroducing a colour the design no longer has. */
         brand: {
-          50: 'oklch(97.5% 0.012 34)',
-          100: 'var(--color-accent-wash)',
-          200: 'oklch(90% 0.055 33)',
-          300: 'oklch(82% 0.095 33)',
-          400: 'oklch(74% 0.13 32)',
-          500: 'var(--color-accent)',
-          600: 'var(--color-accent-hover)',
-          700: 'var(--color-accent-ink)',
-          800: 'oklch(43% 0.135 32)',
-          900: 'oklch(35% 0.11 32)',
+          50: 'var(--muted)',
+          100: 'var(--muted)',
+          200: 'var(--border)',
+          300: 'var(--input)',
+          400: 'var(--muted-foreground)',
+          500: 'var(--primary)',
+          600: 'var(--primary)',
+          700: 'var(--foreground)',
+          800: 'var(--foreground)',
+          900: 'var(--foreground)',
         },
 
-        /* Warm neutral ramp replacing Tailwind's cool slate. */
+        /* Stone neutrals, theme-aware. Tailwind's stock slate is a fixed cool
+           grey and would not follow the dark switch. */
         slate: {
-          50: 'var(--color-paper)',
-          100: 'var(--color-paper-2)',
-          200: 'var(--color-rule)',
-          300: 'var(--color-rule-strong)',
-          400: 'var(--color-ink-3)',
-          500: 'oklch(56% 0.011 49)',
-          600: 'var(--color-ink-2)',
-          700: 'oklch(38% 0.013 46)',
-          800: 'oklch(30% 0.014 45)',
-          900: 'var(--color-ink)',
-          950: 'oklch(17% 0.012 45)',
+          50: 'var(--background)',
+          100: 'var(--muted)',
+          200: 'var(--border)',
+          300: 'var(--input)',
+          400: 'var(--muted-foreground)',
+          500: 'var(--muted-foreground)',
+          600: 'var(--muted-foreground)',
+          700: 'var(--foreground)',
+          800: 'var(--foreground)',
+          900: 'var(--foreground)',
+          950: 'var(--foreground)',
         },
 
         /* Data states — see design.md § Data states. Lost is grey, not red. */
@@ -127,5 +148,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [require('tailwindcss-animate')],
 };
