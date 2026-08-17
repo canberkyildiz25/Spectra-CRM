@@ -24,8 +24,15 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.147 0.004 49.25);
 
-  /* Monochrome primary — the button is ink, not a brand colour. */
-  --primary: oklch(0.216 0.006 56.043);
+  /* The one brand hue. A deep ink-teal: it reads as instrument panel rather
+     than consumer app, and it is the single place a saturated colour appears
+     outside status and charts. Everything else stays stone, so the accent
+     still means something when it shows up. */
+  --brand: oklch(0.48 0.095 205);
+  --brand-hover: oklch(0.43 0.10 205);
+  --brand-wash: oklch(0.965 0.018 205);
+
+  --primary: oklch(0.48 0.095 205);
   --primary-foreground: oklch(0.985 0.001 106.423);
 
   --secondary: oklch(0.97 0.001 106.424);
@@ -34,15 +41,15 @@
   --muted: oklch(0.97 0.001 106.424);
   --muted-foreground: oklch(0.48 0.013 58.071);
 
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
+  --accent: oklch(0.965 0.018 205);
+  --accent-foreground: oklch(0.35 0.09 205);
 
   --destructive: oklch(0.51 0.19 27.5);
   --destructive-foreground: oklch(0.985 0.001 106.423);
 
   --border: oklch(0.923 0.003 48.717);
   --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.42 0.012 56);
+  --ring: oklch(0.48 0.095 205);
 
   --radius: 0.625rem;
 
@@ -62,14 +69,17 @@
   --well: oklch(0.975 0.001 106);
   --well-active: oklch(0.945 0.002 106);
 
-  /* ── Charts. One hue for ordinal, a validated pair for
-       categorical. Slate against amber so the two survive
-       protanopia — see design.md § Charts.                  */
-  --chart-1: oklch(0.45 0.02 250);
-  --chart-2: oklch(0.55 0.025 250);
-  --chart-3: oklch(0.65 0.03 250);
-  --chart-4: oklch(0.74 0.035 250);
-  --chart-5: oklch(0.82 0.03 250);
+  /* ── Charts. The ordinal ramp now carries the brand hue and real chroma
+       instead of near-grey slate: a pipeline is an ordered sequence, so it
+       moves in one direction of lightness, and the saturation makes the steps
+       legible at the 8px sizes a kanban dot lives at. Hue drifts 205→255
+       across the ramp so adjacent steps separate under deuteranopia, where
+       lightness alone is doing all the work. */
+  --chart-1: oklch(0.40 0.10 205);
+  --chart-2: oklch(0.465 0.11 218);
+  --chart-3: oklch(0.525 0.115 232);
+  --chart-4: oklch(0.585 0.115 246);
+  --chart-5: oklch(0.640 0.105 258);
 
   --chart-won: oklch(0.55 0.14 250);
   --chart-lost: oklch(0.68 0.13 65);
@@ -88,7 +98,11 @@
 
   /* On dark the primary inverts to near-white — the fill is still ink, the
      ink is just the other end of the ramp. */
-  --primary: oklch(0.923 0.003 48.717);
+  --brand: oklch(0.74 0.105 200);
+  --brand-hover: oklch(0.80 0.10 200);
+  --brand-wash: oklch(0.27 0.045 205);
+
+  --primary: oklch(0.74 0.105 200);
   --primary-foreground: oklch(0.216 0.006 56.043);
 
   --secondary: oklch(0.268 0.007 34.298);
@@ -97,15 +111,15 @@
   --muted: oklch(0.268 0.007 34.298);
   --muted-foreground: oklch(0.72 0.01 56.259);
 
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
+  --accent: oklch(0.27 0.045 205);
+  --accent-foreground: oklch(0.86 0.07 200);
 
   --destructive: oklch(0.65 0.16 25);
   --destructive-foreground: oklch(0.985 0.001 106.423);
 
   --border: oklch(0.30 0.008 56);
   --input: oklch(0.32 0.008 56);
-  --ring: oklch(0.72 0.01 56.259);
+  --ring: oklch(0.74 0.105 200);
 
   --positive: oklch(0.78 0.13 155);
   --positive-wash: oklch(0.28 0.035 155);
@@ -119,11 +133,11 @@
   --well: oklch(0.185 0.004 49);
   --well-active: oklch(0.235 0.006 56);
 
-  --chart-1: oklch(0.88 0.02 250);
-  --chart-2: oklch(0.78 0.025 250);
-  --chart-3: oklch(0.68 0.03 250);
-  --chart-4: oklch(0.58 0.03 250);
-  --chart-5: oklch(0.48 0.025 250);
+  --chart-1: oklch(0.84 0.10 200);
+  --chart-2: oklch(0.76 0.11 215);
+  --chart-3: oklch(0.68 0.12 232);
+  --chart-4: oklch(0.60 0.12 248);
+  --chart-5: oklch(0.52 0.10 258);
 
   --chart-won: oklch(0.72 0.13 250);
   --chart-lost: oklch(0.78 0.12 65);

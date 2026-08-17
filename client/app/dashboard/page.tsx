@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { TrendingUp, CircleCheck, FileText, Users, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { useAuthStore } from '@/lib/store';
@@ -107,15 +108,23 @@ function StatTile({
   value,
   sub,
   lead,
+  icon: Icon,
 }: {
   label: string;
   value: string;
   sub: string;
   lead?: boolean;
+  icon: LucideIcon;
 }) {
   return (
     <div className="card p-5">
-      <p className="label mb-2">{label}</p>
+      {/* The icon sits beside the label, not above the figure: it identifies
+          which tile you are looking at while scanning, and never competes with
+          the number, which is the thing being read. */}
+      <div className="mb-2 flex items-center gap-1.5">
+        <Icon aria-hidden className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" strokeWidth={2} />
+        <p className="label">{label}</p>
+      </div>
       <p
         className="figure mb-1 leading-none"
         style={{
@@ -213,21 +222,25 @@ export default function Dashboard() {
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatTile
             lead
+            icon={TrendingUp}
             label="Açık hat"
             value={fmtShort(openValue || stats.opportunities.pipelineValue)}
             sub={`${list.length ? stageData.reduce((n, s) => n + s.count, 0) : stats.opportunities.total} açık fırsat`}
           />
           <StatTile
+            icon={CircleCheck}
             label="Kazanılan"
             value={fmtShort(stats.opportunities.wonValue)}
             sub={`${stats.opportunities.won} anlaşma`}
           />
           <StatTile
+            icon={FileText}
             label="Teklif kabulü"
             value={`%${acceptRate}`}
             sub={`${stats.proposals.accepted} / ${stats.proposals.total} teklif`}
           />
           <StatTile
+            icon={Users}
             label="Müşteriler"
             value={String(stats.customers.total)}
             sub={`${stats.customers.active} aktif`}
