@@ -4,6 +4,7 @@ import { Customer } from './models/Customer';
 import { Task } from './models/Task';
 import { User } from './models/User';
 import { Opportunity } from './models/Opportunity';
+import { Proposal } from './models/Proposal';
 
 dotenv.config();
 
@@ -73,9 +74,123 @@ async function seed() {
       { title: 'Global Lojistik - Platform Abonelik', customerId: createdCustomers[3]._id, amount: 48000, stage: 'lead', probability: 10, expectedCloseDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000) },
       { title: 'Öztürk Gıda - Sistem Güncelleme', customerId: createdCustomers[5]._id, amount: 62000, stage: 'closed-won', probability: 100, description: 'Sistem güncelleme projesi tamamlandı' },
       { title: 'Güneş Medya - İçerik Yönetimi', customerId: createdCustomers[7]._id, amount: 28000, stage: 'closed-lost', probability: 0, description: 'Rakip firmayı tercih etti' },
+      /* Six opportunities left the dashboard reading "%0 teklif kabulü" and a
+         kanban with one card per column — an empty-looking app is the wrong
+         first impression for a portfolio visitor. The extra rows also give the
+         win-rate and pipeline figures something real to compute against. */
+      { title: 'Demir Tech - Bulut Göçü', customerId: createdCustomers[6]._id, amount: 145000, stage: 'negotiation', probability: 75, expectedCloseDate: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000), description: 'Şirket içi sistemlerin buluta taşınması' },
+      { title: 'ABC Teknoloji - Destek Paketi', customerId: createdCustomers[0]._id, amount: 42000, stage: 'proposal', probability: 50, expectedCloseDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), description: '7/24 öncelikli destek' },
+      { title: 'Şahin Enerji - Saha Otomasyonu', customerId: createdCustomers[4]._id, amount: 190000, stage: 'qualified', probability: 25, expectedCloseDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) },
+      { title: 'Global Lojistik - Filo Takip', customerId: createdCustomers[3]._id, amount: 76000, stage: 'proposal', probability: 50, expectedCloseDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000), description: 'Araç takip ve rota optimizasyonu' },
+      { title: 'Yıldız Tekstil - Üretim Paneli', customerId: createdCustomers[2]._id, amount: 58000, stage: 'lead', probability: 10, expectedCloseDate: new Date(Date.now() + 50 * 24 * 60 * 60 * 1000) },
+      { title: 'Demir İnşaat - Saha Uygulaması', customerId: createdCustomers[1]._id, amount: 96000, stage: 'closed-won', probability: 100, description: 'Şantiye mobil uygulaması teslim edildi' },
+      { title: 'Öztürk Gıda - Depo Entegrasyonu', customerId: createdCustomers[5]._id, amount: 54000, stage: 'closed-won', probability: 100, description: 'WMS entegrasyonu tamamlandı' },
+      { title: 'Güneş Medya - Reklam Paneli', customerId: createdCustomers[7]._id, amount: 33000, stage: 'closed-won', probability: 100, description: 'Kampanya yönetim paneli' },
+      { title: 'Demir Tech - Lisans Yenileme', customerId: createdCustomers[6]._id, amount: 24000, stage: 'closed-lost', probability: 0, description: 'Bütçe onayı alınamadı' },
     ];
-    await Opportunity.insertMany(opportunities);
+    const createdOpportunities = await Opportunity.insertMany(opportunities);
     console.log(`✅ ${opportunities.length} fırsat eklendi`);
+
+    // Teklifleri ekle
+    await Proposal.deleteMany({});
+    const day = 24 * 60 * 60 * 1000;
+    const byTitle = (t: string) => createdOpportunities.find((o) => o.title === t)?._id;
+    const proposals = [
+      {
+        proposalNumber: 'TKL-2026-001',
+        customerId: createdCustomers[0]._id,
+        opportunityId: byTitle('ABC Teknoloji - Yazılım Lisansı'),
+        title: 'Yazılım Lisans ve Destek Hizmetleri Teklifi',
+        validUntil: new Date(Date.now() + 20 * day),
+        status: 'sent',
+        taxRate: 20,
+        paymentTerms: '30 gün vadeli',
+        notes: 'Fiyatlar 12 aylık kullanım içindir.',
+        items: [
+          { name: 'Kurumsal lisans', description: '50 kullanıcı', quantity: 50, unit: 'Kullanıcı', unitPrice: 1400 },
+          { name: 'Öncelikli destek', quantity: 12, unit: 'Ay', unitPrice: 1250 },
+        ],
+      },
+      {
+        proposalNumber: 'TKL-2026-002',
+        customerId: createdCustomers[1]._id,
+        opportunityId: byTitle('Demir İnşaat - ERP Kurulum'),
+        title: 'ERP Kurulum ve Entegrasyon Teklifi',
+        validUntil: new Date(Date.now() + 35 * day),
+        status: 'sent',
+        taxRate: 20,
+        paymentTerms: '3 taksit',
+        items: [
+          { name: 'Kurulum ve yapılandırma', quantity: 1, unit: 'Proje', unitPrice: 165000 },
+          { name: 'Veri göçü', quantity: 1, unit: 'Proje', unitPrice: 48000 },
+          { name: 'Kullanıcı eğitimi', quantity: 6, unit: 'Gün', unitPrice: 6500 },
+        ],
+      },
+      {
+        proposalNumber: 'TKL-2026-003',
+        customerId: createdCustomers[1]._id,
+        opportunityId: byTitle('Demir İnşaat - Saha Uygulaması'),
+        title: 'Şantiye Mobil Uygulaması Teklifi',
+        validUntil: new Date(Date.now() - 5 * day),
+        status: 'accepted',
+        taxRate: 20,
+        paymentTerms: '50% peşin, 50% teslimde',
+        items: [
+          { name: 'iOS ve Android uygulama', quantity: 1, unit: 'Proje', unitPrice: 78000 },
+          { name: 'Bakım paketi', quantity: 6, unit: 'Ay', unitPrice: 3000 },
+        ],
+      },
+      {
+        proposalNumber: 'TKL-2026-004',
+        customerId: createdCustomers[5]._id,
+        opportunityId: byTitle('Öztürk Gıda - Depo Entegrasyonu'),
+        title: 'Depo Yönetim Sistemi Entegrasyon Teklifi',
+        validUntil: new Date(Date.now() - 12 * day),
+        status: 'accepted',
+        taxRate: 20,
+        paymentTerms: '30 gün vadeli',
+        items: [
+          { name: 'WMS entegrasyonu', quantity: 1, unit: 'Proje', unitPrice: 44000 },
+          { name: 'Barkod terminali kurulumu', quantity: 10, unit: 'Adet', unitPrice: 1000 },
+        ],
+      },
+      {
+        proposalNumber: 'TKL-2026-005',
+        customerId: createdCustomers[7]._id,
+        opportunityId: byTitle('Güneş Medya - Reklam Paneli'),
+        title: 'Kampanya Yönetim Paneli Teklifi',
+        validUntil: new Date(Date.now() - 30 * day),
+        status: 'accepted',
+        taxRate: 20,
+        items: [{ name: 'Panel geliştirme', quantity: 1, unit: 'Proje', unitPrice: 33000 }],
+      },
+      {
+        proposalNumber: 'TKL-2026-006',
+        customerId: createdCustomers[6]._id,
+        opportunityId: byTitle('Demir Tech - Lisans Yenileme'),
+        title: 'Yıllık Lisans Yenileme Teklifi',
+        validUntil: new Date(Date.now() - 8 * day),
+        status: 'rejected',
+        taxRate: 20,
+        notes: 'Bütçe onayı alınamadı, gelecek dönem tekrar değerlendirilecek.',
+        items: [{ name: 'Lisans yenileme', quantity: 20, unit: 'Kullanıcı', unitPrice: 1200 }],
+      },
+      {
+        proposalNumber: 'TKL-2026-007',
+        customerId: createdCustomers[3]._id,
+        opportunityId: byTitle('Global Lojistik - Filo Takip'),
+        title: 'Filo Takip ve Rota Optimizasyonu Teklifi',
+        validUntil: new Date(Date.now() + 28 * day),
+        status: 'draft',
+        taxRate: 20,
+        items: [
+          { name: 'Araç takip modülü', quantity: 40, unit: 'Araç', unitPrice: 1400 },
+          { name: 'Rota optimizasyonu', quantity: 1, unit: 'Proje', unitPrice: 20000 },
+        ],
+      },
+    ];
+    await Proposal.insertMany(proposals);
+    console.log(`✅ ${proposals.length} teklif eklendi`);
 
     console.log('\n🎉 Seed tamamlandı! http://localhost:3000 adresini aç.');
     process.exit(0);
