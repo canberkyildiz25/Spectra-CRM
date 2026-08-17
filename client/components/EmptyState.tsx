@@ -126,8 +126,8 @@ export default function EmptyState({ variant, ctaLabel, ctaHref, onCta }: Props)
         {illustration}
       </div>
 
-      <h3 className="text-base font-semibold text-slate-700 mb-1">{title}</h3>
-      <p className="text-sm text-slate-400 mb-6 max-w-xs">{desc}</p>
+      <h3 className="text-base font-semibold text-foreground mb-1">{title}</h3>
+      <p className="text-sm text-muted-foreground mb-6 max-w-xs">{desc}</p>
 
       {ctaHref && (
         <Link href={ctaHref} className="btn-primary inline-flex">

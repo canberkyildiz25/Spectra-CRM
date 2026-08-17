@@ -54,6 +54,14 @@
   --quiet: oklch(0.48 0.008 56);
   --quiet-wash: oklch(0.955 0.002 106);
 
+  /* A recessed well — the kanban drop target. It must sit *behind* the cards
+     placed on it, which rules out `--muted`: that is lighter than `--card` in
+     dark mode, so the column floated above its own contents. Stated per theme
+     rather than as an alpha of the foreground, because the palette is raw
+     `var()` and has no channel to blend into. */
+  --well: oklch(0.975 0.001 106);
+  --well-active: oklch(0.945 0.002 106);
+
   /* ── Charts. One hue for ordinal, a validated pair for
        categorical. Slate against amber so the two survive
        protanopia — see design.md § Charts.                  */
@@ -105,6 +113,11 @@
   --caution-wash: oklch(0.30 0.032 78);
   --quiet: oklch(0.75 0.008 56);
   --quiet-wash: oklch(0.26 0.005 56);
+
+  /* Below --card (0.216) and below the page (0.147) would read as a hole, so it
+     sits just under the card: the column recedes, the cards on it come forward. */
+  --well: oklch(0.185 0.004 49);
+  --well-active: oklch(0.235 0.006 56);
 
   --chart-1: oklch(0.88 0.02 250);
   --chart-2: oklch(0.78 0.025 250);

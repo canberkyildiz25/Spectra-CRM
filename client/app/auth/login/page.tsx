@@ -88,7 +88,7 @@ export default function Login() {
             <h2 className="text-4xl font-bold text-white leading-tight mb-5">
               Satışlarınızı<br />bir üst seviyeye<br />taşıyın.
             </h2>
-            <p className="text-slate-400 text-[15px] leading-relaxed">
+            <p className="text-muted-foreground text-[15px] leading-relaxed">
               Pipeline yöneticisi, teklif aracı ve müşteri takibini tek platformda birleştiren CRM çözümü.
             </p>
 
@@ -100,12 +100,12 @@ export default function Login() {
                 { text: 'Müşteri ilişkileri ve görev takibi' },
               ].map(f => (
                 <div key={f.text} className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-card/20 flex items-center justify-center shrink-0">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <span className="text-sm text-slate-300">{f.text}</span>
+                  <span className="text-sm text-muted-foreground">{f.text}</span>
                 </div>
               ))}
             </div>

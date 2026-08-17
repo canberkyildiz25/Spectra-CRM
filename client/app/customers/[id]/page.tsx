@@ -21,11 +21,11 @@ interface Proposal {
 }
 
 const statusLabel: Record<string, string> = { customer: 'Müşteri', prospect: 'Aday', inactive: 'Pasif' };
-const statusBadge: Record<string, string> = { customer: 'bg-emerald-50 text-emerald-700', prospect: 'bg-blue-50 text-blue-700', inactive: 'bg-slate-100 text-slate-500' };
+const statusBadge: Record<string, string> = { customer: 'badge-positive', prospect: 'badge-accent', inactive: 'badge-quiet' };
 const stageLabel: Record<string, string> = { lead: 'Lead', qualified: 'Nitelikli', proposal: 'Teklif', negotiation: 'Müzakere', 'closed-won': 'Kazanıldı', 'closed-lost': 'Kaybedildi' };
-const stageColor: Record<string, string> = { lead: 'bg-slate-100 text-slate-600', qualified: 'bg-blue-50 text-blue-700', proposal: 'bg-violet-50 text-violet-700', negotiation: 'bg-amber-50 text-amber-700', 'closed-won': 'bg-emerald-50 text-emerald-700', 'closed-lost': 'bg-rose-50 text-rose-700' };
+const stageColor: Record<string, string> = { lead: 'badge-quiet', qualified: 'badge-quiet', proposal: 'badge-accent', negotiation: 'badge-caution', 'closed-won': 'badge-positive', 'closed-lost': 'badge-quiet' };
 const proposalStatusLabel: Record<string, string> = { draft: 'Taslak', sent: 'Gönderildi', accepted: 'Kabul', rejected: 'Red' };
-const proposalStatusColor: Record<string, string> = { draft: 'bg-slate-100 text-slate-600', sent: 'bg-blue-50 text-blue-700', accepted: 'bg-emerald-50 text-emerald-700', rejected: 'bg-rose-50 text-rose-700' };
+const proposalStatusColor: Record<string, string> = { draft: 'badge-quiet', sent: 'badge-accent', accepted: 'badge-positive', rejected: 'badge-quiet' };
 const avatarColors = ['bg-gradient-brand', 'bg-gradient-info', 'bg-gradient-success', 'bg-gradient-warning', 'bg-gradient-rose'];
 const avatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length];
 
@@ -75,7 +75,7 @@ export default function CustomerDetail() {
     <AppShell>
       <div className="px-8 py-8 max-w-4xl mx-auto">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-slate-100 rounded w-48" />
+          <div className="h-6 bg-muted rounded w-48" />
           <div className="card p-6 h-40" />
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function CustomerDetail() {
     <AppShell>
       <div className="px-8 py-8 max-w-4xl mx-auto animate-fade-in">
         {/* Back */}
-        <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 mb-6 transition">
+        <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           Müşteriler
         </button>
@@ -103,8 +103,8 @@ export default function CustomerDetail() {
                 {customer.firstName[0]}{customer.lastName[0]}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900">{customer.firstName} {customer.lastName}</h1>
-                {customer.company && <p className="text-sm text-slate-500">{customer.company}</p>}
+                <h1 className="text-xl font-bold text-foreground">{customer.firstName} {customer.lastName}</h1>
+                {customer.company && <p className="text-sm text-muted-foreground">{customer.company}</p>}
                 <span className={`badge mt-1 ${statusBadge[customer.status]}`}>{statusLabel[customer.status]}</span>
               </div>
             </div>
@@ -112,14 +112,14 @@ export default function CustomerDetail() {
             <div className="flex items-center gap-2 flex-wrap justify-end">
               <button
                 onClick={() => setShowTaskModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-xl transition"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium btn-secondary rounded-xl"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
                 Görev Ekle
               </button>
               <Link
                 href={`/opportunities/new?customerId=${id}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-50 text-violet-700 hover:bg-violet-100 rounded-xl transition"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium btn-secondary rounded-xl"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
                 Fırsat Ekle
@@ -144,9 +144,9 @@ export default function CustomerDetail() {
           </div>
 
           {customer.notes && (
-            <div className="mt-5 pt-5 border-t border-slate-100">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Notlar</p>
-              <p className="text-sm text-slate-700 whitespace-pre-line">{customer.notes}</p>
+            <div className="mt-5 pt-5 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Notlar</p>
+              <p className="text-sm text-foreground whitespace-pre-line">{customer.notes}</p>
             </div>
           )}
         </div>
@@ -154,32 +154,32 @@ export default function CustomerDetail() {
         {/* Task Modal */}
         {showTaskModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowTaskModal(false)}>
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/50" />
             <div className="relative card p-6 w-full max-w-md animate-slide-up" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-5">
-                <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Yeni Görev</h2>
-                <button onClick={() => setShowTaskModal(false)} className="text-slate-400 hover:text-slate-600 transition">
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Yeni Görev</h2>
+                <button onClick={() => setShowTaskModal(false)} className="text-muted-foreground hover:text-muted-foreground transition">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <form onSubmit={handleCreateTask} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Başlık *</label>
+                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-widest">Başlık *</label>
                   <input type="text" required value={taskForm.title} onChange={e => setTaskForm({ ...taskForm, title: e.target.value })} className="input" placeholder="Görev başlığı..." />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Açıklama</label>
+                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-widest">Açıklama</label>
                   <textarea value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} className="input resize-none" rows={2} placeholder="Açıklama..." />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Öncelik</label>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-widest">Öncelik</label>
                     <select value={taskForm.priority} onChange={e => setTaskForm({ ...taskForm, priority: e.target.value as any })} className="input">
                       <option value="low">Düşük</option><option value="medium">Orta</option><option value="high">Yüksek</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-widest">Bitiş Tarihi</label>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-widest">Bitiş Tarihi</label>
                     <input type="date" value={taskForm.dueDate} onChange={e => setTaskForm({ ...taskForm, dueDate: e.target.value })} className="input" />
                   </div>
                 </div>
@@ -195,21 +195,21 @@ export default function CustomerDetail() {
         {/* Fırsatlar */}
         <div className="card p-6 mb-5">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-sm font-semibold text-slate-900">Fırsatlar <span className="text-slate-400 font-normal">({opportunities.length})</span></h2>
-            <Link href={`/opportunities/new?customerId=${id}`} className="text-xs text-brand-600 hover:text-brand-700 font-medium">+ Fırsat Ekle</Link>
+            <h2 className="text-sm font-semibold text-foreground">Fırsatlar <span className="text-muted-foreground font-normal">({opportunities.length})</span></h2>
+            <Link href={`/opportunities/new?customerId=${id}`} className="text-xs text-foreground hover:text-foreground font-medium">+ Fırsat Ekle</Link>
           </div>
           {opportunities.length === 0 ? (
-            <p className="text-sm text-slate-400 py-3">Bu müşteriye ait fırsat yok</p>
+            <p className="text-sm text-muted-foreground py-3">Bu müşteriye ait fırsat yok</p>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-border">
               {opportunities.map(o => (
                 <div key={o._id} className="flex items-center justify-between py-3">
                   <div>
-                    <p className="text-sm font-medium text-slate-900">{o.title}</p>
-                    {o.expectedCloseDate && <p className="text-xs text-slate-400 mt-0.5">Kapanış: {new Date(o.expectedCloseDate).toLocaleDateString('tr-TR')}</p>}
+                    <p className="text-sm font-medium text-foreground">{o.title}</p>
+                    {o.expectedCloseDate && <p className="text-xs text-muted-foreground mt-0.5">Kapanış: {new Date(o.expectedCloseDate).toLocaleDateString('tr-TR')}</p>}
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-brand-600">{fmt(o.amount)}</span>
+                    <span className="text-sm font-semibold text-foreground">{fmt(o.amount)}</span>
                     <span className={`badge ${stageColor[o.stage]}`}>{stageLabel[o.stage]}</span>
                   </div>
                 </div>
@@ -221,23 +221,23 @@ export default function CustomerDetail() {
         {/* Teklifler */}
         <div className="card p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-sm font-semibold text-slate-900">Teklifler <span className="text-slate-400 font-normal">({proposals.length})</span></h2>
-            <Link href={`/proposals/new?customerId=${id}`} className="text-xs text-brand-600 hover:text-brand-700 font-medium">+ Teklif Oluştur</Link>
+            <h2 className="text-sm font-semibold text-foreground">Teklifler <span className="text-muted-foreground font-normal">({proposals.length})</span></h2>
+            <Link href={`/proposals/new?customerId=${id}`} className="text-xs text-foreground hover:text-foreground font-medium">+ Teklif Oluştur</Link>
           </div>
           {proposals.length === 0 ? (
-            <p className="text-sm text-slate-400 py-3">Bu müşteriye ait teklif yok</p>
+            <p className="text-sm text-muted-foreground py-3">Bu müşteriye ait teklif yok</p>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-border">
               {proposals.map(p => (
                 <div key={p._id} className="flex items-center justify-between py-3">
                   <div>
-                    <p className="text-sm font-medium text-slate-900">{p.title}</p>
-                    <p className="text-xs font-mono text-slate-400">{p.proposalNumber}</p>
+                    <p className="text-sm font-medium text-foreground">{p.title}</p>
+                    <p className="text-xs font-mono text-muted-foreground">{p.proposalNumber}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-slate-900">{fmt(calcTotal(p))}</span>
+                    <span className="text-sm font-semibold text-foreground">{fmt(calcTotal(p))}</span>
                     <span className={`badge ${proposalStatusColor[p.status]}`}>{proposalStatusLabel[p.status]}</span>
-                    <Link href={`/proposals/${p._id}`} className="text-xs text-brand-600 hover:text-brand-700 font-medium">Görüntüle →</Link>
+                    <Link href={`/proposals/${p._id}`} className="text-xs text-foreground hover:text-foreground font-medium">Görüntüle →</Link>
                   </div>
                 </div>
               ))}
@@ -252,8 +252,8 @@ export default function CustomerDetail() {
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
-      <p className="text-sm text-slate-800">{value}</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{label}</p>
+      <p className="text-sm text-foreground">{value}</p>
     </div>
   );
 }
