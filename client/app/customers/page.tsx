@@ -44,20 +44,21 @@ const emptyForm = {
   phone: '',
   company: '',
   city: '',
-  country: 'Türkiye',
+  country: '',
   status: 'prospect' as Status,
   source: '',
   notes: '',
 };
 
 const TEXT_FIELDS: { field: keyof typeof emptyForm; label: string; type?: string; required?: boolean; placeholder?: string; half?: boolean; autoComplete?: string }[] = [
-  { field: 'firstName', label: 'Ad', required: true, half: true, autoComplete: 'off' },
-  { field: 'lastName', label: 'Soyad', required: true, half: true, autoComplete: 'off' },
-  { field: 'email', label: 'E-posta', type: 'email', required: true, autoComplete: 'off' },
-  { field: 'phone', label: 'Telefon', type: 'tel', half: true, autoComplete: 'off' },
-  { field: 'company', label: 'Şirket', half: true },
-  { field: 'city', label: 'Şehir', half: true },
-  { field: 'source', label: 'Kaynak', placeholder: 'Fuar, referans, web…', half: true },
+  { field: 'firstName', label: 'First name', required: true, half: true, autoComplete: 'off' },
+  { field: 'lastName', label: 'Last name', required: true, half: true, autoComplete: 'off' },
+  { field: 'email', label: 'Email', type: 'email', required: true, autoComplete: 'off' },
+  { field: 'phone', label: 'Phone', type: 'tel', half: true, autoComplete: 'off' },
+  { field: 'company', label: 'Company', half: true },
+  { field: 'city', label: 'City', half: true },
+  { field: 'country', label: 'Country', half: true },
+  { field: 'source', label: 'Source', placeholder: 'Trade show, referral, website…', half: true },
 ];
 
 export default function Customers() {
@@ -76,7 +77,7 @@ export default function Customers() {
     api
       .get('/customers?limit=100')
       .then((r) => setCustomers(r.data.data.customers))
-      .catch(() => toast.error('Müşteriler yüklenemedi'));
+      .catch(() => toast.error('Customers could not load'));
 
   const authReady = useAuthReady();
   useEffect(() => {
@@ -91,11 +92,11 @@ export default function Customers() {
   }, [customers]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLocaleLowerCase('tr');
+    const q = search.trim().toLocaleLowerCase('en');
     return customers.filter(
       (c) =>
         (statusFilter === 'all' || c.status === statusFilter) &&
-        (!q || `${c.firstName} ${c.lastName} ${c.company ?? ''} ${c.email}`.toLocaleLowerCase('tr').includes(q)),
+        (!q || `${c.firstName} ${c.lastName} ${c.company ?? ''} ${c.email}`.toLocaleLowerCase('en').includes(q)),
     );
   }, [customers, search, statusFilter]);
 
@@ -115,7 +116,7 @@ export default function Customers() {
       phone: c.phone ?? '',
       company: c.company ?? '',
       city: c.city ?? '',
-      country: c.country ?? 'Türkiye',
+      country: c.country ?? '',
       status: c.status,
       source: c.source ?? '',
       notes: c.notes ?? '',
@@ -131,15 +132,15 @@ export default function Customers() {
     try {
       if (editingId) {
         await api.put(`/customers/${editingId}`, form);
-        toast.success('Müşteri güncellendi');
+        toast.success('Customer updated');
       } else {
         await api.post('/customers', form);
-        toast.success('Müşteri eklendi');
+        toast.success('Customer added');
       }
       setSheetOpen(false);
       await load();
     } catch (err) {
-      setFormError(errorText(err, 'Kayıt başarısız'));
+      setFormError(errorText(err, 'Save failed'));
     } finally {
       setSaving(false);
     }
@@ -152,9 +153,9 @@ export default function Customers() {
     try {
       await api.delete(`/customers/${target._id}`);
       setCustomers((list) => list.filter((x) => x._id !== target._id));
-      toast.success('Müşteri silindi');
+      toast.success('Customer deleted');
     } catch {
-      toast.error('Silme başarısız');
+      toast.error('Delete failed');
     }
   };
 
@@ -162,13 +163,13 @@ export default function Customers() {
     <AppShell>
       <Page>
         <PageHead
-          label="Kayıtlar"
-          title="Müşteriler"
-          meta={`${customers.length} kayıt · ${counts.customer ?? 0} aktif müşteri`}
+          label="Records"
+          title="Customers"
+          meta={`${customers.length} records · ${counts.customer ?? 0} active customers`}
           actions={
             <button type="button" onClick={openNew} className="btn btn-sm">
               <Plus className="size-4" aria-hidden />
-              Müşteri ekle
+              Add customer
             </button>
           }
         />
@@ -177,17 +178,17 @@ export default function Customers() {
           <div className="relative w-full md:max-w-sm">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-fg-3" aria-hidden />
             <label htmlFor="c-search" className="sr-only">
-              Müşteri ara
+              Search customers
             </label>
             <input
               id="c-search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Ad, şirket ya da e-posta"
+              placeholder="Name, company or email"
               className="input pl-9"
             />
           </div>
-          <div className="segmented" role="group" aria-label="Duruma göre süz">
+          <div className="segmented" role="group" aria-label="Filter by status">
             {(['all', 'customer', 'prospect', 'inactive'] as const).map((s) => (
               <button
                 key={s}
@@ -196,7 +197,7 @@ export default function Customers() {
                 aria-pressed={statusFilter === s}
                 onClick={() => setStatusFilter(s)}
               >
-                {s === 'all' ? 'Tümü' : CUSTOMER_STATUS[s].label}
+                {s === 'all' ? 'All' : CUSTOMER_STATUS[s].label}
                 <span className="figure ml-1.5 opacity-70">{counts[s] ?? 0}</span>
               </button>
             ))}
@@ -204,7 +205,7 @@ export default function Customers() {
         </div>
 
         {loading ? (
-          <div className="table-wrap" role="status" aria-label="Yükleniyor">
+          <div className="table-wrap" role="status" aria-label="Loading">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="flex animate-pulse items-center gap-4 border-b border-line px-4 py-4 last:border-0">
                 <div className="size-9 rounded-[var(--radius-md)] bg-lift" />
@@ -218,7 +219,7 @@ export default function Customers() {
         ) : filtered.length === 0 ? (
           <EmptyState
             variant={customers.length ? 'search' : 'customers'}
-            ctaLabel="Müşteri ekle"
+            ctaLabel="Add customer"
             onCta={customers.length ? undefined : openNew}
           />
         ) : (
@@ -226,13 +227,13 @@ export default function Customers() {
             <table className="data-table stack">
               <thead>
                 <tr>
-                  <th>Müşteri</th>
-                  <th>İletişim</th>
-                  <th>Şehir</th>
-                  <th>Durum</th>
-                  <th>Kaynak</th>
+                  <th>Customer</th>
+                  <th>Contact</th>
+                  <th>City</th>
+                  <th>Status</th>
+                  <th>Source</th>
                   <th>
-                    <span className="sr-only">İşlemler</span>
+                    <span className="sr-only">Actions</span>
                   </th>
                 </tr>
               </thead>
@@ -258,23 +259,23 @@ export default function Customers() {
                           </span>
                         </div>
                       </td>
-                      <td data-label="İletişim" className="text-fg-2">
+                      <td data-label="Contact" className="text-fg-2">
                         <span className="break-all">{c.email}</span>
                         {c.phone && <span className="figure block text-xs text-fg-3">{c.phone}</span>}
                       </td>
-                      <td data-label="Şehir" className="text-fg-2">
+                      <td data-label="City" className="text-fg-2">
                         {c.city || '—'}
                       </td>
-                      <td data-label="Durum">
+                      <td data-label="Status">
                         <ToneChip tone={st.tone}>{st.label}</ToneChip>
                       </td>
-                      <td data-label="Kaynak" className="text-fg-2">
+                      <td data-label="Source" className="text-fg-2">
                         {c.source || '—'}
                       </td>
                       <td className="row-actions text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger
-                            aria-label={`${c.firstName} ${c.lastName} için işlemler`}
+                            aria-label={`Actions for ${c.firstName} ${c.lastName}`}
                             className="inline-flex size-8 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg data-[state=open]:bg-lift"
                           >
                             <Ellipsis className="size-4" aria-hidden />
@@ -282,12 +283,12 @@ export default function Customers() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => openEdit(c)}>
                               <Pencil aria-hidden />
-                              Düzenle
+                              Edit
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem variant="destructive" onSelect={() => setTimeout(() => setPendingDelete(c), 0)}>
                               <Trash2 aria-hidden />
-                              Sil
+                              Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -301,7 +302,7 @@ export default function Customers() {
         )}
       </Page>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen} title={editingId ? 'Müşteriyi düzenle' : 'Yeni müşteri'}>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen} title={editingId ? 'Edit customer' : 'New customer'}>
         <form onSubmit={submit} className="grid grid-cols-2 gap-4">
           {formError && (
             <div role="alert" className="notice col-span-2">
@@ -322,7 +323,7 @@ export default function Customers() {
               />
             </Field>
           ))}
-          <Field id="c-status" label="Durum" className="col-span-2 sm:col-span-1">
+          <Field id="c-status" label="Status" className="col-span-2 sm:col-span-1">
             <select
               id="c-status"
               value={form.status}
@@ -336,7 +337,7 @@ export default function Customers() {
               ))}
             </select>
           </Field>
-          <Field id="c-notes" label="Notlar" className="col-span-2">
+          <Field id="c-notes" label="Notes" className="col-span-2">
             <textarea
               id="c-notes"
               rows={3}
@@ -347,10 +348,10 @@ export default function Customers() {
           </Field>
           <div className="col-span-2 mt-2 flex gap-2">
             <button type="submit" disabled={saving} className="btn">
-              {saving ? 'Kaydediliyor' : editingId ? 'Değişiklikleri kaydet' : 'Müşteriyi ekle'}
+              {saving ? 'Saving' : editingId ? 'Save changes' : 'Add customer'}
             </button>
             <button type="button" onClick={() => setSheetOpen(false)} className="btn-secondary">
-              Vazgeç
+              Cancel
             </button>
           </div>
         </form>
@@ -363,8 +364,8 @@ export default function Customers() {
         name={(c) => `${c.firstName} ${c.lastName}`}
         detail={(c) =>
           c.company
-            ? `${c.company} kaydı ve bu müşteriye bağlı geçmiş kalıcı olarak kaldırılır.`
-            : 'Kayıt ve bu müşteriye bağlı geçmiş kalıcı olarak kaldırılır.'
+            ? `The ${c.company} record and its history are removed permanently.`
+            : 'The record and its history are removed permanently.'
         }
       />
     </AppShell>

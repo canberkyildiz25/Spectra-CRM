@@ -24,12 +24,12 @@ export const updateOpportunity = async (req: Request, res: Response) => {
   const opportunity = await Opportunity.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
     .populate('customerId', 'firstName lastName company');
 
-  if (!opportunity) return res.status(404).json({ success: false, error: 'Fırsat bulunamadı' });
+  if (!opportunity) return res.status(404).json({ success: false, error: 'Deal not found' });
   res.json({ success: true, data: opportunity });
 };
 
 export const deleteOpportunity = async (req: Request, res: Response) => {
   const opportunity = await Opportunity.findByIdAndDelete(req.params.id);
-  if (!opportunity) return res.status(404).json({ success: false, error: 'Fırsat bulunamadı' });
-  res.json({ success: true, message: 'Fırsat silindi' });
+  if (!opportunity) return res.status(404).json({ success: false, error: 'Deal not found' });
+  res.json({ success: true, message: 'Deal deleted' });
 };

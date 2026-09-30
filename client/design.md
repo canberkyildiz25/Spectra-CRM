@@ -25,6 +25,14 @@ sits in the middle.
 
 atmospheric / instrument. Dark ground, bright signal, nothing decorative.
 
+## Language
+
+English throughout: interface, landing page and demo data. The demo
+companies are international and fictional; their emails sit under
+example.com and their phone numbers in the ranges reserved for fiction.
+Money is USD. Short dates are ISO (2026-09-30), which read the same in every
+country and sort the way they read; long dates spell the month out.
+
 ## Stack
 
 Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind 4 (`@theme`
@@ -54,12 +62,12 @@ with the same care.
 
 | Token | Value | Means | On panel |
 | --- | --- | --- | --- |
-| `cold` | `#5B9BFF` | stage **Aday**; low priority; prospect | 6.29 |
-| `cool` | `#34D1D8` | stage **Nitelikli** | 9.35 |
-| `warm` | `#F7C948` | stage **Teklif**; medium priority; proposal sent | 11.13 |
-| `hot` | `#FF7B3A` | stage **Müzakere**; high priority | 6.77 |
-| `won` | `#52E08A` | **Kazanıldı**; active customer; accepted; done | 10.29 |
-| `ash` | `#737A86` | **Kaybedildi**; inactive; rejected; draft | 4.03, marks only |
+| `cold` | `#5B9BFF` | stage **Lead**; low priority; prospect | 6.29 |
+| `cool` | `#34D1D8` | stage **Qualified** | 9.35 |
+| `warm` | `#F7C948` | stage **Proposal**; medium priority; proposal sent | 11.13 |
+| `hot` | `#FF7B3A` | stage **Negotiation**; high priority | 6.77 |
+| `won` | `#52E08A` | **Won**; active customer; accepted; done | 10.29 |
+| `ash` | `#737A86` | **Lost**; inactive; rejected; draft | 4.03, marks only |
 | `danger` | `#FF5C5C` | the destructive confirm step, nothing else | 5.76 |
 
 - All six pass 3:1 as marks on every surface. Five pass 4.5:1 as text on
@@ -102,7 +110,7 @@ with the same care.
 - **Landing — Narrative Workflow with a spectrum opening.** The first screen
   is a readout: every opportunity in the demo dataset as a vertical line,
   grouped by stage, with height set by amount. Below it the page walks the
-  five stages in order (01 Aday → 05 Kapanış). Each stage has its own band,
+  five stages in order (01 Lead → 05 Close). Each stage has its own band,
   colour rule and the real demo deals that sit in it. Then an index of the
   screens, a spec sheet of the stack, and a statement footer.
   Nav: N1 wordmark + two links. Footer: Ft5 statement.
@@ -141,7 +149,7 @@ App (Framer Motion, restrained):
 - Headline figures count up once on first render.
 - Stage bars grow from zero once. The motion explains the number.
 - Kanban cards animate to their new column (layout animation) when their
-  stage changes. Every drag has a menu equivalent ("Aşamaya taşı"), because
+  stage changes. Every drag has a menu equivalent ("Move to stage"), because
   drag and drop reaches neither a keyboard nor a touch screen.
 - The active nav bar slides between items.
 - Toasts enter from below and leave by fading.
@@ -154,10 +162,10 @@ grain, looping animation, scroll hijacking, parallax inside the app.
 
 - No invented numbers. The landing readout and stage ledger mirror the demo
   seed (`server/src/seed.ts`). `lib/demo.ts` says so, and the two change
-  together. The page labels them "demo veri seti".
+  together. The page labels them "demo dataset".
 - A chart never plots what the data cannot support. There is no time series,
   because the demo has no history.
-- CTA copy promises only what exists: "Demoyu aç" opens a signed-in demo.
+- CTA copy promises only what exists: "Open the demo" opens a signed-in demo.
 - No fake browser chrome, no fake device frames.
 
 ## Bans

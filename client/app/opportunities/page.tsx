@@ -50,7 +50,7 @@ const emptyForm = {
   description: '',
 };
 
-const who = (c: Customer | null) => (c ? `${c.firstName} ${c.lastName}` : 'Silinmiş müşteri');
+const who = (c: Customer | null) => (c ? `${c.firstName} ${c.lastName}` : 'Deleted customer');
 
 export default function Opportunities() {
   const reduce = useReducedMotion();
@@ -77,7 +77,7 @@ export default function Opportunities() {
       api.get('/opportunities').then((r) => setOpportunities(r.data.data)),
       api.get('/customers?limit=100').then((r) => setCustomers(r.data.data.customers)),
     ])
-      .catch(() => toast.error('Fırsatlar yüklenemedi'))
+      .catch(() => toast.error('Deals could not load'))
       .finally(() => {
         setLoading(false);
         // A customer page links here with ?new=1&customerId=… to start a
@@ -92,10 +92,10 @@ export default function Opportunities() {
   }, [authReady]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLocaleLowerCase('tr');
+    const q = search.trim().toLocaleLowerCase('en');
     if (!q) return opportunities;
     return opportunities.filter((o) =>
-      `${o.title} ${who(o.customerId)} ${o.customerId?.company ?? ''}`.toLocaleLowerCase('tr').includes(q),
+      `${o.title} ${who(o.customerId)} ${o.customerId?.company ?? ''}`.toLocaleLowerCase('en').includes(q),
     );
   }, [opportunities, search]);
 
@@ -131,15 +131,15 @@ export default function Opportunities() {
       const payload = { ...form, amount: Number(form.amount), probability: Number(form.probability) };
       if (editingId) {
         await api.put(`/opportunities/${editingId}`, payload);
-        toast.success('Fırsat güncellendi');
+        toast.success('Deal updated');
       } else {
         await api.post('/opportunities', payload);
-        toast.success('Fırsat eklendi');
+        toast.success('Deal added');
       }
       setSheetOpen(false);
       await refresh();
     } catch (err) {
-      setFormError(errorText(err, 'Kayıt başarısız'));
+      setFormError(errorText(err, 'Save failed'));
     } finally {
       setSaving(false);
     }
@@ -157,7 +157,7 @@ export default function Opportunities() {
       toast.success(`${o.title} → ${label}`);
     } catch {
       setOpportunities(before);
-      toast.error('Aşama güncellenemedi');
+      toast.error('The stage could not be updated');
     }
   };
 
@@ -168,9 +168,9 @@ export default function Opportunities() {
     try {
       await api.delete(`/opportunities/${target._id}`);
       setOpportunities((list) => list.filter((x) => x._id !== target._id));
-      toast.success('Fırsat silindi');
+      toast.success('Deal deleted');
     } catch {
-      toast.error('Silme başarısız');
+      toast.error('Delete failed');
     }
   };
 
@@ -182,7 +182,7 @@ export default function Opportunities() {
   const actions = (o: Opportunity) => (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={`${o.title} için işlemler`}
+        aria-label={`Actions for ${o.title}`}
         className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg data-[state=open]:bg-lift data-[state=open]:text-fg"
       >
         <Ellipsis className="size-4" aria-hidden />
@@ -190,11 +190,11 @@ export default function Opportunities() {
       <DropdownMenuContent align="end" className="min-w-52">
         <DropdownMenuItem onSelect={() => openEdit(o)}>
           <Pencil aria-hidden />
-          Düzenle
+          Edit
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/* The keyboard and touch route for what the board does by dragging. */}
-        <DropdownMenuLabel>Aşamaya taşı</DropdownMenuLabel>
+        <DropdownMenuLabel>Move to stage</DropdownMenuLabel>
         {STAGES.filter((s) => s.key !== o.stage).map((s) => (
           <DropdownMenuItem key={s.key} onSelect={() => moveTo(o, s.key)}>
             <ToneDot tone={s.tone} />
@@ -206,7 +206,7 @@ export default function Opportunities() {
             takes it — otherwise the two focus managers race. */}
         <DropdownMenuItem variant="destructive" onSelect={() => setTimeout(() => setPendingDelete(o), 0)}>
           <Trash2 aria-hidden />
-          Sil
+          Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -216,22 +216,22 @@ export default function Opportunities() {
     <AppShell>
       <Page wide>
         <PageHead
-          label="Satış hattı"
-          title="Fırsatlar"
-          meta={`${opportunities.length} fırsat · ${openDeals.length} açık`}
+          label="Sales pipeline"
+          title="Deals"
+          meta={`${opportunities.length} deals · ${openDeals.length} open`}
           actions={
             <>
-              <div className="segmented" role="group" aria-label="Görünüm">
+              <div className="segmented" role="group" aria-label="View">
                 <button type="button" className="segmented-item" aria-pressed={view === 'board'} onClick={() => setView('board')}>
-                  Pano
+                  Board
                 </button>
                 <button type="button" className="segmented-item" aria-pressed={view === 'list'} onClick={() => setView('list')}>
-                  Liste
+                  List
                 </button>
               </div>
               <button type="button" onClick={openNew} className="btn btn-sm">
                 <Plus className="size-4" aria-hidden />
-                Fırsat ekle
+                Add deal
               </button>
             </>
           }
@@ -240,10 +240,10 @@ export default function Opportunities() {
         {/* ── Summary: one strip, four readings ── */}
         <dl className="grid grid-cols-2 overflow-hidden rounded-[var(--radius-lg)] border border-line bg-panel lg:grid-cols-4">
           {[
-            { k: 'Açık hat', v: moneyShort(sum(openDeals)), title: money(sum(openDeals)) },
-            { k: 'Kazanılan', v: moneyShort(sum(wonDeals)), title: money(sum(wonDeals)) },
-            { k: 'Kazanma oranı', v: `%${closed ? Math.round((wonDeals.length / closed) * 100) : 0}`, title: `${wonDeals.length} / ${closed} kapanış` },
-            { k: 'Açık fırsat', v: String(openDeals.length), title: 'aday, nitelikli, teklif, müzakere' },
+            { k: 'Open pipeline', v: moneyShort(sum(openDeals)), title: money(sum(openDeals)) },
+            { k: 'Won', v: moneyShort(sum(wonDeals)), title: money(sum(wonDeals)) },
+            { k: 'Win rate', v: `${closed ? Math.round((wonDeals.length / closed) * 100) : 0}%`, title: `${wonDeals.length} of ${closed} closed` },
+            { k: 'Open deals', v: String(openDeals.length), title: 'lead, qualified, proposal, negotiation' },
           ].map((s, i) => (
             <div
               key={s.k}
@@ -260,20 +260,20 @@ export default function Opportunities() {
         <div className="relative mt-5 max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-fg-3" aria-hidden />
           <label htmlFor="opp-search" className="sr-only">
-            Fırsat ara
+            Search deals
           </label>
           <input
             id="opp-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Başlık, müşteri ya da şirket"
+            placeholder="Title, contact or company"
             className="input pl-9"
           />
         </div>
 
         <div className="mt-6">
           {loading ? (
-            <div className="flex gap-3 overflow-hidden" role="status" aria-label="Yükleniyor">
+            <div className="flex gap-3 overflow-hidden" role="status" aria-label="Loading">
               {STAGES.map((s) => (
                 <div key={s.key} className="h-72 w-[17rem] shrink-0 animate-pulse rounded-[var(--radius-lg)] bg-well" />
               ))}
@@ -288,7 +288,7 @@ export default function Opportunities() {
                   return (
                     <section
                       key={stage.key}
-                      aria-label={`${stage.label}: ${cards.length} fırsat`}
+                      aria-label={`${stage.label}: ${cards.length} deals`}
                       className="flex w-[17rem] shrink-0 snap-start flex-col"
                     >
                       <header className="mb-2 px-1">
@@ -349,7 +349,7 @@ export default function Opportunities() {
                               <div className="mt-3 flex items-end justify-between gap-2">
                                 <span className="figure text-sm text-fg">{money(o.amount)}</span>
                                 <span className="figure text-[0.6875rem] text-fg-3">
-                                  %{o.probability}
+                                  {o.probability}%
                                   {o.expectedCloseDate ? ` · ${date(o.expectedCloseDate)}` : ''}
                                 </span>
                               </div>
@@ -357,7 +357,7 @@ export default function Opportunities() {
                           </motion.article>
                         ))}
                         {cards.length === 0 && (
-                          <p className="flex flex-1 items-center justify-center py-8 text-xs text-fg-3">Boş</p>
+                          <p className="flex flex-1 items-center justify-center py-8 text-xs text-fg-3">Empty</p>
                         )}
                       </div>
                     </section>
@@ -366,19 +366,19 @@ export default function Opportunities() {
               </div>
             </LayoutGroup>
           ) : filtered.length === 0 ? (
-            <EmptyState variant={search ? 'search' : 'opportunities'} ctaLabel="Fırsat ekle" onCta={search ? undefined : openNew} />
+            <EmptyState variant={search ? 'search' : 'opportunities'} ctaLabel="Add deal" onCta={search ? undefined : openNew} />
           ) : (
             <div className="table-wrap">
               <table className="data-table stack">
                 <thead>
                   <tr>
-                    <th>Fırsat</th>
-                    <th>Aşama</th>
-                    <th className="num">Tutar</th>
-                    <th className="num">Olasılık</th>
-                    <th>Kapanış</th>
+                    <th>Deal</th>
+                    <th>Stage</th>
+                    <th className="num">Amount</th>
+                    <th className="num">Probability</th>
+                    <th>Close date</th>
                     <th>
-                      <span className="sr-only">İşlemler</span>
+                      <span className="sr-only">Actions</span>
                     </th>
                   </tr>
                 </thead>
@@ -394,16 +394,16 @@ export default function Opportunities() {
                             {o.customerId?.company ? ` · ${o.customerId.company}` : ''}
                           </span>
                         </td>
-                        <td data-label="Aşama">
+                        <td data-label="Stage">
                           <ToneChip tone={s.tone}>{s.label}</ToneChip>
                         </td>
-                        <td data-label="Tutar" className="num text-fg">
+                        <td data-label="Amount" className="num text-fg">
                           {money(o.amount)}
                         </td>
-                        <td data-label="Olasılık" className="num text-fg-2">
-                          %{o.probability}
+                        <td data-label="Probability" className="num text-fg-2">
+                          {o.probability}%
                         </td>
-                        <td data-label="Kapanış" className="figure text-fg-2">
+                        <td data-label="Close date" className="figure text-fg-2">
                           {date(o.expectedCloseDate)}
                         </td>
                         <td className="row-actions text-right">
@@ -422,8 +422,8 @@ export default function Opportunities() {
       <Sheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        title={editingId ? 'Fırsatı düzenle' : 'Yeni fırsat'}
-        description={editingId ? undefined : 'Yeni fırsat seçtiğiniz aşamaya düşer; olasılık aşamadan gelir.'}
+        title={editingId ? 'Edit deal' : 'New deal'}
+        description={editingId ? undefined : 'A new deal lands in the stage you pick, and its probability comes from that stage.'}
       >
         <form onSubmit={submit} className="grid grid-cols-2 gap-4">
           {formError && (
@@ -431,18 +431,18 @@ export default function Opportunities() {
               {formError}
             </div>
           )}
-          <Field id="o-title" label="Başlık" className="col-span-2">
+          <Field id="o-title" label="Title" className="col-span-2">
             <input
               id="o-title"
               required
               minLength={3}
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="ABC Teknoloji - Yazılım lisansı"
+              placeholder="Northfield Software - Software license"
               className="input"
             />
           </Field>
-          <Field id="o-customer" label="Müşteri" className="col-span-2">
+          <Field id="o-customer" label="Customer" className="col-span-2">
             <select
               id="o-customer"
               required
@@ -450,7 +450,7 @@ export default function Opportunities() {
               onChange={(e) => setForm({ ...form, customerId: e.target.value })}
               className="input"
             >
-              <option value="">Müşteri seçin</option>
+              <option value="">Choose a customer</option>
               {customers.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.firstName} {c.lastName}
@@ -459,7 +459,7 @@ export default function Opportunities() {
               ))}
             </select>
           </Field>
-          <Field id="o-amount" label="Tutar (₺)" className="col-span-2 sm:col-span-1">
+          <Field id="o-amount" label="Amount ($)" className="col-span-2 sm:col-span-1">
             <input
               id="o-amount"
               required
@@ -471,7 +471,7 @@ export default function Opportunities() {
               className="input figure"
             />
           </Field>
-          <Field id="o-stage" label="Aşama" className="col-span-2 sm:col-span-1">
+          <Field id="o-stage" label="Stage" className="col-span-2 sm:col-span-1">
             <select
               id="o-stage"
               value={form.stage}
@@ -492,7 +492,7 @@ export default function Opportunities() {
               ))}
             </select>
           </Field>
-          <Field id="o-prob" label="Olasılık (%)" className="col-span-2 sm:col-span-1">
+          <Field id="o-prob" label="Probability (%)" className="col-span-2 sm:col-span-1">
             <input
               id="o-prob"
               type="number"
@@ -506,7 +506,7 @@ export default function Opportunities() {
               className="input figure"
             />
           </Field>
-          <Field id="o-close" label="Tahmini kapanış" className="col-span-2 sm:col-span-1">
+          <Field id="o-close" label="Expected close" className="col-span-2 sm:col-span-1">
             <input
               id="o-close"
               type="date"
@@ -515,7 +515,7 @@ export default function Opportunities() {
               className="input figure"
             />
           </Field>
-          <Field id="o-desc" label="Açıklama" className="col-span-2">
+          <Field id="o-desc" label="Description" className="col-span-2">
             <textarea
               id="o-desc"
               rows={3}
@@ -526,10 +526,10 @@ export default function Opportunities() {
           </Field>
           <div className="col-span-2 mt-2 flex gap-2">
             <button type="submit" disabled={saving} className="btn">
-              {saving ? 'Kaydediliyor' : editingId ? 'Değişiklikleri kaydet' : 'Fırsatı ekle'}
+              {saving ? 'Saving' : editingId ? 'Save changes' : 'Add deal'}
             </button>
             <button type="button" onClick={() => setSheetOpen(false)} className="btn-secondary">
-              Vazgeç
+              Cancel
             </button>
           </div>
         </form>
@@ -540,7 +540,7 @@ export default function Opportunities() {
         onCancel={() => setPendingDelete(null)}
         onConfirm={remove}
         name={(o) => o.title}
-        detail={(o) => `${who(o.customerId)} için açılan ${money(o.amount)} tutarındaki fırsat kaldırılır.`}
+        detail={(o) => `The ${money(o.amount)} deal with ${who(o.customerId)} will be removed.`}
       />
     </AppShell>
   );

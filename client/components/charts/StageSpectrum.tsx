@@ -45,13 +45,13 @@ export default function StageSpectrum({ data }: { data: StageDatum[] }) {
       </div>
 
       <table className="mt-6 w-full text-sm">
-        <caption className="sr-only">Açık fırsatların aşama başına sayısı, toplam değeri ve payı</caption>
+        <caption className="sr-only">Open deals by stage: count, total value and share</caption>
         <thead className="sr-only">
           <tr>
-            <th scope="col">Aşama</th>
-            <th scope="col">Fırsat</th>
-            <th scope="col">Değer</th>
-            <th scope="col">Pay</th>
+            <th scope="col">Stage</th>
+            <th scope="col">Deals</th>
+            <th scope="col">Value</th>
+            <th scope="col">Share</th>
           </tr>
         </thead>
         <tbody>
@@ -75,7 +75,7 @@ export default function StageSpectrum({ data }: { data: StageDatum[] }) {
                 {moneyShort(d.value)}
               </td>
               <td className="figure w-14 py-3 text-right text-fg-3">
-                %{total ? Math.round((d.value / total) * 100) : 0}
+                {total ? Math.round((d.value / total) * 100) : 0}%
               </td>
             </tr>
           ))}

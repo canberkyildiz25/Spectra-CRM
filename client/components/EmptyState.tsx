@@ -7,11 +7,11 @@ type Variant = 'customers' | 'proposals' | 'opportunities' | 'tasks' | 'search';
    illustrations floated on a loop in emerald; motion that never stops is
    noise in a tool, and emerald was a colour the system no longer has. */
 const COPY: Record<Variant, { title: string; desc: string }> = {
-  customers: { title: 'Henüz müşteri yok', desc: 'Fırsat ve teklifler bir müşteri kaydına bağlanır; önce onu ekleyin.' },
-  proposals: { title: 'Henüz teklif yok', desc: 'Kalem kalem teklif hazırlayın, yazdırılabilir belge olarak çıkarın.' },
-  opportunities: { title: 'Henüz fırsat yok', desc: 'İlk fırsat panonun en soğuk sütununa, Aday’a düşer.' },
-  tasks: { title: 'Bu listede görev yok', desc: 'Görevler öncelik sıcaklığıyla sıralanır; acil olan sıcak renkte görünür.' },
-  search: { title: 'Eşleşen kayıt yok', desc: 'Aramayı ya da filtreyi değiştirip yeniden deneyin.' },
+  customers: { title: 'No customers yet', desc: 'Deals and proposals hang off a customer record, so add one first.' },
+  proposals: { title: 'No proposals yet', desc: 'Build a proposal line by line and print it as a document.' },
+  opportunities: { title: 'No deals yet', desc: 'The first deal lands in the coldest column of the board: Lead.' },
+  tasks: { title: 'Nothing in this list', desc: 'Tasks are sorted by due date and marked by priority heat, so urgent work shows up hot.' },
+  search: { title: 'No matches', desc: 'Change the search or the filter and try again.' },
 };
 
 export default function EmptyState({

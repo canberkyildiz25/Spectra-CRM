@@ -34,26 +34,26 @@ export default function Login() {
         body: JSON.stringify(credentials),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Giriş başarısız');
+      if (!res.ok) throw new Error(data.error || 'Sign-in failed');
       setAuth(data.data.token, data.data.user);
       router.push('/dashboard');
     } catch (err) {
-      setError(errorText(err, 'Giriş başarısız'));
+      setError(errorText(err, 'Sign-in failed'));
       setPending(null);
     }
   };
 
   return (
     <AuthFrame>
-      <p className="label">Giriş</p>
-      <h1 className="mt-3 text-[2.5rem] text-fg">Tekrar hoş geldiniz.</h1>
-      <p className="mt-2 text-sm text-fg-2">Hesabınızla girin ya da demo hesabını kullanın.</p>
+      <p className="label">Sign in</p>
+      <h1 className="mt-3 text-[2.5rem] text-fg">Welcome back.</h1>
+      <p className="mt-2 text-sm text-fg-2">Sign in with your account, or use the demo.</p>
 
       {/* Demo access — a portfolio visitor should get in without signing up. */}
       <section className="mt-8 rounded-[var(--radius-lg)] border border-line bg-panel p-4" aria-labelledby="demo-title">
         <div className="flex items-center justify-between gap-3">
           <h2 id="demo-title" className="label text-fg-2">
-            Demo hesabı
+            Demo account
           </h2>
           <span className="flex gap-1" aria-hidden>
             {(['cold', 'cool', 'warm', 'hot', 'won'] as const).map((t) => (
@@ -62,7 +62,7 @@ export default function Login() {
           </span>
         </div>
         <p className="mt-2 text-[0.8125rem] leading-relaxed text-fg-2">
-          Kayıt olmadan incelemek için{' '}
+          To look around without signing up:{' '}
           <span className="figure text-fg">{DEMO_CREDENTIALS.email}</span> /{' '}
           <span className="figure text-fg">{DEMO_CREDENTIALS.password}</span>
         </p>
@@ -73,7 +73,7 @@ export default function Login() {
           className="btn-secondary mt-4 w-full"
         >
           {pending === 'demo' && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
-          {pending === 'demo' ? 'Giriliyor' : 'Demo hesabıyla gir'}
+          {pending === 'demo' ? 'Signing in' : 'Sign in with the demo account'}
         </button>
       </section>
 
@@ -93,7 +93,7 @@ export default function Login() {
       >
         <div>
           <label htmlFor="email" className="label field-label">
-            E-posta
+            Email
           </label>
           <input
             id="email"
@@ -102,14 +102,14 @@ export default function Login() {
             autoComplete="email"
             value={form.email}
             onChange={onChange}
-            placeholder="ornek@sirket.com"
+            placeholder="you@company.com"
             className="input"
             required
           />
         </div>
         <div>
           <label htmlFor="password" className="label field-label">
-            Şifre
+            Password
           </label>
           <div className="relative">
             <input
@@ -125,7 +125,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
               aria-pressed={showPassword}
               className="absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:text-fg"
             >
@@ -135,14 +135,14 @@ export default function Login() {
         </div>
         <button type="submit" disabled={pending !== null} className="btn mt-2 w-full">
           {pending === 'form' && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
-          {pending === 'form' ? 'Giriş yapılıyor' : 'Giriş yap'}
+          {pending === 'form' ? 'Signing in' : 'Sign in'}
         </button>
       </form>
 
       <p className="mt-8 text-sm text-fg-2">
-        Hesabınız yok mu?{' '}
+        No account yet?{' '}
         <Link href="/auth/register" className="font-medium text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg">
-          Kayıt olun
+          Sign up
         </Link>
       </p>
     </AuthFrame>

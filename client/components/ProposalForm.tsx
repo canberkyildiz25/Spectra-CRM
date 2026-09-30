@@ -29,8 +29,8 @@ interface Item {
   unitPrice: number;
 }
 
-const UNITS = ['Adet', 'Saat', 'Gün', 'Ay', 'Yıl', 'Kullanıcı', 'Proje', 'Paket'];
-const blankItem = (): Item => ({ name: '', description: '', quantity: 1, unit: 'Adet', unitPrice: 0 });
+const UNITS = ['Each', 'Hour', 'Day', 'Month', 'Year', 'User', 'Vehicle', 'Project', 'Package'];
+const blankItem = (): Item => ({ name: '', description: '', quantity: 1, unit: 'Each', unitPrice: 0 });
 const ownerId = (ref: Opportunity['customerId']) => (typeof ref === 'string' ? ref : ref?._id);
 
 /**
@@ -54,7 +54,7 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
     validUntil: new Date(Date.now() + 30 * 864e5).toISOString().split('T')[0],
     taxRate: 20,
     notes: '',
-    paymentTerms: 'Fatura tarihinden itibaren 30 gün',
+    paymentTerms: 'Net 30',
   }));
   const [items, setItems] = useState<Item[]>([blankItem()]);
 
@@ -91,7 +91,7 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
           if (pre) setForm((f) => ({ ...f, customerId: pre }));
         }
       })
-      .catch(() => setError('Veriler yüklenemedi'))
+      .catch(() => setError('The data could not load'))
       .finally(() => setLoading(false));
   }, [authReady, proposalId]);
 
@@ -108,29 +108,29 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (items.some((i) => !i.name.trim())) return setError('Her satırın bir adı olmalı.');
+    if (items.some((i) => !i.name.trim())) return setError('Every line needs a name.');
     setSaving(true);
     setError('');
     try {
       const payload = { ...form, items, opportunityId: form.opportunityId || undefined };
       if (proposalId) {
         await api.put(`/proposals/${proposalId}`, payload);
-        toast.success('Teklif güncellendi');
+        toast.success('Proposal updated');
         router.push(`/proposals/${proposalId}`);
       } else {
         const res = await api.post('/proposals', payload);
-        toast.success('Teklif oluşturuldu');
+        toast.success('Proposal created');
         router.push(`/proposals/${res.data.data._id}`);
       }
     } catch (err) {
-      setError(errorText(err, 'Kayıt başarısız'));
+      setError(errorText(err, 'Save failed'));
       setSaving(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-4" role="status" aria-label="Yükleniyor">
+      <div className="animate-pulse space-y-4" role="status" aria-label="Loading">
         <div className="h-12 w-72 rounded bg-lift" />
         <div className="h-64 rounded-[var(--radius-lg)] bg-panel" />
       </div>
@@ -141,10 +141,10 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
     <>
       <Link href={proposalId ? `/proposals/${proposalId}` : '/proposals'} className="btn-ghost -ml-3 mb-6">
         <ArrowLeft className="size-4" aria-hidden />
-        {proposalId ? 'Teklif' : 'Teklifler'}
+        {proposalId ? 'Proposal' : 'Proposals'}
       </Link>
-      <p className="label">Belge</p>
-      <h1 className="mt-2 text-[clamp(2.25rem,5vw,3.25rem)] text-fg">{editing ? 'Teklifi düzenle' : 'Yeni teklif'}</h1>
+      <p className="label">Document</p>
+      <h1 className="mt-2 text-[clamp(2.25rem,5vw,3.25rem)] text-fg">{editing ? 'Edit proposal' : 'New proposal'}</h1>
 
       <form onSubmit={submit} className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <div className="min-w-0 space-y-4">
@@ -156,19 +156,19 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
 
           <section className="card grid grid-cols-2 gap-4 p-5 sm:p-6" aria-labelledby="pf-info">
             <h2 id="pf-info" className="col-span-2 text-[1.375rem] text-fg">
-              Teklif bilgileri
+              Proposal details
             </h2>
-            <Field id="pf-title" label="Başlık" className="col-span-2">
+            <Field id="pf-title" label="Title" className="col-span-2">
               <input
                 id="pf-title"
                 required
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Yazılım lisans ve destek hizmetleri teklifi"
+                placeholder="Software license and support proposal"
                 className="input"
               />
             </Field>
-            <Field id="pf-customer" label="Müşteri" className="col-span-2 sm:col-span-1">
+            <Field id="pf-customer" label="Customer" className="col-span-2 sm:col-span-1">
               <select
                 id="pf-customer"
                 required
@@ -176,7 +176,7 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
                 onChange={(e) => setForm({ ...form, customerId: e.target.value, opportunityId: '' })}
                 className="input"
               >
-                <option value="">Müşteri seçin</option>
+                <option value="">Choose a customer</option>
                 {customers.map((c) => (
                   <option key={c._id} value={c._id}>
                     {c.firstName} {c.lastName}
@@ -185,16 +185,16 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
                 ))}
               </select>
             </Field>
-            <Field id="pf-opp" label="İlgili fırsat" className="col-span-2 sm:col-span-1">
+            <Field id="pf-opp" label="Related deal" className="col-span-2 sm:col-span-1">
               <select
                 id="pf-opp"
                 value={form.opportunityId}
                 onChange={(e) => setForm({ ...form, opportunityId: e.target.value })}
                 className="input"
               >
-                <option value="">Yok</option>
+                <option value="">None</option>
                 {ownOpps.length > 0 && (
-                  <optgroup label="Bu müşterinin">
+                  <optgroup label="This customer’s deals">
                     {ownOpps.map((o) => (
                       <option key={o._id} value={o._id}>
                         {o.title}
@@ -202,7 +202,7 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
                     ))}
                   </optgroup>
                 )}
-                <optgroup label={ownOpps.length ? 'Diğer' : 'Tüm fırsatlar'}>
+                <optgroup label={ownOpps.length ? 'Other deals' : 'All deals'}>
                   {otherOpps.map((o) => (
                     <option key={o._id} value={o._id}>
                       {o.title}
@@ -211,7 +211,7 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
                 </optgroup>
               </select>
             </Field>
-            <Field id="pf-valid" label="Geçerlilik" className="col-span-2 sm:col-span-1">
+            <Field id="pf-valid" label="Valid until" className="col-span-2 sm:col-span-1">
               <input
                 id="pf-valid"
                 required
@@ -221,19 +221,19 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
                 className="input figure"
               />
             </Field>
-            <Field id="pf-tax" label="KDV" className="col-span-2 sm:col-span-1">
+            <Field id="pf-tax" label="VAT" className="col-span-2 sm:col-span-1">
               <select
                 id="pf-tax"
                 value={form.taxRate}
                 onChange={(e) => setForm({ ...form, taxRate: Number(e.target.value) })}
                 className="input"
               >
-                <option value={0}>%0 — KDV yok</option>
-                <option value={10}>%10</option>
-                <option value={20}>%20</option>
+                <option value={0}>0%, no VAT</option>
+                <option value={10}>10%</option>
+                <option value={20}>20%</option>
               </select>
             </Field>
-            <Field id="pf-terms" label="Ödeme koşulları" className="col-span-2">
+            <Field id="pf-terms" label="Payment terms" className="col-span-2">
               <input
                 id="pf-terms"
                 value={form.paymentTerms}
@@ -250,7 +250,7 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
               </h2>
               <button type="button" onClick={() => setItems((l) => [...l, blankItem()])} className="btn-secondary btn-sm">
                 <Plus className="size-4" aria-hidden />
-                Satır ekle
+                Add line
               </button>
             </div>
 
@@ -261,23 +261,23 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
               {items.map((item, i) => (
                 <li key={i} className="rounded-[var(--radius-md)] border border-line bg-well p-3">
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-[minmax(0,1fr)_7rem_6rem_8rem_auto]">
-                    <Field id={`pf-name-${i}`} label={`Satır ${i + 1}`} className="col-span-2 md:col-span-1">
+                    <Field id={`pf-name-${i}`} label={`Line ${i + 1}`} className="col-span-2 md:col-span-1">
                       <input
                         id={`pf-name-${i}`}
                         value={item.name}
                         onChange={(e) => update(i, { name: e.target.value })}
-                        placeholder="Ürün ya da hizmet"
+                        placeholder="Product or service"
                         className="input"
                       />
                     </Field>
-                    <Field id={`pf-unit-${i}`} label="Birim">
+                    <Field id={`pf-unit-${i}`} label="Unit">
                       <select id={`pf-unit-${i}`} value={item.unit} onChange={(e) => update(i, { unit: e.target.value })} className="input">
                         {(UNITS.includes(item.unit) ? UNITS : [item.unit, ...UNITS]).map((u) => (
                           <option key={u}>{u}</option>
                         ))}
                       </select>
                     </Field>
-                    <Field id={`pf-qty-${i}`} label="Miktar">
+                    <Field id={`pf-qty-${i}`} label="Qty">
                       <input
                         id={`pf-qty-${i}`}
                         type="number"
@@ -289,7 +289,7 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
                         className="input figure text-right"
                       />
                     </Field>
-                    <Field id={`pf-price-${i}`} label="Birim fiyat">
+                    <Field id={`pf-price-${i}`} label="Unit price">
                       <input
                         id={`pf-price-${i}`}
                         type="number"
@@ -307,19 +307,19 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
                         <button
                           type="button"
                           onClick={() => setItems((l) => l.filter((_, idx) => idx !== i))}
-                          aria-label={`Satır ${i + 1}’i kaldır`}
+                          aria-label={`Remove line ${i + 1}`}
                           className="flex size-10 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg"
                         >
                           <X className="size-4" aria-hidden />
                         </button>
                       )}
                     </div>
-                    <Field id={`pf-desc-${i}`} label="Açıklama" className="col-span-2 md:col-span-4">
+                    <Field id={`pf-desc-${i}`} label="Description" className="col-span-2 md:col-span-4">
                       <input
                         id={`pf-desc-${i}`}
                         value={item.description}
                         onChange={(e) => update(i, { description: e.target.value })}
-                        placeholder="İsteğe bağlı"
+                        placeholder="Optional"
                         className="input"
                       />
                     </Field>
@@ -334,17 +334,17 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
 
           <section className="card p-5 sm:p-6" aria-labelledby="pf-notes">
             <h2 id="pf-notes" className="mb-4 text-[1.375rem] text-fg">
-              Notlar ve koşullar
+              Notes and terms
             </h2>
             <label htmlFor="pf-notes-input" className="sr-only">
-              Notlar
+              Notes
             </label>
             <textarea
               id="pf-notes-input"
               rows={4}
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="Teslim süresi, garanti, özel koşullar"
+              placeholder="Delivery time, warranty, special terms"
               className="input resize-none"
             />
           </section>
@@ -352,27 +352,27 @@ export default function ProposalForm({ proposalId }: { proposalId?: string }) {
 
         {/* Totals stay beside the form on desktop, so the sum is always in
             view while rows change. */}
-        <aside className="card p-5 sm:p-6 lg:sticky lg:top-6" aria-label="Toplamlar">
+        <aside className="card p-5 sm:p-6 lg:sticky lg:top-6" aria-label="Totals">
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-fg-2">Ara toplam</dt>
+              <dt className="text-fg-2">Subtotal</dt>
               <dd className="figure text-fg">{moneyExact(subtotal)}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-fg-2">KDV (%{form.taxRate})</dt>
+              <dt className="text-fg-2">VAT ({form.taxRate}%)</dt>
               <dd className="figure text-fg">{moneyExact(tax)}</dd>
             </div>
             <div className="border-t border-line pt-3">
-              <dt className="label">Genel toplam</dt>
+              <dt className="label">Total</dt>
               <dd className="readout mt-2 text-[2.5rem] text-fg">{moneyExact(total)}</dd>
             </div>
           </dl>
           <div className="mt-6 flex flex-col gap-2">
             <button type="submit" disabled={saving} className="btn w-full">
-              {saving ? 'Kaydediliyor' : editing ? 'Değişiklikleri kaydet' : 'Teklifi oluştur'}
+              {saving ? 'Saving' : editing ? 'Save changes' : 'Create proposal'}
             </button>
             <button type="button" onClick={() => router.back()} className="btn-secondary w-full">
-              Vazgeç
+              Cancel
             </button>
           </div>
         </aside>

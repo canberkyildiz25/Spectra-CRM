@@ -18,8 +18,8 @@ export default function Readout({ compact = false }: { compact?: boolean }) {
         className="flex items-end gap-[clamp(6px,1.4vw,20px)]"
         style={{ height: compact ? 'clamp(140px, 26vh, 220px)' : 'clamp(170px, 30vh, 320px)' }}
         role="img"
-        aria-label={`Demo veri setindeki ${DEMO_DEALS.length} fırsat, aşamaya göre. ${groups
-          .map((g) => `${g.label}: ${g.deals.length} fırsat, ${money(totalOf(g.deals))}`)
+        aria-label={`The ${DEMO_DEALS.length} deals in the demo dataset, by stage. ${groups
+          .map((g) => `${g.label}: ${g.deals.length} deals, ${money(totalOf(g.deals))}`)
           .join('; ')}.`}
       >
         {groups.map((g) => (
@@ -48,7 +48,7 @@ export default function Readout({ compact = false }: { compact?: boolean }) {
       <div className="mt-0 h-px bg-line-strong" aria-hidden />
       {compact ? (
         /* Compact: a wrapping legend with full names. Aligning it under the
-           lines would squeeze one-deal groups down to "NİTELİK…". */
+           lines would squeeze the narrow groups down to an ellipsis. */
         <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2" aria-hidden>
           {groups.map((g) => (
             <li key={g.key} className="flex items-center gap-1.5">

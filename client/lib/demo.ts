@@ -11,21 +11,21 @@ import type { Stage } from './stages';
 export type DemoDeal = { company: string; deal: string; amount: number; stage: Stage };
 
 export const DEMO_DEALS: DemoDeal[] = [
-  { company: 'Global Lojistik', deal: 'Platform abonelik', amount: 48000, stage: 'lead' },
-  { company: 'Yıldız Tekstil', deal: 'Üretim paneli', amount: 58000, stage: 'lead' },
-  { company: 'Yıldız Tekstil', deal: 'Danışmanlık', amount: 35000, stage: 'qualified' },
-  { company: 'Şahin Enerji', deal: 'Saha otomasyonu', amount: 190000, stage: 'qualified' },
-  { company: 'ABC Teknoloji', deal: 'Yazılım lisansı', amount: 85000, stage: 'proposal' },
-  { company: 'ABC Teknoloji', deal: 'Destek paketi', amount: 42000, stage: 'proposal' },
-  { company: 'Global Lojistik', deal: 'Filo takip', amount: 76000, stage: 'proposal' },
-  { company: 'Demir İnşaat', deal: 'ERP kurulum', amount: 250000, stage: 'negotiation' },
-  { company: 'Demir Tech', deal: 'Bulut göçü', amount: 145000, stage: 'negotiation' },
-  { company: 'Öztürk Gıda', deal: 'Sistem güncelleme', amount: 62000, stage: 'closed-won' },
-  { company: 'Demir İnşaat', deal: 'Saha uygulaması', amount: 96000, stage: 'closed-won' },
-  { company: 'Öztürk Gıda', deal: 'Depo entegrasyonu', amount: 54000, stage: 'closed-won' },
-  { company: 'Güneş Medya', deal: 'Reklam paneli', amount: 33000, stage: 'closed-won' },
-  { company: 'Güneş Medya', deal: 'İçerik yönetimi', amount: 28000, stage: 'closed-lost' },
-  { company: 'Demir Tech', deal: 'Lisans yenileme', amount: 24000, stage: 'closed-lost' },
+  { company: 'Meridian Logistics', deal: 'Platform subscription', amount: 48000, stage: 'lead' },
+  { company: 'Starline Textiles', deal: 'Production dashboard', amount: 58000, stage: 'lead' },
+  { company: 'Starline Textiles', deal: 'Consulting', amount: 35000, stage: 'qualified' },
+  { company: 'Falcon Energy', deal: 'Field automation', amount: 190000, stage: 'qualified' },
+  { company: 'Northfield Software', deal: 'Software license', amount: 85000, stage: 'proposal' },
+  { company: 'Northfield Software', deal: 'Support plan', amount: 42000, stage: 'proposal' },
+  { company: 'Meridian Logistics', deal: 'Fleet tracking', amount: 76000, stage: 'proposal' },
+  { company: 'Ironclad Construction', deal: 'ERP rollout', amount: 250000, stage: 'negotiation' },
+  { company: 'Bellwether Tech', deal: 'Cloud migration', amount: 145000, stage: 'negotiation' },
+  { company: 'Harvest Foods', deal: 'System upgrade', amount: 62000, stage: 'closed-won' },
+  { company: 'Ironclad Construction', deal: 'Site app', amount: 96000, stage: 'closed-won' },
+  { company: 'Harvest Foods', deal: 'Warehouse integration', amount: 54000, stage: 'closed-won' },
+  { company: 'Sunpeak Media', deal: 'Ad campaign panel', amount: 33000, stage: 'closed-won' },
+  { company: 'Sunpeak Media', deal: 'Content management', amount: 28000, stage: 'closed-lost' },
+  { company: 'Bellwether Tech', deal: 'License renewal', amount: 24000, stage: 'closed-lost' },
 ];
 
 export const DEMO_CREDENTIALS = { email: 'demo@spectra.com', password: 'demo1234' };

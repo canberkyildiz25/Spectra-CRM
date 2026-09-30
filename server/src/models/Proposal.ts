@@ -39,7 +39,7 @@ const proposalSchema = new Schema<IProposalDocument>(
         name: { type: String, required: true },
         description: { type: String },
         quantity: { type: Number, required: true, min: 0 },
-        unit: { type: String, default: 'Adet' },
+        unit: { type: String, default: 'Each' },
         unitPrice: { type: Number, required: true, min: 0 },
       },
     ],

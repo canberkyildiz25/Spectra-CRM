@@ -47,5 +47,5 @@ export const useAuthStore = create<AuthStore>((set) => ({
 /* Pages fetch only once this is true. A page's effects run as soon as it
    mounts — before ProtectedRoute has finished signing a first-time visitor
    into the demo — so an ungated fetch went out without a token, came back
-   401, and the dashboard opened on "Özet alınamadı". */
+   401, and the dashboard opened on an error screen. */
 export const useAuthReady = () => useAuthStore((s) => s.isAuthenticated);

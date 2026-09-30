@@ -65,7 +65,7 @@ export default function Tasks() {
     api
       .get('/tasks')
       .then((r) => setTasks(r.data.data))
-      .catch(() => toast.error('Görevler yüklenemedi'));
+      .catch(() => toast.error('Tasks could not load'));
 
   useEffect(() => {
     if (!authReady) return;
@@ -90,10 +90,10 @@ export default function Tasks() {
     setTasks((all) => all.map((x) => (x._id === t._id ? { ...x, status } : x)));
     try {
       await api.put(`/tasks/${t._id}`, { status });
-      toast.success(status === 'completed' ? 'Görev tamamlandı' : `Durum: ${TASK_STATUS[status].label}`);
+      toast.success(status === 'completed' ? 'Task done' : `Status: ${TASK_STATUS[status].label}`);
     } catch {
       setTasks(before);
-      toast.error('Durum güncellenemedi');
+      toast.error('The status could not be updated');
     }
   };
 
@@ -103,12 +103,12 @@ export default function Tasks() {
     setFormError('');
     try {
       await api.post('/tasks', form);
-      toast.success('Görev eklendi');
+      toast.success('Task added');
       setSheetOpen(false);
       setForm(emptyForm);
       await load();
     } catch (err) {
-      setFormError(errorText(err, 'Görev eklenemedi'));
+      setFormError(errorText(err, 'The task could not be added'));
     } finally {
       setSaving(false);
     }
@@ -121,9 +121,9 @@ export default function Tasks() {
     try {
       await api.delete(`/tasks/${target._id}`);
       setTasks((all) => all.filter((x) => x._id !== target._id));
-      toast.success('Görev silindi');
+      toast.success('Task deleted');
     } catch {
-      toast.error('Silme başarısız');
+      toast.error('Delete failed');
     }
   };
 
@@ -131,9 +131,9 @@ export default function Tasks() {
     <AppShell>
       <Page>
         <PageHead
-          label="Yapılacaklar"
-          title="Görevler"
-          meta={`${tasks.length - (counts.completed ?? 0)} açık${overdue ? ` · ${overdue} gecikmiş` : ''} · ${counts.completed ?? 0} tamamlandı`}
+          label="To do"
+          title="Tasks"
+          meta={`${tasks.length - (counts.completed ?? 0)} open${overdue ? ` · ${overdue} overdue` : ''} · ${counts.completed ?? 0} done`}
           actions={
             <button
               type="button"
@@ -145,16 +145,16 @@ export default function Tasks() {
               className="btn btn-sm"
             >
               <Plus className="size-4" aria-hidden />
-              Görev ekle
+              Add task
             </button>
           }
         />
 
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="segmented" role="group" aria-label="Duruma göre süz">
+          <div className="segmented" role="group" aria-label="Filter by status">
             {(['all', 'pending', 'in-progress', 'completed'] as const).map((s) => (
               <button key={s} type="button" className="segmented-item" aria-pressed={filter === s} onClick={() => setFilter(s)}>
-                {s === 'all' ? 'Tümü' : TASK_STATUS[s].label}
+                {s === 'all' ? 'All' : TASK_STATUS[s].label}
                 <span className="figure ml-1.5 opacity-70">{counts[s] ?? 0}</span>
               </button>
             ))}
@@ -171,13 +171,13 @@ export default function Tasks() {
         </div>
 
         {loading ? (
-          <div className="space-y-2" role="status" aria-label="Yükleniyor">
+          <div className="space-y-2" role="status" aria-label="Loading">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="h-[4.5rem] animate-pulse rounded-[var(--radius-lg)] bg-panel" />
             ))}
           </div>
         ) : list.length === 0 ? (
-          <EmptyState variant="tasks" ctaLabel="Görev ekle" onCta={() => setSheetOpen(true)} />
+          <EmptyState variant="tasks" ctaLabel="Add task" onCta={() => setSheetOpen(true)} />
         ) : (
           <ul className="space-y-2">
             <AnimatePresence initial={false}>
@@ -200,7 +200,7 @@ export default function Tasks() {
                       type="button"
                       role="checkbox"
                       aria-checked={done}
-                      aria-label={done ? `${t.title}: tamamlandı, geri al` : `${t.title}: tamamla`}
+                      aria-label={done ? `${t.title}: done, undo` : `${t.title}: mark done`}
                       onClick={() => setStatus(t, done ? 'pending' : 'completed')}
                       className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border transition-colors ${
                         done ? 'border-won bg-won text-ground' : 'border-line-strong hover:border-fg-2'
@@ -211,7 +211,7 @@ export default function Tasks() {
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-2">
                         <ToneDot tone={pr.tone} />
-                        <span className="sr-only">{pr.label} öncelik:</span>
+                        <span className="sr-only">{pr.label} priority:</span>
                         <span className={`min-w-0 text-sm font-medium ${done ? 'text-fg-3 line-through' : 'text-fg'}`}>{t.title}</span>
                       </p>
                       {t.description && <p className="mt-1 line-clamp-2 text-sm text-fg-2">{t.description}</p>}
@@ -219,7 +219,7 @@ export default function Tasks() {
                         <ToneChip tone={st.tone}>{st.label}</ToneChip>
                         {t.dueDate && (
                           <span className={`figure text-xs ${late ? 'text-fg' : 'text-fg-3'}`}>
-                            {late ? 'gecikti · ' : ''}
+                            {late ? 'overdue · ' : ''}
                             {date(t.dueDate)}
                           </span>
                         )}
@@ -227,13 +227,13 @@ export default function Tasks() {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        aria-label={`${t.title} için işlemler`}
+                        aria-label={`Actions for ${t.title}`}
                         className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg data-[state=open]:bg-lift"
                       >
                         <Ellipsis className="size-4" aria-hidden />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="min-w-48">
-                        <DropdownMenuLabel>Durum</DropdownMenuLabel>
+                        <DropdownMenuLabel>Status</DropdownMenuLabel>
                         {(['pending', 'in-progress', 'completed'] as const)
                           .filter((s) => s !== t.status)
                           .map((s) => (
@@ -245,7 +245,7 @@ export default function Tasks() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem variant="destructive" onSelect={() => setTimeout(() => setPendingDelete(t), 0)}>
                           <Trash2 aria-hidden />
-                          Sil
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -257,14 +257,14 @@ export default function Tasks() {
         )}
       </Page>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen} title="Yeni görev" description="Size atanır; son tarihe göre sıralanır.">
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen} title="New task" description="Assigned to you and sorted by due date.">
         <form onSubmit={submit} className="grid grid-cols-2 gap-4">
           {formError && (
             <div role="alert" className="notice col-span-2">
               {formError}
             </div>
           )}
-          <Field id="t-title" label="Başlık" className="col-span-2">
+          <Field id="t-title" label="Title" className="col-span-2">
             <input
               id="t-title"
               required
@@ -274,7 +274,7 @@ export default function Tasks() {
               className="input"
             />
           </Field>
-          <Field id="t-desc" label="Açıklama" className="col-span-2">
+          <Field id="t-desc" label="Description" className="col-span-2">
             <textarea
               id="t-desc"
               rows={3}
@@ -283,7 +283,7 @@ export default function Tasks() {
               className="input resize-none"
             />
           </Field>
-          <Field id="t-priority" label="Öncelik" className="col-span-2 sm:col-span-1">
+          <Field id="t-priority" label="Priority" className="col-span-2 sm:col-span-1">
             <select id="t-priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} className="input">
               {Object.entries(PRIORITY).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -292,15 +292,15 @@ export default function Tasks() {
               ))}
             </select>
           </Field>
-          <Field id="t-due" label="Son tarih" className="col-span-2 sm:col-span-1">
+          <Field id="t-due" label="Due date" className="col-span-2 sm:col-span-1">
             <input id="t-due" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className="input figure" />
           </Field>
           <div className="col-span-2 mt-2 flex gap-2">
             <button type="submit" disabled={saving} className="btn">
-              {saving ? 'Kaydediliyor' : 'Görevi ekle'}
+              {saving ? 'Saving' : 'Add task'}
             </button>
             <button type="button" onClick={() => setSheetOpen(false)} className="btn-secondary">
-              Vazgeç
+              Cancel
             </button>
           </div>
         </form>
@@ -311,7 +311,7 @@ export default function Tasks() {
         onCancel={() => setPendingDelete(null)}
         onConfirm={remove}
         name={(t) => t.title}
-        detail={() => 'Görev listeden kaldırılır.'}
+        detail={() => 'The task is removed from the list.'}
       />
     </AppShell>
   );

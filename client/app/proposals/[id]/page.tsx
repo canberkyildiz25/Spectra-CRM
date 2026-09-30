@@ -64,16 +64,16 @@ export default function ProposalDetail() {
       <AppShell>
         <Page>
           {phase === 'loading' ? (
-            <div className="animate-pulse space-y-4" role="status" aria-label="Yükleniyor">
+            <div className="animate-pulse space-y-4" role="status" aria-label="Loading">
               <div className="h-10 w-64 rounded bg-lift" />
               <div className="h-[32rem] rounded-[var(--radius-lg)] bg-panel" />
             </div>
           ) : (
             <div className="max-w-md py-16">
-              <p className="label">Bulunamadı</p>
-              <h1 className="mt-3 text-[2.25rem] text-fg">Bu teklif yok.</h1>
+              <p className="label">Not found</p>
+              <h1 className="mt-3 text-[2.25rem] text-fg">This proposal does not exist.</h1>
               <Link href="/proposals" className="btn mt-6">
-                Tekliflere dön
+                Back to proposals
               </Link>
             </div>
           )}
@@ -89,10 +89,10 @@ export default function ProposalDetail() {
   const c = proposal.customerId;
 
   const meta: [string, string][] = [
-    ['Başlık', proposal.title],
-    ['Düzenleme', dateLong(proposal.createdAt)],
-    ['Geçerlilik', dateLong(proposal.validUntil)],
-    ...(proposal.opportunityId ? ([['İlgili fırsat', proposal.opportunityId.title]] as [string, string][]) : []),
+    ['Title', proposal.title],
+    ['Issued', dateLong(proposal.createdAt)],
+    ['Valid until', dateLong(proposal.validUntil)],
+    ...(proposal.opportunityId ? ([['Related deal', proposal.opportunityId.title]] as [string, string][]) : []),
   ];
 
   return (
@@ -102,17 +102,17 @@ export default function ProposalDetail() {
         <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
           <Link href="/proposals" className="btn-ghost -ml-3">
             <ArrowLeft className="size-4" aria-hidden />
-            Teklifler
+            Proposals
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <ToneChip tone={st.tone}>{st.label}</ToneChip>
             <Link href={`/proposals/${proposal._id}/edit`} className="btn-secondary btn-sm">
               <Pencil className="size-4" aria-hidden />
-              Düzenle
+              Edit
             </Link>
             <button type="button" onClick={() => window.print()} className="btn btn-sm">
               <Printer className="size-4" aria-hidden />
-              Yazdır / PDF
+              Print / PDF
             </button>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function ProposalDetail() {
         {/* ── Document ── */}
         <article
           className="print-page mx-auto max-w-4xl overflow-hidden rounded-[var(--radius-lg)] bg-paper text-paper-ink print:rounded-none"
-          aria-label={`${proposal.proposalNumber} satış teklifi`}
+          aria-label={`Sales proposal ${proposal.proposalNumber}`}
         >
           <header className="flex flex-col gap-6 border-b border-paper-line px-6 py-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
             <div className="flex items-center gap-2.5">
@@ -128,7 +128,7 @@ export default function ProposalDetail() {
               <span className="wordmark text-base text-paper-ink">Spectra</span>
             </div>
             <div className="sm:text-right">
-              <p className="label text-paper-ink-2">Satış teklifi</p>
+              <p className="label text-paper-ink-2">Sales proposal</p>
               <p className="readout mt-2 text-[2.75rem] text-paper-ink">{proposal.proposalNumber}</p>
               <p className="mt-1 text-sm text-paper-ink-2">{st.label}</p>
             </div>
@@ -136,7 +136,7 @@ export default function ProposalDetail() {
 
           <div className="grid gap-8 border-b border-paper-line px-6 py-8 sm:grid-cols-2 sm:px-10">
             <section>
-              <h2 className="label text-paper-ink-2">Müşteri</h2>
+              <h2 className="label text-paper-ink-2">Customer</h2>
               {c ? (
                 <div className="mt-3 space-y-0.5 text-sm">
                   <p className="text-base font-semibold text-paper-ink">
@@ -148,11 +148,11 @@ export default function ProposalDetail() {
                   {c.city && <p className="text-paper-ink-2">{c.city}</p>}
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-paper-ink-2">Müşteri kaydı silinmiş.</p>
+                <p className="mt-3 text-sm text-paper-ink-2">The customer record has been deleted.</p>
               )}
             </section>
             <section>
-              <h2 className="label text-paper-ink-2">Teklif</h2>
+              <h2 className="label text-paper-ink-2">Proposal</h2>
               <dl className="mt-3 space-y-1.5 text-sm">
                 {meta.map(([k, v]) => (
                   <div key={k} className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3">
@@ -166,18 +166,18 @@ export default function ProposalDetail() {
 
           <section className="px-6 py-8 sm:px-10" aria-labelledby="doc-items">
             <h2 id="doc-items" className="label text-paper-ink-2">
-              Ürün ve hizmetler
+              Products and services
             </h2>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[34rem] text-sm">
                 <thead>
                   <tr className="border-b-2 border-paper-ink text-left">
                     <th className="label py-2.5 pr-3 text-paper-ink-2">#</th>
-                    <th className="label py-2.5 pr-3 text-paper-ink-2">Kalem</th>
-                    <th className="label py-2.5 pr-3 text-paper-ink-2">Birim</th>
-                    <th className="label py-2.5 pr-3 text-right text-paper-ink-2">Miktar</th>
-                    <th className="label py-2.5 pr-3 text-right text-paper-ink-2">Birim fiyat</th>
-                    <th className="label py-2.5 text-right text-paper-ink-2">Tutar</th>
+                    <th className="label py-2.5 pr-3 text-paper-ink-2">Item</th>
+                    <th className="label py-2.5 pr-3 text-paper-ink-2">Unit</th>
+                    <th className="label py-2.5 pr-3 text-right text-paper-ink-2">Qty</th>
+                    <th className="label py-2.5 pr-3 text-right text-paper-ink-2">Unit price</th>
+                    <th className="label py-2.5 text-right text-paper-ink-2">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,15 +200,15 @@ export default function ProposalDetail() {
 
             <dl className="ml-auto mt-6 max-w-xs space-y-2 text-sm">
               <div className="flex justify-between gap-4">
-                <dt className="text-paper-ink-2">Ara toplam</dt>
+                <dt className="text-paper-ink-2">Subtotal</dt>
                 <dd className="figure text-paper-ink">{moneyExact(subtotal)}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-paper-ink-2">KDV (%{proposal.taxRate})</dt>
+                <dt className="text-paper-ink-2">VAT ({proposal.taxRate}%)</dt>
                 <dd className="figure text-paper-ink">{moneyExact(tax)}</dd>
               </div>
               <div className="flex items-end justify-between gap-4 border-t-2 border-paper-ink pt-3">
-                <dt className="label text-paper-ink-2">Genel toplam</dt>
+                <dt className="label text-paper-ink-2">Total</dt>
                 <dd className="readout text-[2.25rem] text-paper-ink">{moneyExact(total)}</dd>
               </div>
             </dl>
@@ -218,13 +218,13 @@ export default function ProposalDetail() {
             <div className="grid gap-6 border-t border-paper-line px-6 py-8 sm:grid-cols-2 sm:px-10">
               {proposal.paymentTerms && (
                 <section>
-                  <h2 className="label text-paper-ink-2">Ödeme koşulları</h2>
+                  <h2 className="label text-paper-ink-2">Payment terms</h2>
                   <p className="mt-2 text-sm text-paper-ink">{proposal.paymentTerms}</p>
                 </section>
               )}
               {proposal.notes && (
                 <section>
-                  <h2 className="label text-paper-ink-2">Notlar</h2>
+                  <h2 className="label text-paper-ink-2">Notes</h2>
                   <p className="mt-2 whitespace-pre-line text-sm text-paper-ink">{proposal.notes}</p>
                 </section>
               )}
@@ -232,16 +232,16 @@ export default function ProposalDetail() {
           )}
 
           <div className="grid gap-10 border-t border-paper-line px-6 py-10 sm:grid-cols-2 sm:px-10">
-            {['Hazırlayan', 'Müşteri onayı'].map((label) => (
+            {['Prepared by', 'Accepted by'].map((label) => (
               <div key={label}>
                 <div className="h-14 border-b border-paper-ink" />
-                <p className="mt-2 text-xs text-paper-ink-2">{label} · imza ve tarih</p>
+                <p className="mt-2 text-xs text-paper-ink-2">{label} · signature and date</p>
               </div>
             ))}
           </div>
 
           <footer className="flex flex-wrap justify-between gap-2 border-t border-paper-line px-6 py-4 text-xs text-paper-ink-2 sm:px-10">
-            <span>Spectra CRM ile hazırlandı</span>
+            <span>Prepared with Spectra CRM</span>
             <span className="figure">
               {proposal.proposalNumber} · {dateLong(proposal.createdAt)}
             </span>

@@ -9,12 +9,12 @@ import { useAuthStore } from '@/lib/store';
 import { errorText } from '@/lib/format';
 
 const FIELDS = [
-  { name: 'firstName', label: 'Ad', autoComplete: 'given-name', half: true },
-  { name: 'lastName', label: 'Soyad', autoComplete: 'family-name', half: true },
-  { name: 'username', label: 'Kullanıcı adı', autoComplete: 'username' },
-  { name: 'email', label: 'E-posta', type: 'email', autoComplete: 'email' },
-  { name: 'password', label: 'Şifre', type: 'password', autoComplete: 'new-password', hint: 'En az 6 karakter' },
-  { name: 'confirmPassword', label: 'Şifre tekrar', type: 'password', autoComplete: 'new-password' },
+  { name: 'firstName', label: 'First name', autoComplete: 'given-name', half: true },
+  { name: 'lastName', label: 'Last name', autoComplete: 'family-name', half: true },
+  { name: 'username', label: 'Username', autoComplete: 'username' },
+  { name: 'email', label: 'Email', type: 'email', autoComplete: 'email' },
+  { name: 'password', label: 'Password', type: 'password', autoComplete: 'new-password', hint: 'At least 6 characters' },
+  { name: 'confirmPassword', label: 'Confirm password', type: 'password', autoComplete: 'new-password' },
 ] as const;
 
 type Form = Record<(typeof FIELDS)[number]['name'], string>;
@@ -36,8 +36,8 @@ export default function Register() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (form.password !== form.confirmPassword) return setError('Şifreler eşleşmiyor.');
-    if (form.password.length < 6) return setError('Şifre en az 6 karakter olmalı.');
+    if (form.password !== form.confirmPassword) return setError('The passwords do not match.');
+    if (form.password.length < 6) return setError('The password needs at least 6 characters.');
     setLoading(true);
     try {
       const { confirmPassword: _skip, ...payload } = form;
@@ -48,25 +48,25 @@ export default function Register() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Kayıt başarısız');
+      if (!res.ok) throw new Error(data.error || 'Sign-up failed');
       setAuth(data.data.token, data.data.user);
       router.push('/dashboard');
     } catch (err) {
-      setError(errorText(err, 'Kayıt başarısız'));
+      setError(errorText(err, 'Sign-up failed'));
       setLoading(false);
     }
   };
 
   return (
     <AuthFrame>
-      <p className="label">Kayıt</p>
-      <h1 className="mt-3 text-[2.5rem] text-fg">Hesap oluşturun.</h1>
+      <p className="label">Sign up</p>
+      <h1 className="mt-3 text-[2.5rem] text-fg">Create an account.</h1>
       <p className="mt-2 text-sm text-fg-2">
-        Yalnızca göz atmak için gerek yok —{' '}
+        Just looking around? The{' '}
         <Link href="/auth/login" className="text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg">
-          demo hesabı
+          demo account
         </Link>{' '}
-        hazır.
+        is ready.
       </p>
 
       {error && (
@@ -105,14 +105,14 @@ export default function Register() {
         ))}
         <button type="submit" disabled={loading} className="btn col-span-2 mt-2 w-full">
           {loading && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
-          {loading ? 'Hesap oluşturuluyor' : 'Hesap oluştur'}
+          {loading ? 'Creating account' : 'Create account'}
         </button>
       </form>
 
       <p className="mt-8 text-sm text-fg-2">
-        Zaten hesabınız var mı?{' '}
+        Already have an account?{' '}
         <Link href="/auth/login" className="font-medium text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg">
-          Giriş yapın
+          Sign in
         </Link>
       </p>
     </AuthFrame>

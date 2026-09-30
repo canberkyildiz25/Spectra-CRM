@@ -54,7 +54,7 @@ export default function Proposals() {
     api
       .get('/proposals')
       .then((r) => setProposals(r.data.data))
-      .catch(() => toast.error('Teklifler yüklenemedi'))
+      .catch(() => toast.error('Proposals could not load'))
       .finally(() => setLoading(false));
   }, [authReady]);
 
@@ -71,13 +71,13 @@ export default function Proposals() {
   }, [proposals]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLocaleLowerCase('tr');
+    const q = search.trim().toLocaleLowerCase('en');
     return proposals.filter(
       (p) =>
         (filter === 'all' || p.status === filter) &&
         (!q ||
           `${p.title} ${p.proposalNumber} ${p.customerId?.firstName ?? ''} ${p.customerId?.lastName ?? ''} ${p.customerId?.company ?? ''}`
-            .toLocaleLowerCase('tr')
+            .toLocaleLowerCase('en')
             .includes(q)),
     );
   }, [proposals, search, filter]);
@@ -90,7 +90,7 @@ export default function Proposals() {
       toast.success(`${p.proposalNumber} → ${PROPOSAL_STATUS[status].label}`);
     } catch {
       setProposals(before);
-      toast.error('Durum güncellenemedi');
+      toast.error('The status could not be updated');
     }
   };
 
@@ -103,9 +103,9 @@ export default function Proposals() {
     try {
       await api.delete(`/proposals/${target._id}`);
       setProposals((list) => list.filter((x) => x._id !== target._id));
-      toast.success('Teklif silindi');
+      toast.success('Proposal deleted');
     } catch {
-      toast.error('Silme başarısız');
+      toast.error('Delete failed');
     }
   };
 
@@ -114,13 +114,13 @@ export default function Proposals() {
     <AppShell>
       <Page>
         <PageHead
-          label="Belgeler"
-          title="Teklifler"
-          meta={`${proposals.length} teklif · ${money(groups.accepted?.value ?? 0)} kabul edildi`}
+          label="Documents"
+          title="Proposals"
+          meta={`${proposals.length} proposals · ${money(groups.accepted?.value ?? 0)} accepted`}
           actions={
             <Link href="/proposals/new" className="btn btn-sm">
               <Plus className="size-4" aria-hidden />
-              Yeni teklif
+              New proposal
             </Link>
           }
         />
@@ -128,7 +128,7 @@ export default function Proposals() {
         {/* The summary is the filter: each cell narrows the list to its status. */}
         <div
           role="group"
-          aria-label="Duruma göre süz"
+          aria-label="Filter by status"
           className="grid grid-cols-2 overflow-hidden rounded-[var(--radius-lg)] border border-line bg-panel sm:grid-cols-5"
         >
           {(['all', ...ORDER] as const).map((k, i) => {
@@ -147,7 +147,7 @@ export default function Proposals() {
                 {pressed && <span className="absolute inset-x-0 top-0 h-[2px] bg-fg" aria-hidden />}
                 <span className="flex items-center gap-2">
                   {k !== 'all' && <ToneDot tone={PROPOSAL_STATUS[k].tone} />}
-                  <span className="label">{k === 'all' ? 'Tümü' : PROPOSAL_STATUS[k].label}</span>
+                  <span className="label">{k === 'all' ? 'All' : PROPOSAL_STATUS[k].label}</span>
                 </span>
                 <span className="readout mt-2 block text-[2rem] text-fg">{g.count}</span>
                 <span className="figure mt-1 block text-xs text-fg-2">{moneyShort(g.value)}</span>
@@ -159,20 +159,20 @@ export default function Proposals() {
         <div className="relative mt-5 max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-fg-3" aria-hidden />
           <label htmlFor="p-search" className="sr-only">
-            Teklif ara
+            Search proposals
           </label>
           <input
             id="p-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Numara, başlık ya da müşteri"
+            placeholder="Number, title or customer"
             className="input pl-9"
           />
         </div>
 
         <div className="mt-6">
           {loading ? (
-            <div className="table-wrap" role="status" aria-label="Yükleniyor">
+            <div className="table-wrap" role="status" aria-label="Loading">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex animate-pulse gap-6 border-b border-line px-4 py-5 last:border-0">
                   <div className="h-3 w-24 rounded bg-lift" />
@@ -184,7 +184,7 @@ export default function Proposals() {
           ) : filtered.length === 0 ? (
             <EmptyState
               variant={proposals.length ? 'search' : 'proposals'}
-              ctaLabel="Yeni teklif"
+              ctaLabel="New proposal"
               ctaHref={proposals.length ? undefined : '/proposals/new'}
             />
           ) : (
@@ -192,13 +192,13 @@ export default function Proposals() {
               <table className="data-table stack">
                 <thead>
                   <tr>
-                    <th>Teklif</th>
-                    <th>Müşteri</th>
-                    <th className="num">Tutar</th>
-                    <th>Durum</th>
-                    <th>Geçerlilik</th>
+                    <th>Proposal</th>
+                    <th>Customer</th>
+                    <th className="num">Amount</th>
+                    <th>Status</th>
+                    <th>Valid until</th>
                     <th>
-                      <span className="sr-only">İşlemler</span>
+                      <span className="sr-only">Actions</span>
                     </th>
                   </tr>
                 </thead>
@@ -216,24 +216,24 @@ export default function Proposals() {
                             </span>
                           </Link>
                         </td>
-                        <td data-label="Müşteri" className="text-fg-2">
+                        <td data-label="Customer" className="text-fg-2">
                           {p.customerId ? `${p.customerId.firstName} ${p.customerId.lastName}` : '—'}
                           {p.customerId?.company && <span className="block text-xs text-fg-3">{p.customerId.company}</span>}
                         </td>
-                        <td data-label="Tutar" className="num text-fg">
+                        <td data-label="Amount" className="num text-fg">
                           {money(total(p))}
                         </td>
-                        <td data-label="Durum">
+                        <td data-label="Status">
                           <ToneChip tone={st.tone}>{st.label}</ToneChip>
                         </td>
-                        <td data-label="Geçerlilik" className="figure text-fg-2">
+                        <td data-label="Valid until" className="figure text-fg-2">
                           {date(p.validUntil)}
-                          {expired && <span className="block font-sans text-xs text-fg-3">süresi doldu</span>}
+                          {expired && <span className="block font-sans text-xs text-fg-3">expired</span>}
                         </td>
                         <td className="row-actions text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger
-                              aria-label={`${p.proposalNumber} için işlemler`}
+                              aria-label={`Actions for ${p.proposalNumber}`}
                               className="inline-flex size-8 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg data-[state=open]:bg-lift"
                             >
                               <Ellipsis className="size-4" aria-hidden />
@@ -241,14 +241,14 @@ export default function Proposals() {
                             <DropdownMenuContent align="end" className="min-w-52">
                               <DropdownMenuItem onSelect={() => router.push(`/proposals/${p._id}`)}>
                                 <Eye aria-hidden />
-                                Belgeyi aç
+                                Open document
                               </DropdownMenuItem>
                               <DropdownMenuItem onSelect={() => router.push(`/proposals/${p._id}/edit`)}>
                                 <Pencil aria-hidden />
-                                Düzenle
+                                Edit
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuLabel>Durumu değiştir</DropdownMenuLabel>
+                              <DropdownMenuLabel>Change status</DropdownMenuLabel>
                               {ORDER.filter((s) => s !== p.status).map((s) => (
                                 <DropdownMenuItem key={s} onSelect={() => setStatus(p, s)}>
                                   <ToneDot tone={PROPOSAL_STATUS[s].tone} />
@@ -258,7 +258,7 @@ export default function Proposals() {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem variant="destructive" onSelect={() => setTimeout(() => setPendingDelete(p), 0)}>
                                 <Trash2 aria-hidden />
-                                Sil
+                                Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -278,7 +278,7 @@ export default function Proposals() {
         onCancel={() => setPendingDelete(null)}
         onConfirm={remove}
         name={(p) => p.proposalNumber}
-        detail={(p) => `“${p.title}” teklifi ve kalemleri kaldırılır.`}
+        detail={(p) => `The proposal “${p.title}” and its line items will be removed.`}
       />
     </AppShell>
   );

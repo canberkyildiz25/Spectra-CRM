@@ -31,14 +31,14 @@ export default function WonLostSplit({
   return (
     <div>
       <p className="flex items-baseline gap-3">
-        <span className="readout text-[3.5rem] text-fg">%{winRate}</span>
-        <span className="text-sm text-fg-2">kazanma oranı · {decided} kapanış</span>
+        <span className="readout text-[3.5rem] text-fg">{winRate}%</span>
+        <span className="text-sm text-fg-2">win rate · {decided} closed</span>
       </p>
 
       <div
         className="mt-5 flex h-3 w-full gap-[3px]"
         role="img"
-        aria-label={`Kazanılan ${money(wonValue)}, kaybedilen ${money(lostValue)}`}
+        aria-label={`Won ${money(wonValue)}, lost ${money(lostValue)}`}
       >
         {wonPct > 0 && (
           <motion.span
@@ -56,18 +56,18 @@ export default function WonLostSplit({
         <div>
           <dt className="flex items-center gap-2">
             <span className="tone-dot bg-won" />
-            <span className="label">Kazanılan</span>
+            <span className="label">Won</span>
           </dt>
           <dd className="figure mt-1.5 text-lg text-fg">{money(wonValue)}</dd>
-          <dd className="text-xs text-fg-3">{wonCount} fırsat</dd>
+          <dd className="text-xs text-fg-3">{wonCount} deals</dd>
         </div>
         <div>
           <dt className="flex items-center gap-2">
             <span className="tone-dot bg-ash" />
-            <span className="label">Kaybedilen</span>
+            <span className="label">Lost</span>
           </dt>
           <dd className="figure mt-1.5 text-lg text-fg">{money(lostValue)}</dd>
-          <dd className="text-xs text-fg-3">{lostCount} fırsat</dd>
+          <dd className="text-xs text-fg-3">{lostCount} deals</dd>
         </div>
       </dl>
     </div>

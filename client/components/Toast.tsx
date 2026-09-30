@@ -58,7 +58,7 @@ function ToastCard({ item, onClose }: { item: ToastItem; onClose: (id: number) =
       <button
         type="button"
         onClick={() => onClose(item.id)}
-        aria-label="Bildirimi kapat"
+        aria-label="Dismiss notification"
         className="flex size-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-fg-3 transition-colors hover:bg-lift hover:text-fg"
       >
         <X className="size-3.5" aria-hidden />

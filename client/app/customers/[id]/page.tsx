@@ -75,7 +75,7 @@ export default function CustomerDetail() {
         setProposals((p.data.data as Proposal[]).filter((x) => ownerId(x.customerId) === id));
       })
       .catch(() => {
-        toast.error('Müşteri bulunamadı');
+        toast.error('Customer not found');
         router.push('/customers');
       })
       .finally(() => setLoading(false));
@@ -89,11 +89,11 @@ export default function CustomerDetail() {
     setTaskError('');
     try {
       await api.post('/tasks', { ...task, relatedTo: { type: 'customer', id } });
-      toast.success('Görev eklendi');
+      toast.success('Task added');
       setTaskOpen(false);
       setTask(emptyTask);
     } catch (err) {
-      setTaskError(errorText(err, 'Görev eklenemedi'));
+      setTaskError(errorText(err, 'The task could not be added'));
     } finally {
       setTaskSaving(false);
     }
@@ -103,7 +103,7 @@ export default function CustomerDetail() {
     return (
       <AppShell>
         <Page>
-          <div className="animate-pulse space-y-5" role="status" aria-label="Yükleniyor">
+          <div className="animate-pulse space-y-5" role="status" aria-label="Loading">
             <div className="h-4 w-28 rounded bg-lift" />
             <div className="h-14 w-80 rounded bg-lift" />
             <div className="h-40 rounded-[var(--radius-lg)] bg-panel" />
@@ -120,13 +120,13 @@ export default function CustomerDetail() {
 
   const info: [string, React.ReactNode][] = [
     [
-      'E-posta',
+      'Email',
       <a key="e" href={`mailto:${customer.email}`} className="break-all text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg">
         {customer.email}
       </a>,
     ],
     [
-      'Telefon',
+      'Phone',
       customer.phone ? (
         <a key="p" href={`tel:${customer.phone.replace(/\s/g, '')}`} className="figure text-fg">
           {customer.phone}
@@ -135,10 +135,10 @@ export default function CustomerDetail() {
         '—'
       ),
     ],
-    ['Şehir', customer.city || '—'],
-    ['Ülke', customer.country || '—'],
-    ['Kaynak', customer.source || '—'],
-    ['Kayıt', <span key="d" className="figure">{date(customer.createdAt)}</span>],
+    ['City', customer.city || '—'],
+    ['Country', customer.country || '—'],
+    ['Source', customer.source || '—'],
+    ['Added', <span key="d" className="figure">{date(customer.createdAt)}</span>],
   ];
 
   return (
@@ -146,7 +146,7 @@ export default function CustomerDetail() {
       <Page>
         <Link href="/customers" className="btn-ghost -ml-3 mb-6">
           <ArrowLeft className="size-4" aria-hidden />
-          Müşteriler
+          Customers
         </Link>
 
         <header className="flex flex-col gap-6 border-b border-line pb-8 md:flex-row md:items-end md:justify-between">
@@ -156,7 +156,7 @@ export default function CustomerDetail() {
               {customer.lastName[0]}
             </span>
             <div className="min-w-0">
-              <p className="label">{customer.company || 'Bireysel'}</p>
+              <p className="label">{customer.company || 'Individual'}</p>
               <h1 className="mt-1 text-[clamp(2.25rem,5vw,3.25rem)] text-fg">
                 {customer.firstName} {customer.lastName}
               </h1>
@@ -168,15 +168,15 @@ export default function CustomerDetail() {
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setTaskOpen(true)} className="btn-secondary btn-sm">
               <ListChecks className="size-4" aria-hidden />
-              Görev ekle
+              Add task
             </button>
             <Link href={`/opportunities?new=1&customerId=${id}`} className="btn-secondary btn-sm">
               <Plus className="size-4" aria-hidden />
-              Fırsat ekle
+              Add deal
             </Link>
             <Link href={`/proposals/new?customerId=${id}`} className="btn btn-sm">
               <Plus className="size-4" aria-hidden />
-              Teklif hazırla
+              New proposal
             </Link>
           </div>
         </header>
@@ -190,7 +190,7 @@ export default function CustomerDetail() {
           ))}
           {customer.notes && (
             <div className="sm:col-span-2 lg:col-span-3">
-              <dt className="label">Notlar</dt>
+              <dt className="label">Notes</dt>
               <dd className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-fg-2">{customer.notes}</dd>
             </div>
           )}
@@ -200,12 +200,12 @@ export default function CustomerDetail() {
           <section className="card overflow-hidden" aria-labelledby="c-opps">
             <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-4">
               <h2 id="c-opps" className="text-[1.375rem] text-fg">
-                Fırsatlar <span className="figure text-sm text-fg-3">{opportunities.length}</span>
+                Deals <span className="figure text-sm text-fg-3">{opportunities.length}</span>
               </h2>
-              {openValue > 0 && <span className="figure text-sm text-fg-2">açık {money(openValue)}</span>}
+              {openValue > 0 && <span className="figure text-sm text-fg-2">{money(openValue)} open</span>}
             </div>
             {opportunities.length === 0 ? (
-              <p className="px-5 py-8 text-sm text-fg-3">Bu müşteriye bağlı fırsat yok.</p>
+              <p className="px-5 py-8 text-sm text-fg-3">No deals for this customer yet.</p>
             ) : (
               <ul>
                 {opportunities.map((o) => {
@@ -231,11 +231,11 @@ export default function CustomerDetail() {
           <section className="card overflow-hidden" aria-labelledby="c-props">
             <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-4">
               <h2 id="c-props" className="text-[1.375rem] text-fg">
-                Teklifler <span className="figure text-sm text-fg-3">{proposals.length}</span>
+                Proposals <span className="figure text-sm text-fg-3">{proposals.length}</span>
               </h2>
             </div>
             {proposals.length === 0 ? (
-              <p className="px-5 py-8 text-sm text-fg-3">Bu müşteriye hazırlanmış teklif yok.</p>
+              <p className="px-5 py-8 text-sm text-fg-3">No proposals for this customer yet.</p>
             ) : (
               <ul>
                 {proposals.map((p) => {
@@ -265,8 +265,8 @@ export default function CustomerDetail() {
       <Sheet
         open={taskOpen}
         onOpenChange={setTaskOpen}
-        title="Yeni görev"
-        description={`${customer.firstName} ${customer.lastName} kaydına bağlanır.`}
+        title="New task"
+        description={`Linked to ${customer.firstName} ${customer.lastName}.`}
       >
         <form onSubmit={createTask} className="grid grid-cols-2 gap-4">
           {taskError && (
@@ -274,7 +274,7 @@ export default function CustomerDetail() {
               {taskError}
             </div>
           )}
-          <Field id="t-title" label="Başlık" className="col-span-2">
+          <Field id="t-title" label="Title" className="col-span-2">
             <input
               id="t-title"
               required
@@ -284,7 +284,7 @@ export default function CustomerDetail() {
               className="input"
             />
           </Field>
-          <Field id="t-desc" label="Açıklama" className="col-span-2">
+          <Field id="t-desc" label="Description" className="col-span-2">
             <textarea
               id="t-desc"
               rows={3}
@@ -293,7 +293,7 @@ export default function CustomerDetail() {
               className="input resize-none"
             />
           </Field>
-          <Field id="t-priority" label="Öncelik" className="col-span-2 sm:col-span-1">
+          <Field id="t-priority" label="Priority" className="col-span-2 sm:col-span-1">
             <select id="t-priority" value={task.priority} onChange={(e) => setTask({ ...task, priority: e.target.value })} className="input">
               {Object.entries(PRIORITY).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -302,15 +302,15 @@ export default function CustomerDetail() {
               ))}
             </select>
           </Field>
-          <Field id="t-due" label="Son tarih" className="col-span-2 sm:col-span-1">
+          <Field id="t-due" label="Due date" className="col-span-2 sm:col-span-1">
             <input id="t-due" type="date" value={task.dueDate} onChange={(e) => setTask({ ...task, dueDate: e.target.value })} className="input figure" />
           </Field>
           <div className="col-span-2 mt-2 flex gap-2">
             <button type="submit" disabled={taskSaving} className="btn">
-              {taskSaving ? 'Kaydediliyor' : 'Görevi ekle'}
+              {taskSaving ? 'Saving' : 'Add task'}
             </button>
             <button type="button" onClick={() => setTaskOpen(false)} className="btn-secondary">
-              Vazgeç
+              Cancel
             </button>
           </div>
         </form>

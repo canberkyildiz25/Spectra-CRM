@@ -45,13 +45,13 @@ function Rail() {
   return (
     <aside className="no-print sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-raised lg:flex">
       <div className="px-5 pb-6 pt-6">
-        <Link href="/dashboard" aria-label="Panele git" className="rounded-sm">
+        <Link href="/dashboard" aria-label="Go to the dashboard" className="rounded-sm">
           <Wordmark />
         </Link>
       </div>
 
-      <nav className="flex-1 px-3" aria-label="Uygulama">
-        <p className="label px-3 pb-3">Çalışma alanı</p>
+      <nav className="flex-1 px-3" aria-label="App">
+        <p className="label px-3 pb-3">Workspace</p>
         <ul className="space-y-0.5">
           {NAV.map((item) => {
             const active = isActive(pathname, item.href);
@@ -98,8 +98,8 @@ function Rail() {
           <button
             type="button"
             onClick={signOut}
-            aria-label="Çıkış yap"
-            title="Çıkış yap"
+            aria-label="Sign out"
+            title="Sign out"
             className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg"
           >
             <LogOut className="size-4" aria-hidden />
@@ -115,22 +115,22 @@ function TopBar() {
   const signOut = useSignOut();
   return (
     <header className="no-print sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-raised px-4 lg:hidden">
-      <Link href="/dashboard" aria-label="Panele git" className="rounded-sm">
+      <Link href="/dashboard" aria-label="Go to the dashboard" className="rounded-sm">
         <Wordmark />
       </Link>
       <DropdownMenu>
         <DropdownMenuTrigger
-          aria-label="Hesap menüsü"
+          aria-label="Account menu"
           className="figure flex size-9 items-center justify-center rounded-[var(--radius-md)] border border-line bg-panel text-[0.6875rem] text-fg"
         >
           {initials(user?.firstName, user?.lastName)}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-52">
-          <DropdownMenuLabel>{user ? `${user.firstName} ${user.lastName}` : 'Hesap'}</DropdownMenuLabel>
+          <DropdownMenuLabel>{user ? `${user.firstName} ${user.lastName}` : 'Account'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={signOut}>
             <LogOut aria-hidden />
-            Çıkış yap
+            Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -143,7 +143,7 @@ function TabBar() {
   const reduce = useReducedMotion();
   return (
     <nav
-      aria-label="Uygulama"
+      aria-label="App"
       className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-raised pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="grid grid-cols-5">
@@ -184,7 +184,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
       <a href="#content" className="skip-link no-print">
-        İçeriğe geç
+        Skip to content
       </a>
       <div className="flex min-h-dvh bg-ground">
         <Rail />

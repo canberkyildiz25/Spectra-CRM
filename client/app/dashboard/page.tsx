@@ -31,13 +31,13 @@ interface Opportunity {
 
 const greeting = () => {
   const h = new Date().getHours();
-  if (h < 12) return 'Günaydın';
-  if (h < 18) return 'İyi günler';
-  return 'İyi akşamlar';
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
 };
 
 const plainNumber = (n: number) => String(n);
-const percent = (n: number) => `%${n}`;
+const percent = (n: number) => `${n}%`;
 
 export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
@@ -68,7 +68,7 @@ export default function Dashboard() {
       <AppShell>
         <Page>
           {phase === 'loading' ? (
-            <div role="status" aria-label="Veriler yükleniyor" className="animate-pulse space-y-6">
+            <div role="status" aria-label="Loading data" className="animate-pulse space-y-6">
               <div className="h-4 w-24 rounded bg-lift" />
               <div className="h-12 w-72 rounded bg-lift" />
               <div className="h-32 rounded-[var(--radius-lg)] bg-panel" />
@@ -79,11 +79,11 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="max-w-md py-16">
-              <p className="label">Veri yok</p>
-              <h1 className="mt-3 text-[2.25rem] text-fg">Özet alınamadı.</h1>
-              <p className="mt-3 text-sm leading-relaxed text-fg-2">Sunucu yanıt vermedi. Sayfayı yenileyip yeniden deneyin.</p>
+              <p className="label">No data</p>
+              <h1 className="mt-3 text-[2.25rem] text-fg">The summary could not load.</h1>
+              <p className="mt-3 text-sm leading-relaxed text-fg-2">The server did not respond. Reload the page to try again.</p>
               <button type="button" onClick={() => window.location.reload()} className="btn mt-6">
-                Yenile
+                Reload
               </button>
             </div>
           )}
@@ -111,12 +111,12 @@ export default function Dashboard() {
     <AppShell>
       <Page>
         <PageHead
-          label="Panel"
+          label="Dashboard"
           title={`${greeting()}${user?.firstName ? `, ${user.firstName}` : ''}.`}
           meta={dateLong(new Date())}
           actions={
             <Link href="/opportunities" className="btn-secondary btn-sm">
-              Fırsat panosu
+              Deal board
               <ArrowUpRight className="size-4" aria-hidden />
             </Link>
           }
@@ -124,19 +124,19 @@ export default function Dashboard() {
 
         {/* ── Headline figures: one lead readout, three beside it ── */}
         <section
-          aria-label="Özet rakamlar"
+          aria-label="Summary figures"
           className="grid grid-cols-2 overflow-hidden rounded-[var(--radius-lg)] border border-line bg-panel sm:grid-cols-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))]"
         >
           <div className="col-span-2 border-b border-line p-5 sm:col-span-3 sm:p-6 lg:col-span-1 lg:border-b-0 lg:border-r">
-            <p className="label">Açık hat</p>
+            <p className="label">Open pipeline</p>
             <p className="readout mt-3 text-[clamp(3.25rem,7vw,5rem)] text-fg">
               <CountUp value={openValue || stats.opportunities.pipelineValue} format={moneyShort} />
             </p>
             <p className="mt-2 text-sm text-fg-2">
-              {openCount} açık fırsat
+              {openCount} open deals
               {hottest?.value > 0 && (
                 <>
-                  {' · '}en büyük pay{' '}
+                  {' · '}largest share{' '}
                   <span className="inline-flex items-center gap-1.5 text-fg">
                     <ToneDot tone={hottest.tone} />
                     {hottest.label}
@@ -146,9 +146,9 @@ export default function Dashboard() {
             </p>
           </div>
           {[
-            { label: 'Kazanılan', value: stats.opportunities.wonValue, fmt: moneyShort, sub: `${stats.opportunities.won} anlaşma` },
-            { label: 'Teklif kabulü', value: acceptRate, fmt: percent, sub: `${stats.proposals.accepted} / ${stats.proposals.total} teklif` },
-            { label: 'Müşteriler', value: stats.customers.total, fmt: plainNumber, sub: `${stats.customers.active} aktif` },
+            { label: 'Won', value: stats.opportunities.wonValue, fmt: moneyShort, sub: `${stats.opportunities.won} deals` },
+            { label: 'Proposals accepted', value: acceptRate, fmt: percent, sub: `${stats.proposals.accepted} of ${stats.proposals.total}` },
+            { label: 'Customers', value: stats.customers.total, fmt: plainNumber, sub: `${stats.customers.active} active` },
           ].map((f, i) => (
             <div
               key={f.label}
@@ -169,9 +169,9 @@ export default function Dashboard() {
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <h2 id="pipeline-title" className="text-[1.75rem] text-fg">
-                  Aşamaya göre açık hat
+                  Open pipeline by stage
                 </h2>
-                <p className="mt-1 text-sm text-fg-2">Soğuktan sıcağa: aday, nitelikli, teklif, müzakere.</p>
+                <p className="mt-1 text-sm text-fg-2">Cold to hot: lead, qualified, proposal, negotiation.</p>
               </div>
             </div>
             <StageSpectrum data={stageData} />
@@ -179,9 +179,9 @@ export default function Dashboard() {
 
           <section className="card p-5 sm:p-6" aria-labelledby="closed-title">
             <h2 id="closed-title" className="text-[1.75rem] text-fg">
-              Kapanmış işler
+              Closed deals
             </h2>
-            <p className="mb-6 mt-1 text-sm text-fg-2">Kazanılan ve kaybedilen tutar.</p>
+            <p className="mb-6 mt-1 text-sm text-fg-2">Value won and lost.</p>
             <WonLostSplit
               wonCount={won.length || stats.opportunities.won}
               lostCount={lost.length}
@@ -196,14 +196,14 @@ export default function Dashboard() {
           <section className="card overflow-hidden" aria-labelledby="tasks-title">
             <div className="flex items-center justify-between border-b border-line px-5 py-4">
               <h2 id="tasks-title" className="text-[1.375rem] text-fg">
-                Son görevler
+                Recent tasks
               </h2>
               <Link href="/tasks" className="label transition-colors hover:text-fg">
-                Tümü ↗
+                All ↗
               </Link>
             </div>
             {stats.recentTasks.length === 0 ? (
-              <p className="px-5 py-10 text-sm text-fg-3">Henüz görev yok.</p>
+              <p className="px-5 py-10 text-sm text-fg-3">No tasks yet.</p>
             ) : (
               <ul>
                 {stats.recentTasks.map((t) => {
@@ -212,7 +212,7 @@ export default function Dashboard() {
                   return (
                     <li key={t._id} className="flex items-center gap-3 border-b border-line px-5 py-3 last:border-0">
                       <ToneDot tone={pr.tone} />
-                      <span className="sr-only">{pr.label} öncelik:</span>
+                      <span className="sr-only">{pr.label} priority:</span>
                       <span className={`min-w-0 flex-1 truncate text-sm ${t.status === 'completed' ? 'text-fg-3 line-through' : 'text-fg'}`}>
                         {t.title}
                       </span>
@@ -228,14 +228,14 @@ export default function Dashboard() {
           <section className="card overflow-hidden" aria-labelledby="customers-title">
             <div className="flex items-center justify-between border-b border-line px-5 py-4">
               <h2 id="customers-title" className="text-[1.375rem] text-fg">
-                Son müşteriler
+                Recent customers
               </h2>
               <Link href="/customers" className="label transition-colors hover:text-fg">
-                Tümü ↗
+                All ↗
               </Link>
             </div>
             {stats.recentCustomers.length === 0 ? (
-              <p className="px-5 py-10 text-sm text-fg-3">Henüz müşteri yok.</p>
+              <p className="px-5 py-10 text-sm text-fg-3">No customers yet.</p>
             ) : (
               <ul>
                 {stats.recentCustomers.map((c) => {

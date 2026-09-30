@@ -53,7 +53,7 @@ export function Sheet({
               )}
             </div>
             <DialogPrimitive.Close
-              aria-label="Kapat"
+              aria-label="Close"
               className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg"
             >
               <X className="size-4" aria-hidden />

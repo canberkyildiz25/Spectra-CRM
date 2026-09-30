@@ -1,101 +1,115 @@
 # Spectra CRM
 
-Müşteri, fırsat, teklif ve görev yönetimi. Next.js 16, Node.js/Express ve MongoDB Atlas ile geliştirilmiştir. Tasarım sistemi `client/design.md` dosyasındadır: koyu zemin, her fırsat aşamasının rengini taşıdığı bir sıcaklık skalası (aday soğuk, müzakere sıcak).
+Customers, deals, proposals and tasks in one CRM, built with Next.js 16, Node.js/Express and MongoDB Atlas.
+
+**Live demo:** https://client-xi-three-50.vercel.app — no sign-up; the demo account opens by itself.
+
+The design system lives in `client/design.md`: a dark ground and a single colour scale in which every deal carries the temperature of its stage, from a cold lead to a hot negotiation.
 
 ---
 
-## Özellikler
+## Features
 
-- **Müşteri Yönetimi** — Müşteri profilleri, iletişim bilgileri ve geçmiş kayıtlar
-- **Satış Pipeline** — Kanban tabanlı fırsat takibi ve satış hunisi yönetimi
-- **Teklif Oluşturma** — Profesyonel teklif hazırlama ve PDF çıktısı
-- **Görev Takibi** — Ekip içi görev atama ve ilerleme takibi
-- **Dashboard** — Gerçek zamanlı satış ve performans istatistikleri
-- **Kimlik Doğrulama** — JWT tabanlı güvenli giriş sistemi
+- **Deal pipeline** — a kanban board; drag a deal to the next stage, or move it from its menu with a keyboard or on a touch screen
+- **Proposals** — built from line items with VAT, printable as a PDF document, tracked as draft, sent, accepted or rejected
+- **Customers** — contact details with their deals and proposals in one record
+- **Tasks** — sorted by due date and marked by priority
+- **Dashboard** — open pipeline by stage, won and lost value, proposal acceptance, computed from the database
+- **Authentication** — JWT, plus a demo account for visitors
 
 ---
 
-## Teknoloji Yığını
+## Tech stack
 
-| Katman | Teknoloji |
+| Layer | Technology |
 |--------|-----------|
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
-| Hareket | GSAP ScrollTrigger (tanıtım ve giriş), Framer Motion (uygulama) |
+| Motion | GSAP ScrollTrigger (landing and sign-in), Framer Motion (app) |
 | Backend | Node.js, Express, TypeScript |
-| Veritabanı | MongoDB Atlas |
+| Database | MongoDB Atlas |
 | Auth | JWT (JSON Web Token) |
 | State | Zustand |
-| Deploy | Vercel — istemci ve API ayrı projeler |
+| Deploy | Vercel, with the client and the API as separate projects |
 
 ---
 
-## Proje Yapısı
+## Project structure
 
 ```
-Spectra CRM/
-├── client/          # Next.js frontend uygulaması
-│   ├── app/         # Sayfalar (App Router)
-│   ├── components/  # Yeniden kullanılabilir bileşenler
-│   ├── lib/         # API istemcisi, store, yardımcılar
-│   └── public/      # Statik dosyalar
+Spectra-CRM/
+├── client/          # Next.js app
+│   ├── app/         # Routes (App Router)
+│   ├── components/  # Shared components
+│   ├── lib/         # API client, store, formatters, stage scale
+│   └── design.md    # The locked design system
 ├── server/          # Express REST API
 │   └── src/
 │       ├── controllers/
 │       ├── models/
 │       ├── routes/
-│       └── middleware/
-├── shared/          # Ortak TypeScript tipleri
-└── docs/            # Teknik dokümantasyon
+│       ├── middleware/
+│       └── seed.ts  # Demo data
+├── shared/          # Shared TypeScript types
+└── docs/            # Technical notes
 ```
 
 ---
 
-## Kurulum ve Çalıştırma
+## Running it locally
 
-### Gereksinimler
+### Requirements
 
-- Node.js 18+
-- MongoDB Atlas hesabı (veya yerel MongoDB)
+- Node.js 20.9+
+- A MongoDB Atlas cluster, or a local MongoDB
 
-### 1. Repoyu klonla
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/canberkyildiz25/Spectra-CRM.git
 cd Spectra-CRM
 ```
 
-### 2. Bağımlılıkları kur
+### 2. Install dependencies
+
+The repository is an npm workspace, so one install at the root covers the client and the server.
 
 ```bash
-cd server && npm install
-cd ../client && npm install
+npm install
 ```
 
-### 3. Ortam değişkenlerini ayarla
+### 3. Set the environment variables
 
-`server/.env` dosyası oluştur:
+Create `server/.env`:
 
 ```env
-MONGODB_URI=mongodb+srv://<kullanici>:<sifre>@cluster0.xxxx.mongodb.net/spectra-crm
-JWT_SECRET=guclu_bir_secret_key
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxx.mongodb.net/spectra-crm
+JWT_SECRET=a_long_random_secret
 JWT_EXPIRE=7d
 SERVER_PORT=5000
 NODE_ENV=development
 ```
 
-`client/.env.local` dosyası oluştur:
+Create `client/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
-### 4. Geliştirme sunucularını başlat
+### 4. Load the demo data
 
 ```bash
-# Terminal 1 — Backend (http://localhost:5000)
+cd server && npx ts-node --transpile-only src/seed.ts
+```
+
+This creates the demo user (`demo@spectra.com` / `demo1234`) and replaces the customers, deals, tasks and proposals with the demo set.
+
+### 5. Start the development servers
+
+```bash
+# Terminal 1 — API (http://localhost:5000)
 cd server && npm run dev
 
-# Terminal 2 — Frontend (http://localhost:3000)
+# Terminal 2 — client (http://localhost:3000)
 cd client && npm run dev
 ```
 
@@ -103,12 +117,12 @@ cd client && npm run dev
 
 ## Deployment
 
-- **Backend** → Vercel'de tek bir serverless fonksiyon (`server/api/index.ts`)
-- **Frontend** → Vercel'de ayrı bir proje (kök dizin `client`)
-- **Veritabanı** → MongoDB Atlas (M0 ücretsiz tier)
+- **API** → one serverless function on Vercel (`server/api/index.ts`)
+- **Client** → a separate Vercel project with `client` as its root directory
+- **Database** → MongoDB Atlas (M0 free tier)
 
 ---
 
-## Lisans
+## License
 
-© 2026 Spectra CRM — Tüm hakları saklıdır.
+© 2026 Spectra CRM — All rights reserved.

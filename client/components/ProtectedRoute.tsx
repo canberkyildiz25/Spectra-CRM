@@ -33,7 +33,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
             body: JSON.stringify(DEMO_CREDENTIALS),
           });
           const body = await res.json();
-          if (!res.ok) throw new Error(body?.error ?? 'Giriş başarısız');
+          if (!res.ok) throw new Error(body?.error ?? 'Sign-in failed');
           useAuthStore.getState().setAuth(body.data.token, body.data.user);
         } catch {
           if (!cancelled) setPhase('unreachable');
@@ -55,7 +55,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-ground px-6" role="status">
         <SpectraMark size={22} className="animate-pulse" />
-        <p className="label">Oturum hazırlanıyor</p>
+        <p className="label">Setting up the session</p>
       </div>
     );
   }
@@ -64,18 +64,18 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     return (
       <div className="flex min-h-dvh items-center justify-center bg-ground px-6">
         <div className="max-w-sm">
-          <p className="label">Bağlantı yok</p>
-          <h1 className="mt-3 text-[2.25rem] text-fg">Sunucuya ulaşılamıyor.</h1>
+          <p className="label">No connection</p>
+          <h1 className="mt-3 text-[2.25rem] text-fg">The server can’t be reached.</h1>
           <p className="mt-3 text-sm leading-relaxed text-fg-2">
-            Demo oturumu açılamadı. API yanıt vermiyor olabilir; birkaç saniye sonra yeniden
-            deneyin.
+            The demo session could not be opened. The API may not be responding; try again in a
+            few seconds.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <button type="button" onClick={() => window.location.reload()} className="btn">
-              Yeniden dene
+              Try again
             </button>
             <Link href="/auth/login" className="btn-secondary">
-              Giriş ekranı
+              Sign-in screen
             </Link>
           </div>
         </div>

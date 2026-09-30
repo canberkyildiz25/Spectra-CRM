@@ -5,7 +5,7 @@ import { ToastProvider } from '@/components/Toast';
 
 /* Three faces, all variable in width — that axis is the typographic idea
    (design.md § Typography). Hubot condensed for figures and headings, Mona
-   for the interface, Martian Mono for data. latin-ext carries ğ ş ı İ. */
+   for the interface, Martian Mono for data. */
 const hubot = Hubot_Sans({
   subsets: ['latin', 'latin-ext'],
   axes: ['wdth'],
@@ -30,11 +30,11 @@ const martian = Martian_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://client-xi-three-50.vercel.app'),
   title: {
-    default: 'Spectra CRM — Soğuk adaydan kazanılan işe',
+    default: 'Spectra CRM — From cold lead to won deal',
     template: '%s — Spectra CRM',
   },
   description:
-    'Müşteri, fırsat, teklif ve görev yönetimi. Her fırsat aşamasının rengini taşır: aday soğuk, müzakere sıcak. Demo hesabı hazır, kayıt gerekmez.',
+    'Customers, deals, proposals and tasks in one CRM. Every deal carries the colour of its stage, from a cold lead to a hot negotiation. The demo account is ready, no sign-up needed.',
 };
 
 export const viewport: Viewport = {
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     /* Font variables sit on <html>, not <body>: Tailwind resolves the
        --font-* tokens at :root, where a body-scoped variable is empty. */
     <html
-      lang="tr"
+      lang="en"
       className={`${hubot.variable} ${mona.variable} ${martian.variable}`}
       suppressHydrationWarning
     >

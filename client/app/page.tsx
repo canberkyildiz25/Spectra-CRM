@@ -36,74 +36,74 @@ const share = (deals: DemoDeal[]) => Math.round((totalOf(deals) / openTotal) * 1
 
 const BANDS: Band[] = [
   {
-    id: 'asama-aday',
+    id: 'stage-lead',
     n: '01',
     label: stage('lead').label,
     tone: 'cold',
-    title: 'Bir isim, bir ihtiyaç, henüz bütçe yok.',
-    body: 'Fırsat bir müşteri kaydına bağlanarak açılır. Olasılık %10’dan başlar ve kart panonun en soldaki sütununda bekler.',
-    ledgers: [{ caption: `${dealsIn('lead').length} fırsat`, tone: 'cold', deals: dealsIn('lead') }],
-    note: `Açık hattın %${share(dealsIn('lead'))}’i`,
+    title: 'A name, a need, no budget yet.',
+    body: 'A deal opens against a customer record. Probability starts at 10% and the card waits in the leftmost column of the board.',
+    ledgers: [{ caption: `${dealsIn('lead').length} deals`, tone: 'cold', deals: dealsIn('lead') }],
+    note: `${share(dealsIn('lead'))}% of the open pipeline`,
   },
   {
-    id: 'asama-nitelikli',
+    id: 'stage-qualified',
     n: '02',
     label: stage('qualified').label,
     tone: 'cool',
-    title: 'Karar veren belli, ihtiyaç doğrulandı.',
-    body: 'Kartı bir sütun sağa sürüklemek aşamayı ve olasılığı birlikte günceller. Ayrı bir form doldurulmaz.',
-    ledgers: [{ caption: `${dealsIn('qualified').length} fırsat`, tone: 'cool', deals: dealsIn('qualified') }],
-    note: `Açık hattın %${share(dealsIn('qualified'))}’i`,
+    title: 'The decision-maker is known and the need is real.',
+    body: 'Dragging the card one column right updates the stage and the probability together. There is no separate form to fill in.',
+    ledgers: [{ caption: `${dealsIn('qualified').length} deals`, tone: 'cool', deals: dealsIn('qualified') }],
+    note: `${share(dealsIn('qualified'))}% of the open pipeline`,
   },
   {
-    id: 'asama-teklif',
+    id: 'stage-proposal',
     n: '03',
     label: stage('proposal').label,
     tone: 'warm',
-    title: 'Kalem kalem teklif, yazdırılabilir belge.',
-    body: 'Teklif ürün ve hizmet satırlarından hesaplanır, KDV ayrı gösterilir. Belge PDF olarak yazdırılır; durumu gönderildi, kabul ya da ret olarak izlenir.',
-    ledgers: [{ caption: `${dealsIn('proposal').length} fırsat`, tone: 'warm', deals: dealsIn('proposal') }],
-    note: `Açık hattın %${share(dealsIn('proposal'))}’i`,
+    title: 'Line-item proposals, printable documents.',
+    body: 'A proposal is calculated from product and service lines, with VAT shown separately. It prints as a PDF, and its status is tracked as sent, accepted or rejected.',
+    ledgers: [{ caption: `${dealsIn('proposal').length} deals`, tone: 'warm', deals: dealsIn('proposal') }],
+    note: `${share(dealsIn('proposal'))}% of the open pipeline`,
   },
   {
-    id: 'asama-muzakere',
+    id: 'stage-negotiation',
     n: '04',
     label: stage('negotiation').label,
     tone: 'hot',
-    title: 'Fiyat masada. Hattın en sıcak yeri.',
-    body: 'Olasılık %75. Açık hattın en büyük payı çoğu zaman buradadır; demo verisinde de öyle. Panelde bu sütun ilk bakılan yerdir.',
-    ledgers: [{ caption: `${dealsIn('negotiation').length} fırsat`, tone: 'hot', deals: dealsIn('negotiation') }],
-    note: `Açık hattın %${share(dealsIn('negotiation'))}’i`,
+    title: 'Price is on the table. The hottest part of the pipeline.',
+    body: 'Probability is 75%. The largest share of the open pipeline usually sits here, and in the demo data it does. On the dashboard this is the first column to check.',
+    ledgers: [{ caption: `${dealsIn('negotiation').length} deals`, tone: 'hot', deals: dealsIn('negotiation') }],
+    note: `${share(dealsIn('negotiation'))}% of the open pipeline`,
   },
   {
-    id: 'asama-kapanis',
+    id: 'stage-close',
     n: '05',
-    label: 'Kapanış',
+    label: 'Close',
     tone: 'won',
-    title: 'Kazanılan da kaybedilen de kayda geçer.',
-    body: 'Kaybedilen fırsat kırmızıyla işaretlenmez; olağan bir sonuçtur, alarm değil. Kazanma oranı bu iki sütundan hesaplanır.',
+    title: 'Won or lost, it goes on the record.',
+    body: 'A lost deal is not marked in red. Losing is a normal outcome, so it is shown in grey. The win rate is calculated from these two columns.',
     ledgers: [
       { caption: `${stage('closed-won').label} · ${won.length}`, tone: 'won', deals: won },
       { caption: `${stage('closed-lost').label} · ${lost.length}`, tone: 'ash', deals: lost },
     ],
-    note: `%${winRate} kazanma oranı · ${won.length} / ${won.length + lost.length} kapanış`,
+    note: `${winRate}% win rate · ${won.length} / ${won.length + lost.length} closed`,
   },
 ];
 
 const SCREENS = [
-  { href: '/dashboard', name: 'Panel', body: 'Açık hat, kazanılan tutar, teklif kabulü, son görevler ve son müşteriler.' },
-  { href: '/opportunities', name: 'Fırsat panosu', body: 'Altı sütun. Kart sürüklenince aşama da olasılık da güncellenir.' },
-  { href: '/proposals', name: 'Teklifler', body: 'Durum takibi ve yazdırılabilir teklif belgesi.' },
-  { href: '/customers', name: 'Müşteriler', body: 'İletişim bilgisi, bağlı fırsatlar ve teklifler tek kayıtta.' },
-  { href: '/tasks', name: 'Görevler', body: 'Öncelik sıcaklıkla işaretli: acil iş sıcak renkte.' },
+  { href: '/dashboard', name: 'Dashboard', body: 'Open pipeline, won revenue, proposal acceptance, recent tasks and recent customers.' },
+  { href: '/opportunities', name: 'Deal board', body: 'Six columns. Drag a card and both the stage and the probability update.' },
+  { href: '/proposals', name: 'Proposals', body: 'Status tracking and a printable proposal document.' },
+  { href: '/customers', name: 'Customers', body: 'Contact details, linked deals and proposals in one record.' },
+  { href: '/tasks', name: 'Tasks', body: 'Priority is marked by heat, so urgent work shows up hot.' },
 ];
 
 const STACK = [
-  ['İstemci', 'Next.js 16 · React 19 · TypeScript · Tailwind 4'],
-  ['Hareket', 'GSAP ScrollTrigger bu sayfada, Framer Motion uygulamada'],
+  ['Client', 'Next.js 16 · React 19 · TypeScript · Tailwind 4'],
+  ['Motion', 'GSAP ScrollTrigger on this page, Framer Motion in the app'],
   ['API', 'Express · MongoDB (Mongoose) · REST'],
-  ['Kimlik', 'JWT, Bearer token'],
-  ['Barındırma', 'Vercel — istemci ve API ayrı projeler'],
+  ['Auth', 'JWT, Bearer token'],
+  ['Hosting', 'Vercel, with the client and the API as separate projects'],
 ];
 
 const tone = (t: Tone) => ({ '--tone': toneVar(t) }) as React.CSSProperties;
@@ -111,24 +111,24 @@ const tone = (t: Tone) => ({ '--tone': toneVar(t) }) as React.CSSProperties;
 export default function Home() {
   return (
     <div className="min-h-screen bg-ground">
-      <a href="#akis" className="skip-link">
-        İçeriğe geç
+      <a href="#workflow" className="skip-link">
+        Skip to content
       </a>
 
       {/* ── Nav · N1: wordmark and two doors ─────────────── */}
       <header className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-4 py-5 sm:px-8 lg:px-12">
-        <Link href="/" aria-label="Spectra CRM ana sayfa" className="rounded-sm">
+        <Link href="/" aria-label="Spectra CRM home" className="rounded-sm">
           <Wordmark />
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-2" aria-label="Ana gezinme">
-          <a href="#akis" className="btn-ghost hidden sm:inline-flex">
-            Akış
+        <nav className="flex items-center gap-1 sm:gap-2" aria-label="Main">
+          <a href="#workflow" className="btn-ghost hidden sm:inline-flex">
+            Workflow
           </a>
-          <Link href="/auth/login" className="btn-ghost">
-            Giriş
+          <Link href="/auth/login" className="btn-ghost hidden min-[360px]:inline-flex">
+            Sign in
           </Link>
           <Link href="/dashboard" className="btn btn-sm">
-            Demoyu aç
+            Open demo
           </Link>
         </nav>
       </header>
@@ -137,30 +137,31 @@ export default function Home() {
         {/* ── Opening: the readout ─────────────────────────── */}
         <section className="mx-auto max-w-[1320px] px-4 pb-16 pt-[clamp(2rem,6vh,4.5rem)] sm:px-8 lg:px-12">
           <p className="label rise" data-now data-delay="0">
-            Satış hattı · {DEMO_DEALS.length} fırsat · demo veri seti
+            Sales pipeline · {DEMO_DEALS.length} deals · demo dataset
           </p>
           <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-end lg:gap-12">
             <h1 className="split text-[clamp(3.1rem,9.6vw,8.75rem)] text-fg" data-now>
-              <span className="text-cold">Soğuk</span> adaydan
+              From <span className="text-cold">cold</span> lead
               <br />
-              <span className="text-won">kazanılan</span> işe.
+              to <span className="text-won">won</span> deal.
             </h1>
             <div className="lg:pb-3">
               <p className="rise max-w-[36rem] leading-relaxed text-fg-2" data-now data-delay="450">
-                Spectra müşteriyi, açık fırsatı, gönderilen teklifi ve bekleyen görevi aynı ekranda
-                tutar. Her fırsat aşamasının rengini taşır: aday soğuk mavi, müzakere sıcak turuncu.
+                Spectra keeps the customer, the open deal, the proposal you sent and the task that is
+                waiting on one screen. Every deal carries the colour of its stage: a lead is cold blue, a
+                negotiation is hot orange.
               </p>
               <div className="rise mt-6 flex flex-wrap items-center gap-3" data-now data-delay="600">
                 <Link href="/dashboard" className="btn magnetic">
-                  Demoyu aç
+                  Open the demo
                   <ArrowUpRight className="size-4" aria-hidden />
                 </Link>
                 <Link href="/auth/login" className="btn-secondary">
-                  Giriş ekranı
+                  Sign-in screen
                 </Link>
               </div>
               <p className="rise mt-3 text-sm text-fg-3" data-now data-delay="700">
-                Kayıt gerekmez, demo hesabı hazır.
+                No sign-up. The demo account is ready.
               </p>
             </div>
           </div>
@@ -168,22 +169,22 @@ export default function Home() {
           <div className="mt-12 lg:mt-14">
             <Readout />
             <p className="rise mt-5 max-w-xl text-sm text-fg-3" data-now data-delay="900">
-              Demo hesabındaki {DEMO_DEALS.length} fırsat. Her çizgi bir fırsat; boyu tutarı, rengi
-              aşamayı gösterir. Açık hatta {moneyShort(openTotal)} var.
+              The {DEMO_DEALS.length} deals in the demo account. Each line is one deal: its height is the
+              amount and its colour is the stage. {moneyShort(openTotal)} is in the open pipeline.
             </p>
           </div>
         </section>
 
         {/* ── Workflow: five stops ─────────────────────────── */}
-        <section id="akis" className="border-t border-line">
+        <section id="workflow" className="border-t border-line">
           <div className="mx-auto max-w-[1320px] px-4 pt-20 sm:px-8 lg:px-12 lg:pt-28">
-            <p className="label">Akış</p>
+            <p className="label">Workflow</p>
             <h2 className="split mt-4 max-w-[14ch] text-[clamp(2.4rem,6.5vw,5.25rem)]">
-              Bir fırsatın beş durağı.
+              Five stops for every deal.
             </h2>
             <p className="rise mt-6 max-w-[38rem] leading-relaxed text-fg-2">
-              Panoda her sütun bir aşamadır ve kartlar soldan sağa ısınır. Aşağıdaki fırsatlar demo
-              hesabında şu anda nerede duruyorlarsa oradalar.
+              Each column on the board is a stage, and cards warm up from left to right. The deals
+              below sit exactly where they are in the demo account right now.
             </p>
           </div>
 
@@ -262,11 +263,11 @@ export default function Home() {
           <div className="mx-auto max-w-[1320px] px-4 py-20 sm:px-8 lg:px-12 lg:py-28">
             <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
               <div>
-                <p className="label">İçeride</p>
-                <h2 className="split mt-4 text-[clamp(2.2rem,5vw,4rem)]">Beş ekran, bir veri seti.</h2>
+                <p className="label">Inside</p>
+                <h2 className="split mt-4 text-[clamp(2.2rem,5vw,4rem)]">Five screens, one dataset.</h2>
                 <p className="rise mt-5 max-w-[30rem] leading-relaxed text-fg-2">
-                  Bağlantılar doğrudan demoya açılır. Oturum kendiliğinden kurulur; giriş formunu
-                  görmek isteyen için giriş ekranı ayrıca duruyor.
+                  These links open straight into the demo and the session sets itself up. The
+                  sign-in screen is still there for anyone who wants to see it.
                 </p>
               </div>
               <ol className="border-t border-line">
@@ -297,8 +298,8 @@ export default function Home() {
         <section className="border-t border-line bg-raised">
           <div className="mx-auto grid max-w-[1320px] gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:px-12">
             <div>
-              <p className="label">Altyapı</p>
-              <h2 className="split mt-4 text-[clamp(2rem,4.2vw,3.25rem)]">Uçtan uca çalışır.</h2>
+              <p className="label">Stack</p>
+              <h2 className="split mt-4 text-[clamp(2rem,4.2vw,3.25rem)]">Works end to end.</h2>
             </div>
             <dl className="border-t border-line">
               {STACK.map(([k, v]) => (
@@ -315,16 +316,16 @@ export default function Home() {
       {/* ── Footer · Ft5 statement ──────────────────────────── */}
       <footer className="border-t border-line">
         <div className="mx-auto max-w-[1320px] px-4 pb-10 pt-20 sm:px-8 lg:px-12 lg:pt-28">
-          <p className="split display text-[clamp(3.25rem,13vw,11rem)] text-fg">Hat açık.</p>
+          <p className="split display text-[clamp(3.25rem,13vw,11rem)] text-fg">Pipeline open.</p>
           <div className="mt-10 flex flex-col gap-8 border-t border-line pt-8 md:flex-row md:items-end md:justify-between">
             <p className="max-w-[36rem] text-sm leading-relaxed text-fg-2">
-              Bu bir portfolyo projesidir ve uçtan uca çalışır: Next.js istemci, Express ve MongoDB
-              üzerinde REST API, JWT ile kimlik doğrulama. Sayfadaki bütün rakamlar demo veri
-              setinden hesaplanır.
+              This is a portfolio project and it works end to end: a Next.js client, a REST API on
+              Express and MongoDB, and JWT authentication. Every figure on this page is calculated
+              from the demo dataset.
             </p>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <Link href="/dashboard" className="btn">
-                Demoyu aç
+                Open the demo
               </Link>
               <a
                 href="https://github.com/canberkyildiz25/Spectra-CRM"
@@ -332,7 +333,7 @@ export default function Home() {
                 rel="noreferrer"
                 className="label transition-colors hover:text-fg"
               >
-                Kaynak kodu ↗
+                Source code ↗
               </a>
               <span className="label">Canberk Yıldız</span>
             </div>

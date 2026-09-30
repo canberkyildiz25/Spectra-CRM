@@ -24,7 +24,7 @@ interface ConfirmDeleteProps<T> {
 }
 
 /**
- * The question always names the record. "Bu kaydı silmek istiyor musunuz?" is
+ * The question always names the record. "Delete this record?" is
  * unanswerable — the user has to remember which row they clicked, and the row is
  * behind the dialog.
  *
@@ -38,23 +38,23 @@ export default function ConfirmDelete<T>({
   onConfirm,
   name,
   detail,
-  confirmLabel = 'Kalıcı olarak sil',
+  confirmLabel = 'Delete permanently',
 }: ConfirmDeleteProps<T>) {
   return (
     <AlertDialog open={!!target} onOpenChange={(open: boolean) => { if (!open) onCancel(); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{target && `${name(target)} silinsin mi?`}</AlertDialogTitle>
+          <AlertDialogTitle>{target && `Delete ${name(target)}?`}</AlertDialogTitle>
           <AlertDialogDescription>
             {target && detail
-              ? `${detail(target)} Bu işlem geri alınamaz.`
-              : 'Kayıt kalıcı olarak kaldırılır. Bu işlem geri alınamaz.'}
+              ? `${detail(target)} This cannot be undone.`
+              : 'The record is removed permanently. This cannot be undone.'}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           {/* Cancel first and focused by default. The destructive button is never
               the one Enter reaches for. */}
-          <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm}>{confirmLabel}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
