@@ -1,47 +1,67 @@
-import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
-import "./globals.css";
-import { ToastProvider } from "@/components/Toast";
-import ThemeProvider from "@/components/ThemeProvider";
+import type { Metadata, Viewport } from 'next';
+import { Hubot_Sans, Mona_Sans, Martian_Mono } from 'next/font/google';
+import './globals.css';
+import { ToastProvider } from '@/components/Toast';
 
-/* Three faces, which is the ceiling.
- *
- * The serif is gone. Instrument Serif gave the headings a voice but the wrong
- * one — a bracketed serif over a sales table reads as a magazine, not an
- * instrument. Space Grotesk keeps the drawn quality without the register: a
- * grotesque with enough character to carry a wordmark and enough discipline to
- * sit above dense data.
- *
- * Geist takes body and controls, Geist Mono every figure. Inter is banned. */
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display-face",
-  display: "swap",
+/* Three faces, all variable in width — that axis is the typographic idea
+   (design.md § Typography). Hubot condensed for figures and headings, Mona
+   for the interface, Martian Mono for data. latin-ext carries ğ ş ı İ. */
+const hubot = Hubot_Sans({
+  subsets: ['latin', 'latin-ext'],
+  axes: ['wdth'],
+  variable: '--nf-hubot',
+  display: 'swap',
+});
+
+const mona = Mona_Sans({
+  subsets: ['latin', 'latin-ext'],
+  axes: ['wdth'],
+  variable: '--nf-mona',
+  display: 'swap',
+});
+
+const martian = Martian_Mono({
+  subsets: ['latin', 'latin-ext'],
+  axes: ['wdth'],
+  variable: '--nf-martian',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "Spectra CRM",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://client-xi-three-50.vercel.app'),
+  title: {
+    default: 'Spectra CRM — Soğuk adaydan kazanılan işe',
+    template: '%s — Spectra CRM',
+  },
   description:
-    "Müşteri, fırsat, görev ve teklif yönetimi — satış hattını tek ekranda tutan CRM.",
+    'Müşteri, fırsat, teklif ve görev yönetimi. Her fırsat aşamasının rengini taşır: aday soğuk, müzakere sıcak. Demo hesabı hazır, kayıt gerekmez.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = {
+  themeColor: '#0a0b0d',
+  colorScheme: 'dark',
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    /* suppressHydrationWarning is required by next-themes: the theme class is
-       written to <html> before React hydrates, so the server and client markup
-       differ by design on that one attribute. */
+    /* Font variables sit on <html>, not <body>: Tailwind resolves the
+       --font-* tokens at :root, where a body-scoped variable is empty. */
     <html
       lang="tr"
+      className={`${hubot.variable} ${mona.variable} ${martian.variable}`}
       suppressHydrationWarning
-      className={`${GeistSans.variable} ${GeistMono.variable} ${spaceGrotesk.variable}`}
     >
-      <body className="font-sans antialiased">
-        <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </ThemeProvider>
+      <head>
+        {/* Motion pre-states apply only when JS runs and the reader has not
+            asked for reduced motion; otherwise the content is simply there. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('motion')}catch(e){}`,
+          }}
+        />
+      </head>
+      <body>
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

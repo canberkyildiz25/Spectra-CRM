@@ -1,0 +1,16 @@
+[
+  {
+    "date": "2026-09-30",
+    "scope": "app",
+    "stack": "Next.js 16 + React 19 + TS + Tailwind 4 + GSAP ScrollTrigger + Framer Motion (FORGE infrastructure)",
+    "macrostructure": "Narrative Workflow with a spectrum opening (landing); split readout (auth); Workbench (app)",
+    "nav": "N1 wordmark + two links (landing); N3 side rail + phone tab bar (app)",
+    "footer": "Ft5 statement",
+    "theme": "Spectra temperature scale on a dark ground — design.md",
+    "type": "Hubot Sans condensed (display, figures) · Mona Sans (UI) · Martian Mono (data)",
+    "enrichment": "Data readout of the demo seed (15 deals as spectral lines); no stock imagery",
+    "motion": "GSAP: headline mask rise, readout lines grow, stage rule sweeps, side rail fill, magnetic CTA. Framer: route fade-rise, count-up, bar grow, kanban layout, sliding nav marker, toasts. Reduced-motion gated.",
+    "verification": "tsc + eslint clean; next build clean; 26/26 e2e + 7/7 write flows on dev and production build (local API + in-memory Mongo); 821 text nodes, 0 AA contrast failures; 0 overflowing elements at 320px on 11 routes",
+    "critique": "P5 H5 E4 S5 R4 V5"
+  }
+]

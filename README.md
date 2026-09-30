@@ -1,6 +1,6 @@
 # Spectra CRM
 
-Modern, hızlı ve kullanımı kolay bir müşteri ilişkileri yönetim sistemi. Next.js 14, Node.js/Express ve MongoDB Atlas ile geliştirilmiştir.
+Müşteri, fırsat, teklif ve görev yönetimi. Next.js 16, Node.js/Express ve MongoDB Atlas ile geliştirilmiştir. Tasarım sistemi `client/design.md` dosyasındadır: koyu zemin, her fırsat aşamasının rengini taşıdığı bir sıcaklık skalası (aday soğuk, müzakere sıcak).
 
 ---
 
@@ -19,12 +19,13 @@ Modern, hızlı ve kullanımı kolay bir müşteri ilişkileri yönetim sistemi.
 
 | Katman | Teknoloji |
 |--------|-----------|
-| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| Hareket | GSAP ScrollTrigger (tanıtım ve giriş), Framer Motion (uygulama) |
 | Backend | Node.js, Express, TypeScript |
 | Veritabanı | MongoDB Atlas |
 | Auth | JWT (JSON Web Token) |
 | State | Zustand |
-| Deploy | Vercel (frontend) · Railway (backend) |
+| Deploy | Vercel — istemci ve API ayrı projeler |
 
 ---
 
@@ -102,8 +103,8 @@ cd client && npm run dev
 
 ## Deployment
 
-- **Backend** → [Railway](https://railway.app) üzerinde çalışır
-- **Frontend** → [Vercel](https://vercel.com) üzerinde çalışır
+- **Backend** → Vercel'de tek bir serverless fonksiyon (`server/api/index.ts`)
+- **Frontend** → Vercel'de ayrı bir proje (kök dizin `client`)
 - **Veritabanı** → MongoDB Atlas (M0 ücretsiz tier)
 
 ---

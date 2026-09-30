@@ -1,36 +1,56 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import AppShell from '@/components/AppShell';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import api from '@/lib/axios';
+import { useParams, useRouter } from 'next/navigation';
+import { ArrowLeft, ArrowUpRight, ListChecks, Plus } from 'lucide-react';
+import AppShell from '@/components/AppShell';
+import { Page } from '@/components/app/PageHead';
+import ToneChip from '@/components/app/ToneChip';
 import { toast } from '@/components/Toast';
+import { Sheet, Field } from '@/components/ui/sheet';
+import api from '@/lib/axios';
+import { useAuthReady } from '@/lib/store';
+import { CUSTOMER_STATUS, PRIORITY, PROPOSAL_STATUS, stageOf } from '@/lib/stages';
+import { date, dateLong, errorText, money } from '@/lib/format';
 
 interface Customer {
-  _id: string; firstName: string; lastName: string; email: string;
-  phone?: string; company?: string; city?: string; country?: string;
-  status: 'prospect' | 'customer' | 'inactive'; source?: string; notes?: string; createdAt: string;
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  city?: string;
+  country?: string;
+  status: 'prospect' | 'customer' | 'inactive';
+  source?: string;
+  notes?: string;
+  createdAt: string;
 }
 interface Opportunity {
-  _id: string; title: string; amount: number; stage: string; probability: number; expectedCloseDate?: string;
+  _id: string;
+  title: string;
+  amount: number;
+  stage: string;
+  probability: number;
+  expectedCloseDate?: string;
+  customerId: { _id: string } | string | null;
 }
 interface Proposal {
-  _id: string; proposalNumber: string; title: string; status: string;
-  validUntil: string; items: { unitPrice: number; quantity: number }[]; taxRate: number;
+  _id: string;
+  proposalNumber: string;
+  title: string;
+  status: string;
+  validUntil: string;
+  items: { unitPrice: number; quantity: number }[];
+  taxRate: number;
+  customerId: { _id: string } | string | null;
 }
 
-const statusLabel: Record<string, string> = { customer: 'Müşteri', prospect: 'Aday', inactive: 'Pasif' };
-const statusBadge: Record<string, string> = { customer: 'badge-positive', prospect: 'badge-accent', inactive: 'badge-quiet' };
-const stageLabel: Record<string, string> = { lead: 'Lead', qualified: 'Nitelikli', proposal: 'Teklif', negotiation: 'Müzakere', 'closed-won': 'Kazanıldı', 'closed-lost': 'Kaybedildi' };
-const stageColor: Record<string, string> = { lead: 'badge-quiet', qualified: 'badge-quiet', proposal: 'badge-accent', negotiation: 'badge-caution', 'closed-won': 'badge-positive', 'closed-lost': 'badge-quiet' };
-const proposalStatusLabel: Record<string, string> = { draft: 'Taslak', sent: 'Gönderildi', accepted: 'Kabul', rejected: 'Red' };
-const proposalStatusColor: Record<string, string> = { draft: 'badge-quiet', sent: 'badge-accent', accepted: 'badge-positive', rejected: 'badge-quiet' };
-const avatarColors = ['bg-gradient-brand', 'bg-gradient-info', 'bg-gradient-success', 'bg-gradient-warning', 'bg-gradient-rose'];
-const avatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length];
-
-const fmt = (n: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(n);
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const ownerId = (ref: { _id: string } | string | null) => (typeof ref === 'string' ? ref : ref?._id);
+const proposalTotal = (p: Proposal) => p.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0) * (1 + p.taxRate / 100);
+const emptyTask = { title: '', description: '', priority: 'medium', dueDate: '' };
 
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
@@ -39,221 +59,262 @@ export default function CustomerDetail() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', priority: 'medium' as 'low' | 'medium' | 'high', dueDate: '' });
+  const [taskOpen, setTaskOpen] = useState(false);
+  const [task, setTask] = useState(emptyTask);
   const [taskSaving, setTaskSaving] = useState(false);
+  const [taskError, setTaskError] = useState('');
+
+  const authReady = useAuthReady();
 
   useEffect(() => {
-    Promise.all([
-      api.get(`/customers/${id}`),
-      api.get('/opportunities'),
-      api.get('/proposals'),
-    ]).then(([cRes, oRes, pRes]) => {
-      setCustomer(cRes.data.data);
-      setOpportunities((oRes.data.data as any[]).filter((o: any) => o.customerId._id === id || o.customerId === id));
-      setProposals((pRes.data.data as any[]).filter((p: any) => p.customerId._id === id || p.customerId === id));
-    }).catch(() => router.push('/customers')).finally(() => setLoading(false));
-  }, [id]);
+    if (!authReady) return;
+    Promise.all([api.get(`/customers/${id}`), api.get('/opportunities'), api.get('/proposals')])
+      .then(([c, o, p]) => {
+        setCustomer(c.data.data);
+        setOpportunities((o.data.data as Opportunity[]).filter((x) => ownerId(x.customerId) === id));
+        setProposals((p.data.data as Proposal[]).filter((x) => ownerId(x.customerId) === id));
+      })
+      .catch(() => {
+        toast.error('Müşteri bulunamadı');
+        router.push('/customers');
+      })
+      .finally(() => setLoading(false));
+  }, [id, router, authReady]);
 
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault(); setTaskSaving(true);
+  /* The old form sent `relatedCustomer`, a field the Task model does not have,
+     so the task was saved but never tied to the customer. */
+  const createTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTaskSaving(true);
+    setTaskError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/tasks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...taskForm, relatedCustomer: id }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success('Görev oluşturuldu');
-      setShowTaskModal(false);
-      setTaskForm({ title: '', description: '', priority: 'medium', dueDate: '' });
-    } catch { toast.error('Görev oluşturulamadı'); } finally { setTaskSaving(false); }
+      await api.post('/tasks', { ...task, relatedTo: { type: 'customer', id } });
+      toast.success('Görev eklendi');
+      setTaskOpen(false);
+      setTask(emptyTask);
+    } catch (err) {
+      setTaskError(errorText(err, 'Görev eklenemedi'));
+    } finally {
+      setTaskSaving(false);
+    }
   };
 
-  if (loading) return (
-    <AppShell>
-      <div className="px-8 py-8 max-w-4xl mx-auto">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-muted rounded w-48" />
-          <div className="card p-6 h-40" />
-        </div>
-      </div>
-    </AppShell>
-  );
+  if (loading || !customer) {
+    return (
+      <AppShell>
+        <Page>
+          <div className="animate-pulse space-y-5" role="status" aria-label="Yükleniyor">
+            <div className="h-4 w-28 rounded bg-lift" />
+            <div className="h-14 w-80 rounded bg-lift" />
+            <div className="h-40 rounded-[var(--radius-lg)] bg-panel" />
+          </div>
+        </Page>
+      </AppShell>
+    );
+  }
 
-  if (!customer) return null;
+  const st = CUSTOMER_STATUS[customer.status];
+  const openValue = opportunities
+    .filter((o) => o.stage !== 'closed-won' && o.stage !== 'closed-lost')
+    .reduce((s, o) => s + o.amount, 0);
 
-  const calcTotal = (p: Proposal) => p.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0) * (1 + p.taxRate / 100);
+  const info: [string, React.ReactNode][] = [
+    [
+      'E-posta',
+      <a key="e" href={`mailto:${customer.email}`} className="break-all text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg">
+        {customer.email}
+      </a>,
+    ],
+    [
+      'Telefon',
+      customer.phone ? (
+        <a key="p" href={`tel:${customer.phone.replace(/\s/g, '')}`} className="figure text-fg">
+          {customer.phone}
+        </a>
+      ) : (
+        '—'
+      ),
+    ],
+    ['Şehir', customer.city || '—'],
+    ['Ülke', customer.country || '—'],
+    ['Kaynak', customer.source || '—'],
+    ['Kayıt', <span key="d" className="figure">{date(customer.createdAt)}</span>],
+  ];
 
   return (
     <AppShell>
-      <div className="px-8 py-8 max-w-4xl mx-auto animate-fade-in">
-        {/* Back */}
-        <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+      <Page>
+        <Link href="/customers" className="btn-ghost -ml-3 mb-6">
+          <ArrowLeft className="size-4" aria-hidden />
           Müşteriler
-        </button>
+        </Link>
 
-        {/* Profil + Hızlı Aksiyonlar */}
-        <div className="card p-6 mb-5">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className={`w-14 h-14 rounded-2xl ${avatarColor(customer.firstName)} flex items-center justify-center text-white font-bold text-xl shrink-0`}>
-                {customer.firstName[0]}{customer.lastName[0]}
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">{customer.firstName} {customer.lastName}</h1>
-                {customer.company && <p className="text-sm text-muted-foreground">{customer.company}</p>}
-                <span className={`badge mt-1 ${statusBadge[customer.status]}`}>{statusLabel[customer.status]}</span>
+        <header className="flex flex-col gap-6 border-b border-line pb-8 md:flex-row md:items-end md:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <span className="figure flex size-14 shrink-0 items-center justify-center rounded-[var(--radius-lg)] border border-line bg-panel text-base text-fg">
+              {customer.firstName[0]}
+              {customer.lastName[0]}
+            </span>
+            <div className="min-w-0">
+              <p className="label">{customer.company || 'Bireysel'}</p>
+              <h1 className="mt-1 text-[clamp(2.25rem,5vw,3.25rem)] text-fg">
+                {customer.firstName} {customer.lastName}
+              </h1>
+              <div className="mt-2">
+                <ToneChip tone={st.tone}>{st.label}</ToneChip>
               </div>
             </div>
-            {/* Quick actions */}
-            <div className="flex items-center gap-2 flex-wrap justify-end">
-              <button
-                onClick={() => setShowTaskModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium btn-secondary rounded-xl"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                Görev Ekle
-              </button>
-              <Link
-                href={`/opportunities/new?customerId=${id}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium btn-secondary rounded-xl"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                Fırsat Ekle
-              </Link>
-              <Link
-                href={`/proposals/new?customerId=${id}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium btn-primary text-xs py-1.5"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                Teklif Oluştur
-              </Link>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setTaskOpen(true)} className="btn-secondary btn-sm">
+              <ListChecks className="size-4" aria-hidden />
+              Görev ekle
+            </button>
+            <Link href={`/opportunities?new=1&customerId=${id}`} className="btn-secondary btn-sm">
+              <Plus className="size-4" aria-hidden />
+              Fırsat ekle
+            </Link>
+            <Link href={`/proposals/new?customerId=${id}`} className="btn btn-sm">
+              <Plus className="size-4" aria-hidden />
+              Teklif hazırla
+            </Link>
+          </div>
+        </header>
+
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-5 py-8 sm:grid-cols-2 lg:grid-cols-3">
+          {info.map(([k, v]) => (
+            <div key={k} className="min-w-0">
+              <dt className="label">{k}</dt>
+              <dd className="mt-1.5 text-sm text-fg">{v}</dd>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-            <InfoItem label="E-posta" value={customer.email} />
-            <InfoItem label="Telefon" value={customer.phone || '—'} />
-            <InfoItem label="Şehir" value={customer.city || '—'} />
-            <InfoItem label="Ülke" value={customer.country || '—'} />
-            <InfoItem label="Kaynak" value={customer.source || '—'} />
-            <InfoItem label="Kayıt Tarihi" value={new Date(customer.createdAt).toLocaleDateString('tr-TR')} />
-          </div>
-
+          ))}
           {customer.notes && (
-            <div className="mt-5 pt-5 border-t border-border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Notlar</p>
-              <p className="text-sm text-foreground whitespace-pre-line">{customer.notes}</p>
+            <div className="sm:col-span-2 lg:col-span-3">
+              <dt className="label">Notlar</dt>
+              <dd className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-fg-2">{customer.notes}</dd>
             </div>
           )}
-        </div>
+        </dl>
 
-        {/* Task Modal */}
-        {showTaskModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowTaskModal(false)}>
-            <div className="absolute inset-0 bg-black/50" />
-            <div className="relative card p-6 w-full max-w-md animate-slide-up" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center mb-5">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Yeni Görev</h2>
-                <button onClick={() => setShowTaskModal(false)} className="text-muted-foreground hover:text-muted-foreground transition">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              <form onSubmit={handleCreateTask} className="space-y-4">
-                <div>
-                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-widest">Başlık *</label>
-                  <input type="text" required value={taskForm.title} onChange={e => setTaskForm({ ...taskForm, title: e.target.value })} className="input" placeholder="Görev başlığı..." />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-widest">Açıklama</label>
-                  <textarea value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} className="input resize-none" rows={2} placeholder="Açıklama..." />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-widest">Öncelik</label>
-                    <select value={taskForm.priority} onChange={e => setTaskForm({ ...taskForm, priority: e.target.value as any })} className="input">
-                      <option value="low">Düşük</option><option value="medium">Orta</option><option value="high">Yüksek</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-widest">Bitiş Tarihi</label>
-                    <input type="date" value={taskForm.dueDate} onChange={e => setTaskForm({ ...taskForm, dueDate: e.target.value })} className="input" />
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button type="submit" disabled={taskSaving} className="btn-primary flex-1">{taskSaving ? 'Kaydediliyor...' : 'Görev Oluştur'}</button>
-                  <button type="button" onClick={() => setShowTaskModal(false)} className="btn-secondary">İptal</button>
-                </div>
-              </form>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <section className="card overflow-hidden" aria-labelledby="c-opps">
+            <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-4">
+              <h2 id="c-opps" className="text-[1.375rem] text-fg">
+                Fırsatlar <span className="figure text-sm text-fg-3">{opportunities.length}</span>
+              </h2>
+              {openValue > 0 && <span className="figure text-sm text-fg-2">açık {money(openValue)}</span>}
             </div>
-          </div>
-        )}
+            {opportunities.length === 0 ? (
+              <p className="px-5 py-8 text-sm text-fg-3">Bu müşteriye bağlı fırsat yok.</p>
+            ) : (
+              <ul>
+                {opportunities.map((o) => {
+                  const s = stageOf(o.stage);
+                  return (
+                    <li key={o._id} className="flex items-center gap-3 border-b border-line px-5 py-3.5 last:border-0">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm text-fg">{o.title}</span>
+                        <span className="figure block text-xs text-fg-3">
+                          %{o.probability}
+                          {o.expectedCloseDate ? ` · ${date(o.expectedCloseDate)}` : ''}
+                        </span>
+                      </span>
+                      <span className="figure text-sm text-fg">{money(o.amount)}</span>
+                      <ToneChip tone={s.tone}>{s.label}</ToneChip>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-        {/* Fırsatlar */}
-        <div className="card p-6 mb-5">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-sm font-semibold text-foreground">Fırsatlar <span className="text-muted-foreground font-normal">({opportunities.length})</span></h2>
-            <Link href={`/opportunities/new?customerId=${id}`} className="text-xs text-foreground hover:text-foreground font-medium">+ Fırsat Ekle</Link>
-          </div>
-          {opportunities.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-3">Bu müşteriye ait fırsat yok</p>
-          ) : (
-            <div className="divide-y divide-border">
-              {opportunities.map(o => (
-                <div key={o._id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{o.title}</p>
-                    {o.expectedCloseDate && <p className="text-xs text-muted-foreground mt-0.5">Kapanış: {new Date(o.expectedCloseDate).toLocaleDateString('tr-TR')}</p>}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-foreground">{fmt(o.amount)}</span>
-                    <span className={`badge ${stageColor[o.stage]}`}>{stageLabel[o.stage]}</span>
-                  </div>
-                </div>
+          <section className="card overflow-hidden" aria-labelledby="c-props">
+            <div className="flex items-baseline justify-between gap-4 border-b border-line px-5 py-4">
+              <h2 id="c-props" className="text-[1.375rem] text-fg">
+                Teklifler <span className="figure text-sm text-fg-3">{proposals.length}</span>
+              </h2>
+            </div>
+            {proposals.length === 0 ? (
+              <p className="px-5 py-8 text-sm text-fg-3">Bu müşteriye hazırlanmış teklif yok.</p>
+            ) : (
+              <ul>
+                {proposals.map((p) => {
+                  const ps = PROPOSAL_STATUS[p.status] ?? PROPOSAL_STATUS.draft;
+                  return (
+                    <li key={p._id} className="border-b border-line last:border-0">
+                      <Link href={`/proposals/${p._id}`} className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-lift">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-fg">{p.title}</span>
+                          <span className="figure block text-xs text-fg-3">
+                            {p.proposalNumber} · {dateLong(p.validUntil)}
+                          </span>
+                        </span>
+                        <span className="figure text-sm text-fg">{money(proposalTotal(p))}</span>
+                        <ToneChip tone={ps.tone}>{ps.label}</ToneChip>
+                        <ArrowUpRight className="size-4 shrink-0 text-fg-3" aria-hidden />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </div>
+      </Page>
+
+      <Sheet
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        title="Yeni görev"
+        description={`${customer.firstName} ${customer.lastName} kaydına bağlanır.`}
+      >
+        <form onSubmit={createTask} className="grid grid-cols-2 gap-4">
+          {taskError && (
+            <div role="alert" className="notice col-span-2">
+              {taskError}
+            </div>
+          )}
+          <Field id="t-title" label="Başlık" className="col-span-2">
+            <input
+              id="t-title"
+              required
+              minLength={3}
+              value={task.title}
+              onChange={(e) => setTask({ ...task, title: e.target.value })}
+              className="input"
+            />
+          </Field>
+          <Field id="t-desc" label="Açıklama" className="col-span-2">
+            <textarea
+              id="t-desc"
+              rows={3}
+              value={task.description}
+              onChange={(e) => setTask({ ...task, description: e.target.value })}
+              className="input resize-none"
+            />
+          </Field>
+          <Field id="t-priority" label="Öncelik" className="col-span-2 sm:col-span-1">
+            <select id="t-priority" value={task.priority} onChange={(e) => setTask({ ...task, priority: e.target.value })} className="input">
+              {Object.entries(PRIORITY).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v.label}
+                </option>
               ))}
-            </div>
-          )}
-        </div>
-
-        {/* Teklifler */}
-        <div className="card p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-sm font-semibold text-foreground">Teklifler <span className="text-muted-foreground font-normal">({proposals.length})</span></h2>
-            <Link href={`/proposals/new?customerId=${id}`} className="text-xs text-foreground hover:text-foreground font-medium">+ Teklif Oluştur</Link>
+            </select>
+          </Field>
+          <Field id="t-due" label="Son tarih" className="col-span-2 sm:col-span-1">
+            <input id="t-due" type="date" value={task.dueDate} onChange={(e) => setTask({ ...task, dueDate: e.target.value })} className="input figure" />
+          </Field>
+          <div className="col-span-2 mt-2 flex gap-2">
+            <button type="submit" disabled={taskSaving} className="btn">
+              {taskSaving ? 'Kaydediliyor' : 'Görevi ekle'}
+            </button>
+            <button type="button" onClick={() => setTaskOpen(false)} className="btn-secondary">
+              Vazgeç
+            </button>
           </div>
-          {proposals.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-3">Bu müşteriye ait teklif yok</p>
-          ) : (
-            <div className="divide-y divide-border">
-              {proposals.map(p => (
-                <div key={p._id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{p.title}</p>
-                    <p className="text-xs font-mono text-muted-foreground">{p.proposalNumber}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-foreground">{fmt(calcTotal(p))}</span>
-                    <span className={`badge ${proposalStatusColor[p.status]}`}>{proposalStatusLabel[p.status]}</span>
-                    <Link href={`/proposals/${p._id}`} className="text-xs text-foreground hover:text-foreground font-medium">Görüntüle →</Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+        </form>
+      </Sheet>
     </AppShell>
-  );
-}
-
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{label}</p>
-      <p className="text-sm text-foreground">{value}</p>
-    </div>
   );
 }

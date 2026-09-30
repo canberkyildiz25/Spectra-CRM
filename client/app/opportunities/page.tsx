@@ -1,400 +1,546 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { LayoutGroup, motion, useReducedMotion } from 'framer-motion';
+import { Ellipsis, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import AppShell from '@/components/AppShell';
-import api from '@/lib/axios';
-import { toast } from '@/components/Toast';
+import PageHead, { Page } from '@/components/app/PageHead';
+import ToneChip, { ToneDot } from '@/components/app/ToneChip';
 import EmptyState from '@/components/EmptyState';
 import ConfirmDelete from '@/components/ConfirmDelete';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { toast } from '@/components/Toast';
+import { Sheet, Field } from '@/components/ui/sheet';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import api from '@/lib/axios';
+import { useAuthReady } from '@/lib/store';
+import { OPEN_STAGES, STAGES, stageOf, toneVar, type Stage } from '@/lib/stages';
+import { date, errorText, money, moneyShort } from '@/lib/format';
 
-interface Customer { _id: string; firstName: string; lastName: string; company?: string; }
+interface Customer {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  company?: string;
+}
 interface Opportunity {
-  _id: string; title: string; customerId: Customer;
-  amount: number; stage: Stage; probability: number;
-  expectedCloseDate?: string; description?: string;
+  _id: string;
+  title: string;
+  customerId: Customer | null;
+  amount: number;
+  stage: Stage;
+  probability: number;
+  expectedCloseDate?: string;
+  description?: string;
 }
 
-type Stage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'closed-won' | 'closed-lost';
+const emptyForm = {
+  title: '',
+  customerId: '',
+  amount: '',
+  stage: 'lead' as Stage,
+  probability: '10',
+  expectedCloseDate: '',
+  description: '',
+};
 
-/* The old table hard-coded Tailwind's own palette — slate-100, blue-50,
-   violet-50, emerald-50. Those are light-mode literals: they stayed white in
-   dark mode, which is why the board came out as white cards on a dark page.
-   They also spent six unrelated hues on what is really one ordered sequence.
-
-   The four open stages now walk the ordinal ramp, so the pipeline reads as
-   progression rather than as six categories. Only the two terminal states carry
-   meaning-bearing colour, and `closed-lost` is grey, not red — a lost deal is a
-   normal business outcome, not an alarm. */
-const STAGES: { key: Stage; label: string; tone: string }[] = [
-  { key: 'lead',        label: 'Lead',       tone: 'var(--chart-1)' },
-  { key: 'qualified',   label: 'Nitelikli',  tone: 'var(--chart-2)' },
-  { key: 'proposal',    label: 'Teklif',     tone: 'var(--chart-3)' },
-  { key: 'negotiation', label: 'Müzakere',   tone: 'var(--chart-4)' },
-  { key: 'closed-won',  label: 'Kazanıldı',  tone: 'var(--positive)' },
-  { key: 'closed-lost', label: 'Kaybedildi', tone: 'var(--quiet)' },
-];
-
-const emptyForm = { title: '', customerId: '', amount: '', stage: 'lead' as Stage, probability: '10', expectedCloseDate: '', description: '' };
-const fmt = (n: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(n);
+const who = (c: Customer | null) => (c ? `${c.firstName} ${c.lastName}` : 'Silinmiş müşteri');
 
 export default function Opportunities() {
+  const reduce = useReducedMotion();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [view, setView] = useState<'kanban' | 'list'>('kanban');
-  const [dragOverStage, setDragOverStage] = useState<Stage | null>(null);
+  const [view, setView] = useState<'board' | 'list'>('board');
   const [search, setSearch] = useState('');
+  const [dragOver, setDragOver] = useState<Stage | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [probTouched, setProbTouched] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
   const [pendingDelete, setPendingDelete] = useState<Opportunity | null>(null);
 
-  useEffect(() => {
-    Promise.all([
-      api.get('/opportunities').then(r => setOpportunities(r.data.data)),
-      api.get('/customers?limit=100').then(r => setCustomers(r.data.data.customers)),
-    ]).finally(() => setLoading(false));
-  }, []);
+  const authReady = useAuthReady();
+  const refresh = () => api.get('/opportunities').then((r) => setOpportunities(r.data.data));
 
-  const fetchOpportunities = async () => {
-    const res = await api.get('/opportunities');
-    setOpportunities(res.data.data);
-  };
+  useEffect(() => {
+    if (!authReady) return;
+    Promise.all([
+      api.get('/opportunities').then((r) => setOpportunities(r.data.data)),
+      api.get('/customers?limit=100').then((r) => setCustomers(r.data.data.customers)),
+    ])
+      .catch(() => toast.error('Fırsatlar yüklenemedi'))
+      .finally(() => {
+        setLoading(false);
+        // A customer page links here with ?new=1&customerId=… to start a
+        // deal for that customer.
+        const q = new URLSearchParams(window.location.search);
+        if (q.get('new')) {
+          setForm({ ...emptyForm, customerId: q.get('customerId') ?? '' });
+          setSheetOpen(true);
+          window.history.replaceState(null, '', '/opportunities');
+        }
+      });
+  }, [authReady]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return opportunities;
-    const q = search.toLowerCase();
-    return opportunities.filter(o =>
-      o.title.toLowerCase().includes(q) ||
-      `${o.customerId.firstName} ${o.customerId.lastName}`.toLowerCase().includes(q) ||
-      (o.customerId.company || '').toLowerCase().includes(q)
+    const q = search.trim().toLocaleLowerCase('tr');
+    if (!q) return opportunities;
+    return opportunities.filter((o) =>
+      `${o.title} ${who(o.customerId)} ${o.customerId?.company ?? ''}`.toLocaleLowerCase('tr').includes(q),
     );
   }, [opportunities, search]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true); setError('');
-    try {
-      const payload = { ...formData, amount: Number(formData.amount), probability: Number(formData.probability) };
-      if (editingId) { await api.put(`/opportunities/${editingId}`, payload); toast.success('Fırsat güncellendi'); }
-      else { await api.post('/opportunities', payload); toast.success('Fırsat oluşturuldu'); }
-      setShowForm(false); setEditingId(null); setFormData(emptyForm); fetchOpportunities();
-    } catch (err: any) { setError(err.response?.data?.error || 'Kayıt başarısız'); } finally { setSaving(false); }
+  const openNew = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setProbTouched(false);
+    setFormError('');
+    setSheetOpen(true);
   };
 
-  const handleEdit = (o: Opportunity) => {
-    setFormData({ title: o.title, customerId: o.customerId._id, amount: String(o.amount), stage: o.stage, probability: String(o.probability), expectedCloseDate: o.expectedCloseDate ? o.expectedCloseDate.split('T')[0] : '', description: o.description || '' });
-    setEditingId(o._id); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' });
+  const openEdit = (o: Opportunity) => {
+    setEditingId(o._id);
+    setForm({
+      title: o.title,
+      customerId: o.customerId?._id ?? '',
+      amount: String(o.amount),
+      stage: o.stage,
+      probability: String(o.probability),
+      expectedCloseDate: o.expectedCloseDate ? o.expectedCloseDate.split('T')[0] : '',
+      description: o.description ?? '',
+    });
+    setProbTouched(true);
+    setFormError('');
+    setSheetOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!pendingDelete) return;
-    const { _id } = pendingDelete;
-    setPendingDelete(null);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setFormError('');
     try {
-      await api.delete(`/opportunities/${_id}`);
-      toast.success('Fırsat silindi');
-      fetchOpportunities();
-    } catch {
-      setError('Silme başarısız');
+      const payload = { ...form, amount: Number(form.amount), probability: Number(form.probability) };
+      if (editingId) {
+        await api.put(`/opportunities/${editingId}`, payload);
+        toast.success('Fırsat güncellendi');
+      } else {
+        await api.post('/opportunities', payload);
+        toast.success('Fırsat eklendi');
+      }
+      setSheetOpen(false);
+      await refresh();
+    } catch (err) {
+      setFormError(errorText(err, 'Kayıt başarısız'));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleStageChange = async (id: string, stage: Stage) => {
-    const probMap: Record<Stage, number> = { lead: 10, qualified: 25, proposal: 50, negotiation: 75, 'closed-won': 100, 'closed-lost': 0 };
-    await api.put(`/opportunities/${id}`, { stage, probability: probMap[stage] });
-    toast.success('Aşama güncellendi');
-    fetchOpportunities();
+  /* Optimistic: the card moves the moment it is dropped, and moves back if
+     the server refuses. Stage and probability travel together. */
+  const moveTo = async (o: Opportunity, stage: Stage) => {
+    if (o.stage === stage) return;
+    const before = opportunities;
+    const { probability, label } = stageOf(stage);
+    setOpportunities((list) => list.map((x) => (x._id === o._id ? { ...x, stage, probability } : x)));
+    try {
+      await api.put(`/opportunities/${o._id}`, { stage, probability });
+      toast.success(`${o.title} → ${label}`);
+    } catch {
+      setOpportunities(before);
+      toast.error('Aşama güncellenemedi');
+    }
   };
 
-  const handleDragStart = (e: React.DragEvent, id: string) => { e.dataTransfer.setData('opportunityId', id); e.dataTransfer.effectAllowed = 'move'; };
-  const handleDragOver = (e: React.DragEvent, stage: Stage) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverStage(stage); };
-  const handleDrop = async (e: React.DragEvent, stage: Stage) => {
-    e.preventDefault(); setDragOverStage(null);
-    const id = e.dataTransfer.getData('opportunityId');
-    const opp = opportunities.find(o => o._id === id);
-    if (!opp || opp.stage === stage) return;
-    await handleStageChange(id, stage);
+  const remove = async () => {
+    if (!pendingDelete) return;
+    const target = pendingDelete;
+    setPendingDelete(null);
+    try {
+      await api.delete(`/opportunities/${target._id}`);
+      setOpportunities((list) => list.filter((x) => x._id !== target._id));
+      toast.success('Fırsat silindi');
+    } catch {
+      toast.error('Silme başarısız');
+    }
   };
 
-  // Summary stats
-  const totalPipeline = opportunities.filter(o => o.stage !== 'closed-lost').reduce((s, o) => s + o.amount, 0);
-  const wonValue = opportunities.filter(o => o.stage === 'closed-won').reduce((s, o) => s + o.amount, 0);
-  const totalClosed = opportunities.filter(o => o.stage === 'closed-won' || o.stage === 'closed-lost').length;
-  const winRate = totalClosed > 0 ? Math.round((opportunities.filter(o => o.stage === 'closed-won').length / totalClosed) * 100) : 0;
+  const openDeals = opportunities.filter((o) => OPEN_STAGES.some((s) => s.key === o.stage));
+  const wonDeals = opportunities.filter((o) => o.stage === 'closed-won');
+  const closed = wonDeals.length + opportunities.filter((o) => o.stage === 'closed-lost').length;
+  const sum = (rows: Opportunity[]) => rows.reduce((s, o) => s + o.amount, 0);
+
+  const actions = (o: Opportunity) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={`${o.title} için işlemler`}
+        className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg data-[state=open]:bg-lift data-[state=open]:text-fg"
+      >
+        <Ellipsis className="size-4" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-52">
+        <DropdownMenuItem onSelect={() => openEdit(o)}>
+          <Pencil aria-hidden />
+          Düzenle
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* The keyboard and touch route for what the board does by dragging. */}
+        <DropdownMenuLabel>Aşamaya taşı</DropdownMenuLabel>
+        {STAGES.filter((s) => s.key !== o.stage).map((s) => (
+          <DropdownMenuItem key={s.key} onSelect={() => moveTo(o, s.key)}>
+            <ToneDot tone={s.tone} />
+            {s.label}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        {/* Deferred a tick so the menu hands focus back before the dialog
+            takes it — otherwise the two focus managers race. */}
+        <DropdownMenuItem variant="destructive" onSelect={() => setTimeout(() => setPendingDelete(o), 0)}>
+          <Trash2 aria-hidden />
+          Sil
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <AppShell>
-      <div className="px-8 py-8 max-w-full animate-fade-in">
-        {/* Header */}
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <div>
-            <p className="label mb-2">Pipeline</p>
-            <h1 className="text-2xl sm:text-3xl">Fırsatlar</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              <span className="figure">{opportunities.length}</span> fırsat
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {/* The same segmented control the customers page uses for its status
-                filter — one pattern for "pick one of these", not a bespoke pill
-                row per page. */}
-            <div className="segmented" role="group" aria-label="Görünüm">
-              <button onClick={() => setView('kanban')} aria-pressed={view === 'kanban'} className="segmented-item">Kanban</button>
-              <button onClick={() => setView('list')} aria-pressed={view === 'list'} className="segmented-item">Liste</button>
-            </div>
-            <button onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm); }} className="btn-primary">
-              Fırsat ekle
-            </button>
-          </div>
-        </div>
+      <Page wide>
+        <PageHead
+          label="Satış hattı"
+          title="Fırsatlar"
+          meta={`${opportunities.length} fırsat · ${openDeals.length} açık`}
+          actions={
+            <>
+              <div className="segmented" role="group" aria-label="Görünüm">
+                <button type="button" className="segmented-item" aria-pressed={view === 'board'} onClick={() => setView('board')}>
+                  Pano
+                </button>
+                <button type="button" className="segmented-item" aria-pressed={view === 'list'} onClick={() => setView('list')}>
+                  Liste
+                </button>
+              </div>
+              <button type="button" onClick={openNew} className="btn btn-sm">
+                <Plus className="size-4" aria-hidden />
+                Fırsat ekle
+              </button>
+            </>
+          }
+        />
 
-        {/* Summary bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-          {/* Four figures in four different colours told the reader nothing —
-              the hue was decoration, not meaning. Figures are plain; the label
-              above them is what distinguishes one card from the next. */}
+        {/* ── Summary: one strip, four readings ── */}
+        <dl className="grid grid-cols-2 overflow-hidden rounded-[var(--radius-lg)] border border-line bg-panel lg:grid-cols-4">
           {[
-            { label: 'Toplam Pipeline', value: fmt(totalPipeline), sub: 'aktif fırsatlar' },
-            { label: 'Kazanılan', value: fmt(wonValue), sub: 'closed-won toplamı' },
-            { label: 'Kazanma Oranı', value: `%${winRate}`, sub: `${totalClosed} kapanan fırsattan` },
-            { label: 'Aktif Fırsat', value: String(opportunities.filter(o => o.stage !== 'closed-won' && o.stage !== 'closed-lost').length), sub: 'devam eden' },
-          ].map(s => (
-            <div key={s.label} className="card px-4 py-3">
-              <p className="label mb-1">{s.label}</p>
-              <p className="figure text-lg font-medium text-foreground">{s.value}</p>
-              <p className="text-xs text-muted-foreground">{s.sub}</p>
+            { k: 'Açık hat', v: moneyShort(sum(openDeals)), title: money(sum(openDeals)) },
+            { k: 'Kazanılan', v: moneyShort(sum(wonDeals)), title: money(sum(wonDeals)) },
+            { k: 'Kazanma oranı', v: `%${closed ? Math.round((wonDeals.length / closed) * 100) : 0}`, title: `${wonDeals.length} / ${closed} kapanış` },
+            { k: 'Açık fırsat', v: String(openDeals.length), title: 'aday, nitelikli, teklif, müzakere' },
+          ].map((s, i) => (
+            <div
+              key={s.k}
+              className={`px-4 py-4 sm:px-5 ${i % 2 === 0 ? 'border-r border-line' : ''} ${i < 2 ? 'border-b border-line lg:border-b-0' : ''} ${i === 1 ? 'lg:border-r' : ''}`}
+            >
+              <dt className="label">{s.k}</dt>
+              <dd className="readout mt-2 text-[2.25rem] text-fg" title={s.title}>
+                {s.v}
+              </dd>
             </div>
           ))}
+        </dl>
+
+        <div className="relative mt-5 max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-fg-3" aria-hidden />
+          <label htmlFor="opp-search" className="sr-only">
+            Fırsat ara
+          </label>
+          <input
+            id="opp-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Başlık, müşteri ya da şirket"
+            className="input pl-9"
+          />
         </div>
 
-        {/* Search */}
-        <div className="relative mb-5 max-w-sm">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Başlık veya müşteri ara..." className="input pl-10" />
-        </div>
-
-        {error && <div role="alert" className="notice mb-5">{error}</div>}
-
-        {/* Form */}
-        {showForm && (
-          <div className="card p-6 mb-6 animate-slide-up">
-            <h2 className="label mb-5">{editingId ? 'Fırsat Düzenle' : 'Yeni Fırsat'}</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="md:col-span-2">
-                  <label className="label block mb-1.5">Fırsat Başlığı *</label>
-                  <input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Örn: ABC Teknoloji - Yazılım Lisansı" className="input" />
-                </div>
-                <div>
-                  <label className="label block mb-1.5">Müşteri *</label>
-                  <select required value={formData.customerId} onChange={e => setFormData({ ...formData, customerId: e.target.value })} className="input">
-                    <option value="">Müşteri seçin...</option>
-                    {customers.map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName} {c.company ? `(${c.company})` : ''}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="label block mb-1.5">Tutar (₺) *</label>
-                  <input required type="number" min="0" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} className="input" />
-                </div>
-                <div>
-                  <label className="label block mb-1.5">Aşama</label>
-                  <select value={formData.stage} onChange={e => setFormData({ ...formData, stage: e.target.value as Stage })} className="input">
-                    {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="label block mb-1.5">Olasılık (%)</label>
-                  <input type="number" min="0" max="100" value={formData.probability} onChange={e => setFormData({ ...formData, probability: e.target.value })} className="input" />
-                </div>
-                <div>
-                  <label className="label block mb-1.5">Tahmini Kapanış</label>
-                  <input type="date" value={formData.expectedCloseDate} onChange={e => setFormData({ ...formData, expectedCloseDate: e.target.value })} className="input" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="label block mb-1.5">Açıklama</label>
-                  <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={2} className="input resize-none" />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" disabled={saving} className="btn-primary">{saving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Kaydet'}</button>
-                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setFormData(emptyForm); }} className="btn-secondary">İptal</button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex gap-3">
-            {[...Array(6)].map((_, i) => <div key={i} className="flex-shrink-0 w-52 card p-3 h-40 animate-pulse"><div className="mb-4 h-3 w-2/3 rounded bg-muted" /><div className="h-20 rounded bg-muted" /></div>)}
-          </div>
-        ) : view === 'kanban' ? (
-          <div className="flex gap-3 overflow-x-auto pb-4">
-            {STAGES.map(stage => {
-              const cols = filtered.filter(o => o.stage === stage.key);
-              const colTotal = cols.reduce((s, o) => s + o.amount, 0);
-              return (
-                <div key={stage.key} className="w-56 flex-shrink-0">
-                  <div className="mb-2 flex items-center justify-between px-1">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        aria-hidden
-                        className="h-2 w-2 rounded-full"
-                        style={{ background: stage.tone }}
-                      />
-                      <span className="text-xs font-medium text-foreground">{stage.label}</span>
-                      <span className="figure rounded-full bg-muted px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground">
-                        {cols.length}
-                      </span>
-                    </div>
-                    <span className="figure text-[0.6875rem] text-muted-foreground">{fmt(colTotal)}</span>
-                  </div>
-                  {/* `--well` is stated per theme — see tokens.css for why an
-                      alpha of the foreground could not do this job. */}
-                  <div
-                    className={`min-h-32 space-y-2 rounded-xl border p-2 transition-colors duration-fast ease-out ${
-                      dragOverStage === stage.key
-                        ? 'border-ring bg-well-active'
-                        : 'border-transparent bg-well'
-                    }`}
-                    onDragOver={e => handleDragOver(e, stage.key)}
-                    onDragLeave={() => setDragOverStage(null)}
-                    onDrop={e => handleDrop(e, stage.key)}
-                  >
-                    {cols.map(o => (
-                      <div
-                        key={o._id}
-                        draggable
-                        onDragStart={e => handleDragStart(e, o._id)}
-                        className="group cursor-grab rounded-lg border border-border bg-card p-3 transition-shadow duration-fast ease-out hover:shadow-[var(--shadow-pop)] active:cursor-grabbing active:opacity-60"
-                      >
-                        <p className="mb-1 text-xs font-medium leading-snug text-card-foreground">{o.title}</p>
-                        <p className="mb-2 truncate text-xs text-muted-foreground">
-                          {o.customerId.firstName} {o.customerId.lastName}
-                        </p>
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="figure text-sm font-medium text-foreground">{fmt(o.amount)}</p>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" aria-label={`${o.title} için işlemler`}>
-                                <MoreHorizontal />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onSelect={() => handleEdit(o)}>
-                                <Pencil />
-                                Düzenle
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onSelect={() => setTimeout(() => setPendingDelete(o), 0)}
-                              >
-                                <Trash2 />
-                                Sil
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    ))}
-                    {cols.length === 0 && (
-                      <div className="flex h-20 items-center justify-center">
-                        <span className="text-xs text-muted-foreground">Boş</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : filtered.length === 0 ? (
-          <EmptyState variant="opportunities" ctaLabel="İlk fırsatı ekle" onCta={() => setShowForm(true)} />
-        ) : (
-          <div className="card overflow-hidden">
-            <table className="min-w-full data-table">
-              <thead><tr>
-                <th>Başlık</th><th>Müşteri</th><th>Tutar</th><th>Aşama</th><th>Olasılık</th><th>Kapanış</th><th />
-              </tr></thead>
-              <tbody>
-                {filtered.map(o => {
-                  const s = STAGES.find(s => s.key === o.stage)!;
+        <div className="mt-6">
+          {loading ? (
+            <div className="flex gap-3 overflow-hidden" role="status" aria-label="Yükleniyor">
+              {STAGES.map((s) => (
+                <div key={s.key} className="h-72 w-[17rem] shrink-0 animate-pulse rounded-[var(--radius-lg)] bg-well" />
+              ))}
+            </div>
+          ) : view === 'board' ? (
+            <LayoutGroup>
+              {/* Columns scroll sideways and snap on narrow screens. */}
+              <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 sm:-mx-8 sm:px-8">
+                {STAGES.map((stage) => {
+                  const cards = filtered.filter((o) => o.stage === stage.key);
+                  const over = dragOver === stage.key;
                   return (
-                    <tr key={o._id} className="group">
-                      <td className="text-sm font-medium text-foreground">{o.title}</td>
-                      <td className="text-sm text-muted-foreground">
-                        {o.customerId.firstName} {o.customerId.lastName}
-                        {o.customerId.company && <div className="text-xs text-muted-foreground">{o.customerId.company}</div>}
-                      </td>
-                      <td className="figure text-sm font-medium text-foreground">{fmt(o.amount)}</td>
-                      <td>
-                        {/* The dot carries the stage; the select stays a plain
-                            control. Tinting the select itself meant the colour
-                            moved every time the value changed, and the tint was
-                            a light-mode literal that never went dark. */}
-                        <div className="flex items-center gap-2">
-                          <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.tone }} />
-                          <select
-                            value={o.stage}
-                            onChange={e => handleStageChange(o._id, e.target.value as Stage)}
-                            aria-label={`${o.title} aşaması`}
-                            className="cursor-pointer rounded-md border border-border bg-transparent py-0.5 pl-1.5 pr-6 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            {STAGES.map(st => <option key={st.key} value={st.key}>{st.label}</option>)}
-                          </select>
+                    <section
+                      key={stage.key}
+                      aria-label={`${stage.label}: ${cards.length} fırsat`}
+                      className="flex w-[17rem] shrink-0 snap-start flex-col"
+                    >
+                      <header className="mb-2 px-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-2">
+                            <ToneDot tone={stage.tone} />
+                            <span className="text-sm font-semibold text-fg">{stage.label}</span>
+                            <span className="figure text-xs text-fg-3">{cards.length}</span>
+                          </span>
+                          <span className="figure text-xs text-fg-2">{moneyShort(sum(cards))}</span>
                         </div>
-                      </td>
-                      <td className="figure text-sm text-muted-foreground">%{o.probability}</td>
-                      <td className="figure text-sm text-muted-foreground">{o.expectedCloseDate ? new Date(o.expectedCloseDate).toLocaleDateString('tr-TR') : '—'}</td>
-                      <td className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" aria-label={`${o.title} için işlemler`}>
-                              <MoreHorizontal />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => handleEdit(o)}>
-                              <Pencil />
-                              Düzenle
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onSelect={() => setTimeout(() => setPendingDelete(o), 0)}
+                      </header>
+                      <div
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                          if (dragOver !== stage.key) setDragOver(stage.key);
+                        }}
+                        onDragLeave={(e) => {
+                          if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDragOver(null);
+                          const o = opportunities.find((x) => x._id === e.dataTransfer.getData('text/opportunity'));
+                          if (o) moveTo(o, stage.key);
+                        }}
+                        className={`flex min-h-40 flex-1 flex-col gap-2 rounded-[var(--radius-lg)] border-t-2 p-2 transition-colors ${
+                          over ? 'bg-lift' : 'bg-well'
+                        }`}
+                        style={{ borderTopColor: toneVar(stage.tone) }}
+                      >
+                        {cards.map((o) => (
+                          <motion.article
+                            key={o._id}
+                            layoutId={reduce ? undefined : o._id}
+                            layout={!reduce}
+                            transition={{ type: 'spring', stiffness: 480, damping: 40 }}
+                            className="rounded-[var(--radius-md)] border border-line bg-panel"
+                            style={{ boxShadow: `inset 2px 0 0 ${toneVar(stage.tone)}` }}
+                          >
+                            <div
+                              draggable
+                              onDragStart={(e) => {
+                                e.dataTransfer.setData('text/opportunity', o._id);
+                                e.dataTransfer.effectAllowed = 'move';
+                              }}
+                              className="cursor-grab p-3 pl-4 active:cursor-grabbing"
                             >
-                              <Trash2 />
-                              Sil
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="text-sm font-medium leading-snug text-fg">{o.title}</h3>
+                                {actions(o)}
+                              </div>
+                              <p className="mt-1 truncate text-xs text-fg-3">
+                                {who(o.customerId)}
+                                {o.customerId?.company ? ` · ${o.customerId.company}` : ''}
+                              </p>
+                              <div className="mt-3 flex items-end justify-between gap-2">
+                                <span className="figure text-sm text-fg">{money(o.amount)}</span>
+                                <span className="figure text-[0.6875rem] text-fg-3">
+                                  %{o.probability}
+                                  {o.expectedCloseDate ? ` · ${date(o.expectedCloseDate)}` : ''}
+                                </span>
+                              </div>
+                            </div>
+                          </motion.article>
+                        ))}
+                        {cards.length === 0 && (
+                          <p className="flex flex-1 items-center justify-center py-8 text-xs text-fg-3">Boş</p>
+                        )}
+                      </div>
+                    </section>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </LayoutGroup>
+          ) : filtered.length === 0 ? (
+            <EmptyState variant={search ? 'search' : 'opportunities'} ctaLabel="Fırsat ekle" onCta={search ? undefined : openNew} />
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table stack">
+                <thead>
+                  <tr>
+                    <th>Fırsat</th>
+                    <th>Aşama</th>
+                    <th className="num">Tutar</th>
+                    <th className="num">Olasılık</th>
+                    <th>Kapanış</th>
+                    <th>
+                      <span className="sr-only">İşlemler</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((o) => {
+                    const s = stageOf(o.stage);
+                    return (
+                      <tr key={o._id}>
+                        <td className="pr-12 md:pr-4">
+                          <span className="block font-medium text-fg">{o.title}</span>
+                          <span className="block text-xs text-fg-3">
+                            {who(o.customerId)}
+                            {o.customerId?.company ? ` · ${o.customerId.company}` : ''}
+                          </span>
+                        </td>
+                        <td data-label="Aşama">
+                          <ToneChip tone={s.tone}>{s.label}</ToneChip>
+                        </td>
+                        <td data-label="Tutar" className="num text-fg">
+                          {money(o.amount)}
+                        </td>
+                        <td data-label="Olasılık" className="num text-fg-2">
+                          %{o.probability}
+                        </td>
+                        <td data-label="Kapanış" className="figure text-fg-2">
+                          {date(o.expectedCloseDate)}
+                        </td>
+                        <td className="row-actions text-right">
+                          {actions(o)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </Page>
+
+      <Sheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title={editingId ? 'Fırsatı düzenle' : 'Yeni fırsat'}
+        description={editingId ? undefined : 'Yeni fırsat seçtiğiniz aşamaya düşer; olasılık aşamadan gelir.'}
+      >
+        <form onSubmit={submit} className="grid grid-cols-2 gap-4">
+          {formError && (
+            <div role="alert" className="notice col-span-2">
+              {formError}
+            </div>
+          )}
+          <Field id="o-title" label="Başlık" className="col-span-2">
+            <input
+              id="o-title"
+              required
+              minLength={3}
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="ABC Teknoloji - Yazılım lisansı"
+              className="input"
+            />
+          </Field>
+          <Field id="o-customer" label="Müşteri" className="col-span-2">
+            <select
+              id="o-customer"
+              required
+              value={form.customerId}
+              onChange={(e) => setForm({ ...form, customerId: e.target.value })}
+              className="input"
+            >
+              <option value="">Müşteri seçin</option>
+              {customers.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.firstName} {c.lastName}
+                  {c.company ? ` (${c.company})` : ''}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field id="o-amount" label="Tutar (₺)" className="col-span-2 sm:col-span-1">
+            <input
+              id="o-amount"
+              required
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              className="input figure"
+            />
+          </Field>
+          <Field id="o-stage" label="Aşama" className="col-span-2 sm:col-span-1">
+            <select
+              id="o-stage"
+              value={form.stage}
+              onChange={(e) => {
+                const stage = e.target.value as Stage;
+                setForm((f) => ({
+                  ...f,
+                  stage,
+                  probability: probTouched ? f.probability : String(stageOf(stage).probability),
+                }));
+              }}
+              className="input"
+            >
+              {STAGES.map((s) => (
+                <option key={s.key} value={s.key}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field id="o-prob" label="Olasılık (%)" className="col-span-2 sm:col-span-1">
+            <input
+              id="o-prob"
+              type="number"
+              min="0"
+              max="100"
+              value={form.probability}
+              onChange={(e) => {
+                setProbTouched(true);
+                setForm({ ...form, probability: e.target.value });
+              }}
+              className="input figure"
+            />
+          </Field>
+          <Field id="o-close" label="Tahmini kapanış" className="col-span-2 sm:col-span-1">
+            <input
+              id="o-close"
+              type="date"
+              value={form.expectedCloseDate}
+              onChange={(e) => setForm({ ...form, expectedCloseDate: e.target.value })}
+              className="input figure"
+            />
+          </Field>
+          <Field id="o-desc" label="Açıklama" className="col-span-2">
+            <textarea
+              id="o-desc"
+              rows={3}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="input resize-none"
+            />
+          </Field>
+          <div className="col-span-2 mt-2 flex gap-2">
+            <button type="submit" disabled={saving} className="btn">
+              {saving ? 'Kaydediliyor' : editingId ? 'Değişiklikleri kaydet' : 'Fırsatı ekle'}
+            </button>
+            <button type="button" onClick={() => setSheetOpen(false)} className="btn-secondary">
+              Vazgeç
+            </button>
           </div>
-        )}
-      </div>
+        </form>
+      </Sheet>
 
       <ConfirmDelete
         target={pendingDelete}
         onCancel={() => setPendingDelete(null)}
-        onConfirm={handleDelete}
+        onConfirm={remove}
         name={(o) => o.title}
-        detail={(o) =>
-          `${o.customerId.firstName} ${o.customerId.lastName} için açılan ${fmt(o.amount)} tutarındaki fırsat kaldırılır.`
-        }
+        detail={(o) => `${who(o.customerId)} için açılan ${money(o.amount)} tutarındaki fırsat kaldırılır.`}
       />
     </AppShell>
   );

@@ -41,7 +41,7 @@ export default function ConfirmDelete<T>({
   confirmLabel = 'Kalıcı olarak sil',
 }: ConfirmDeleteProps<T>) {
   return (
-    <AlertDialog open={!!target} onOpenChange={(open) => { if (!open) onCancel(); }}>
+    <AlertDialog open={!!target} onOpenChange={(open: boolean) => { if (!open) onCancel(); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{target && `${name(target)} silinsin mi?`}</AlertDialogTitle>

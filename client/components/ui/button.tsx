@@ -6,7 +6,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 /**
- * The primary variant is ink, not a brand colour — see design.md. `destructive`
+ * The primary variant is the foreground, not a hue — colour means a stage (design.md). `destructive`
  * exists but is used only on a confirmation step, never on the trigger that
  * opens it; a red button on every table row stops meaning anything.
  *

@@ -1,24 +1,16 @@
 'use client';
 
+import { motion, useReducedMotion } from 'framer-motion';
+import { money } from '@/lib/format';
+
 /**
  * Closed business — won against lost.
  *
- * Deliberately not a time series. The demo holds one win and one loss; plotting
- * those over months would be inventing a trend that the data cannot support.
- * This is the honest form for two totals: a proportion bar plus both figures.
- *
- * The colours are the validated categorical pair, not the badge palette — the
- * grey used on a "lost" badge sits under the chroma floor and measures ΔE 3.9
- * against the positive green under deutan vision. See design.md § Charts.
+ * Not a time series: the demo has no history, and plotting a handful of
+ * closes over months would invent a trend. Two totals get the honest form, a
+ * proportion strip plus both figures. Lost is ash, not red — a lost deal is a
+ * normal outcome, not an alarm.
  */
-
-const fmtFull = (n: number) =>
-  new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    maximumFractionDigits: 0,
-  }).format(n);
-
 export default function WonLostSplit({
   wonCount,
   lostCount,
@@ -30,6 +22,7 @@ export default function WonLostSplit({
   wonValue: number;
   lostValue: number;
 }) {
+  const reduce = useReducedMotion();
   const total = wonValue + lostValue;
   const wonPct = total > 0 ? (wonValue / total) * 100 : 0;
   const decided = wonCount + lostCount;
@@ -37,64 +30,44 @@ export default function WonLostSplit({
 
   return (
     <div>
-      <div className="mb-5 flex items-baseline gap-3">
-        <span className="figure text-3xl text-ink">%{winRate}</span>
-        <span className="text-sm text-ink-2">
-          kazanma oranı · {decided} kapanmış fırsat
-        </span>
-      </div>
+      <p className="flex items-baseline gap-3">
+        <span className="readout text-[3.5rem] text-fg">%{winRate}</span>
+        <span className="text-sm text-fg-2">kazanma oranı · {decided} kapanış</span>
+      </p>
 
-      {/* One bar, two segments, a 2px surface gap between them so the fills
-          never touch. */}
       <div
-        className="flex h-3 w-full overflow-hidden rounded-sm"
-        style={{ background: 'var(--color-paper-3)', gap: '2px' }}
+        className="mt-5 flex h-3 w-full gap-[3px]"
         role="img"
-        aria-label={`Kazanılan ${fmtFull(wonValue)}, kaybedilen ${fmtFull(lostValue)}`}
+        aria-label={`Kazanılan ${money(wonValue)}, kaybedilen ${money(lostValue)}`}
       >
-        <div
-          className="h-full rounded-sm"
-          style={{
-            width: `${wonPct}%`,
-            background: 'var(--chart-won)',
-            transition: 'width var(--dur-base) var(--ease-out)',
-          }}
-          title={`Kazanılan · ${fmtFull(wonValue)}`}
-        />
-        <div
-          className="h-full flex-1 rounded-sm"
-          style={{ background: 'var(--chart-lost)' }}
-          title={`Kaybedilen · ${fmtFull(lostValue)}`}
-        />
+        {wonPct > 0 && (
+          <motion.span
+            initial={reduce ? false : { scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="h-full origin-left rounded-[2px] bg-won"
+            style={{ width: `${wonPct}%` }}
+          />
+        )}
+        {wonPct < 100 && <span className="h-full flex-1 rounded-[2px] bg-ash" />}
       </div>
 
-      {/* Legend — mandatory for two series. The swatch carries identity; the
-          text stays in ink tokens rather than wearing the series colour. */}
-      <dl className="mt-4 grid grid-cols-2 gap-4">
+      <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-line pt-4">
         <div>
-          <dt className="mb-1 flex items-center gap-2">
-            <span
-              aria-hidden
-              className="inline-block h-2.5 w-2.5 rounded-full"
-              style={{ background: 'var(--chart-won)' }}
-            />
+          <dt className="flex items-center gap-2">
+            <span className="tone-dot bg-won" />
             <span className="label">Kazanılan</span>
           </dt>
-          <dd className="figure text-lg text-ink">{fmtFull(wonValue)}</dd>
-          <dd className="text-xs text-ink-3">{wonCount} fırsat</dd>
+          <dd className="figure mt-1.5 text-lg text-fg">{money(wonValue)}</dd>
+          <dd className="text-xs text-fg-3">{wonCount} fırsat</dd>
         </div>
-
         <div>
-          <dt className="mb-1 flex items-center gap-2">
-            <span
-              aria-hidden
-              className="inline-block h-2.5 w-2.5 rounded-full"
-              style={{ background: 'var(--chart-lost)' }}
-            />
+          <dt className="flex items-center gap-2">
+            <span className="tone-dot bg-ash" />
             <span className="label">Kaybedilen</span>
           </dt>
-          <dd className="figure text-lg text-ink">{fmtFull(lostValue)}</dd>
-          <dd className="text-xs text-ink-3">{lostCount} fırsat</dd>
+          <dd className="figure mt-1.5 text-lg text-fg">{money(lostValue)}</dd>
+          <dd className="text-xs text-fg-3">{lostCount} fırsat</dd>
         </div>
       </dl>
     </div>

@@ -2,109 +2,119 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store';
 import Link from 'next/link';
+import { LoaderCircle, TriangleAlert } from 'lucide-react';
+import AuthFrame from '@/components/auth/AuthFrame';
+import { useAuthStore } from '@/lib/store';
+import { errorText } from '@/lib/format';
+
+const FIELDS = [
+  { name: 'firstName', label: 'Ad', autoComplete: 'given-name', half: true },
+  { name: 'lastName', label: 'Soyad', autoComplete: 'family-name', half: true },
+  { name: 'username', label: 'Kullanıcı adı', autoComplete: 'username' },
+  { name: 'email', label: 'E-posta', type: 'email', autoComplete: 'email' },
+  { name: 'password', label: 'Şifre', type: 'password', autoComplete: 'new-password', hint: 'En az 6 karakter' },
+  { name: 'confirmPassword', label: 'Şifre tekrar', type: 'password', autoComplete: 'new-password' },
+] as const;
+
+type Form = Record<(typeof FIELDS)[number]['name'], string>;
 
 export default function Register() {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
+  const setAuth = useAuthStore((s) => s.setAuth);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '', firstName: '', lastName: '' });
+  const [form, setForm] = useState<Form>({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError('');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (formData.password !== formData.confirmPassword) return setError('Şifreler eşleşmiyor');
-    if (formData.password.length < 6) return setError('Şifre en az 6 karakter olmalıdır');
+    if (form.password !== form.confirmPassword) return setError('Şifreler eşleşmiyor.');
+    if (form.password.length < 6) return setError('Şifre en az 6 karakter olmalı.');
     setLoading(true);
     try {
+      const { confirmPassword: _skip, ...payload } = form;
+      void _skip;
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: formData.username, email: formData.email, password: formData.password, firstName: formData.firstName, lastName: formData.lastName }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Kayıt başarısız');
       setAuth(data.data.token, data.data.user);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+    } catch (err) {
+      setError(errorText(err, 'Kayıt başarısız'));
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-muted flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="font-bold text-foreground text-lg">Spectra CRM</span>
-          </Link>
-          <h1 className="text-2xl font-bold text-foreground">Hesap Oluştur</h1>
-          <p className="text-muted-foreground text-sm mt-1">Sisteme katılmak için kayıt olun</p>
+    <AuthFrame>
+      <p className="label">Kayıt</p>
+      <h1 className="mt-3 text-[2.5rem] text-fg">Hesap oluşturun.</h1>
+      <p className="mt-2 text-sm text-fg-2">
+        Yalnızca göz atmak için gerek yok —{' '}
+        <Link href="/auth/login" className="text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg">
+          demo hesabı
+        </Link>{' '}
+        hazır.
+      </p>
+
+      {error && (
+        <div role="alert" className="notice mt-6">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden />
+          {error}
         </div>
+      )}
 
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
-          {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {error}
-            </div>
-          )}
+      <form onSubmit={onSubmit} className="mt-8 grid grid-cols-2 gap-4">
+        {FIELDS.map((f) => (
+          <div key={f.name} className={'half' in f && f.half ? 'col-span-1' : 'col-span-2'}>
+            <label htmlFor={f.name} className="label field-label">
+              {f.label}
+            </label>
+            <input
+              id={f.name}
+              name={f.name}
+              type={'type' in f ? f.type : 'text'}
+              autoComplete={f.autoComplete}
+              value={form[f.name]}
+              onChange={(e) => {
+                setForm((s) => ({ ...s, [f.name]: e.target.value }));
+                setError('');
+              }}
+              aria-describedby={'hint' in f ? `${f.name}-hint` : undefined}
+              className="input"
+              required
+            />
+            {'hint' in f && (
+              <p id={`${f.name}-hint`} className="mt-1.5 text-xs text-fg-3">
+                {f.hint}
+              </p>
+            )}
+          </div>
+        ))}
+        <button type="submit" disabled={loading} className="btn col-span-2 mt-2 w-full">
+          {loading && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
+          {loading ? 'Hesap oluşturuluyor' : 'Hesap oluştur'}
+        </button>
+      </form>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Ad *</label>
-                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Ad" className="input" required />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Soyad *</label>
-                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Soyad" className="input" required />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Kullanıcı Adı *</label>
-              <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="kullanici_adi" className="input" required />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">E-posta *</label>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="ornek@email.com" className="input" required />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Şifre *</label>
-              <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="En az 6 karakter" className="input" required />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Şifre Tekrar *</label>
-              <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" className="input" required />
-            </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-1">
-              {loading ? 'Hesap oluşturuluyor...' : 'Hesap Oluştur'}
-            </button>
-          </form>
-        </div>
-
-        <p className="text-center text-muted-foreground text-sm mt-5">
-          Zaten hesabınız var mı?{' '}
-          <Link href="/auth/login" className="font-medium text-foreground underline underline-offset-4">Giriş yapın</Link>
-        </p>
-      </div>
-    </div>
+      <p className="mt-8 text-sm text-fg-2">
+        Zaten hesabınız var mı?{' '}
+        <Link href="/auth/login" className="font-medium text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg">
+          Giriş yapın
+        </Link>
+      </p>
+    </AuthFrame>
   );
 }

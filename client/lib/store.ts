@@ -1,6 +1,5 @@
-// Global state management with Zustand
 import { create } from 'zustand';
-import { IUser } from '@/shared/types';
+import type { IUser } from '@/shared/types';
 
 interface AuthStore {
   user: IUser | null;
@@ -16,7 +15,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   token: null,
   isAuthenticated: false,
 
-  setAuth: (token: string, user: IUser) => {
+  setAuth: (token, user) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
@@ -33,13 +32,20 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   loadFromStorage: () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      if (token && userStr) {
-        const user = JSON.parse(userStr);
-        set({ token, user, isAuthenticated: true });
-      }
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) return;
+    try {
+      set({ token, user: JSON.parse(userStr), isAuthenticated: true });
+    } catch {
+      localStorage.removeItem('user');
     }
-  }
+  },
 }));
+
+/* Pages fetch only once this is true. A page's effects run as soon as it
+   mounts — before ProtectedRoute has finished signing a first-time visitor
+   into the demo — so an ungated fetch went out without a token, came back
+   401, and the dashboard opened on "Özet alınamadı". */
+export const useAuthReady = () => useAuthStore((s) => s.isAuthenticated);

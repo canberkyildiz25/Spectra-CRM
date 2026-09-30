@@ -1,118 +1,103 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { Check, Info, TriangleAlert, X } from 'lucide-react';
 
-type ToastType = 'success' | 'error' | 'info' | 'warning';
-interface ToastItem { id: string; message: string; type: ToastType; }
+type ToastType = 'success' | 'error' | 'info';
+interface ToastItem {
+  id: number;
+  message: string;
+  type: ToastType;
+}
 
-// ── Global singleton – kullanım: toast.success('Kaydedildi')
-let _add: ((msg: string, type: ToastType) => void) | null = null;
+// Global singleton — toast.success('Kaydedildi') from anywhere.
+let push: ((msg: string, type: ToastType) => void) | null = null;
 
 export const toast = {
-  success: (msg: string) => _add?.(msg, 'success'),
-  error:   (msg: string) => _add?.(msg, 'error'),
-  info:    (msg: string) => _add?.(msg, 'info'),
-  warning: (msg: string) => _add?.(msg, 'warning'),
+  success: (msg: string) => push?.(msg, 'success'),
+  error: (msg: string) => push?.(msg, 'error'),
+  info: (msg: string) => push?.(msg, 'info'),
 };
 
-/* Toast colour is the one place status hues earn their keep: the toast is
-   transient and the colour is the only thing that distinguishes success from
-   failure at a glance. Tokens, not Tailwind literals, so they follow the
-   theme. */
-const cfg: Record<ToastType, { bar: string; icon: JSX.Element }> = {
-  success: {
-    bar: 'bg-[var(--positive)]',
-    icon: (
-      <svg className="w-4 h-4 text-[var(--positive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-      </svg>
-    ),
-  },
-  error: {
-    bar: 'bg-[var(--destructive)]',
-    icon: (
-      <svg className="w-4 h-4 text-[var(--destructive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    ),
-  },
-  info: {
-    bar: 'bg-[var(--quiet)]',
-    icon: (
-      <svg className="w-4 h-4 text-[var(--quiet)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  warning: {
-    bar: 'bg-[var(--caution)]',
-    icon: (
-      <svg className="w-4 h-4 text-[var(--caution)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-      </svg>
-    ),
-  },
+/* Success is the won colour — a completed action is a small win. Errors use
+   danger, which appears nowhere else but the destructive confirm. */
+const TONE: Record<ToastType, { color: string; Icon: typeof Check }> = {
+  success: { color: 'var(--color-won)', Icon: Check },
+  error: { color: 'var(--color-danger)', Icon: TriangleAlert },
+  info: { color: 'var(--color-fg-2)', Icon: Info },
 };
 
-// ── Single toast card
-function ToastCard({ item, onClose }: { item: ToastItem; onClose: () => void }) {
-  const { bar, icon } = cfg[item.type];
+const LIFETIME = 3800;
+let seq = 0;
+
+function ToastCard({ item, onClose }: { item: ToastItem; onClose: (id: number) => void }) {
+  const { color, Icon } = TONE[item.type];
+  const reduce = useReducedMotion();
 
   useEffect(() => {
-    const t = setTimeout(onClose, 3800);
+    // onClose is stable and takes the id, so a new toast arriving does not
+    // restart the timers of the ones already on screen.
+    const t = setTimeout(() => onClose(item.id), LIFETIME);
     return () => clearTimeout(t);
-  }, [onClose]);
+  }, [item.id, onClose]);
 
   return (
-    <div
-      className="relative flex items-start gap-3 bg-card border border-border rounded-2xl shadow-card-hover px-4 py-3.5 w-80 overflow-hidden pointer-events-auto animate-slide-up"
-      style={{ boxShadow: '0 8px 30px rgb(0 0 0 / .12)' }}
+    <motion.div
+      layout={!reduce}
+      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      className="pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden rounded-[var(--radius-lg)] border border-line bg-panel py-3 pl-4 pr-2 shadow-[var(--shadow-pop)] sm:w-80"
+      role={item.type === 'error' ? 'alert' : 'status'}
     >
-      {/* Progress bar */}
-      <div
-        className={`absolute bottom-0 left-0 h-0.5 ${bar} rounded-full`}
-        style={{ animation: 'toastProgress 3.8s linear forwards' }}
-      />
-      {/* Icon */}
-      <div className="shrink-0 mt-0.5 w-6 h-6 rounded-lg bg-muted flex items-center justify-center">
-        {icon}
-      </div>
-      {/* Message */}
-      <p className="flex-1 text-sm font-medium text-foreground leading-snug pt-0.5">{item.message}</p>
-      {/* Close */}
-      <button onClick={onClose} className="shrink-0 text-muted-foreground hover:text-muted-foreground transition mt-0.5">
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-        </svg>
+      <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: color }} aria-hidden />
+      <Icon className="mt-0.5 size-4 shrink-0" style={{ color }} aria-hidden />
+      <p className="flex-1 pt-px text-sm font-medium leading-snug text-fg">{item.message}</p>
+      <button
+        type="button"
+        onClick={() => onClose(item.id)}
+        aria-label="Bildirimi kapat"
+        className="flex size-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-fg-3 transition-colors hover:bg-lift hover:text-fg"
+      >
+        <X className="size-3.5" aria-hidden />
       </button>
-    </div>
+    </motion.div>
   );
 }
 
-// ── Provider – layout.tsx içine ekle
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const add = useCallback((message: string, type: ToastType) => {
-    const id = Math.random().toString(36).slice(2, 8);
-    setToasts(t => [...t, { id, message, type }]);
+    seq += 1;
+    const id = seq;
+    setToasts((t) => [...t.slice(-3), { id, message, type }]);
   }, []);
 
   useEffect(() => {
-    _add = add;
-    return () => { _add = null; };
+    push = add;
+    return () => {
+      push = null;
+    };
   }, [add]);
 
-  const remove = useCallback((id: string) => setToasts(t => t.filter(x => x.id !== id)), []);
+  const remove = useCallback((id: number) => setToasts((t) => t.filter((x) => x.id !== id)), []);
 
   return (
     <>
       {children}
-      {/* Toast container */}
-      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none">
-        {toasts.map(item => (
-          <ToastCard key={item.id} item={item} onClose={() => remove(item.id)} />
-        ))}
+      {/* Sits above the phone tab bar; bottom-right on desktop. */}
+      <div
+        className="pointer-events-none fixed inset-x-4 bottom-20 z-[70] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-6 lg:bottom-6"
+        aria-live="polite"
+      >
+        <AnimatePresence initial={false}>
+          {toasts.map((item) => (
+            <ToastCard key={item.id} item={item} onClose={remove} />
+          ))}
+        </AnimatePresence>
       </div>
     </>
   );

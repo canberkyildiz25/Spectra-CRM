@@ -1,304 +1,253 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { ArrowLeft, Pencil, Printer } from 'lucide-react';
+import AppShell from '@/components/AppShell';
+import { Page } from '@/components/app/PageHead';
+import ToneChip from '@/components/app/ToneChip';
+import SpectraMark from '@/components/brand/SpectraMark';
 import api from '@/lib/axios';
+import { useAuthReady } from '@/lib/store';
+import { PROPOSAL_STATUS } from '@/lib/stages';
+import { dateLong, moneyExact } from '@/lib/format';
 
-interface Item { name: string; description?: string; quantity: number; unit: string; unitPrice: number; }
+interface Item {
+  name: string;
+  description?: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+}
 interface Proposal {
-  _id: string; proposalNumber: string; title: string; status: string;
-  validUntil: string; taxRate: number; notes?: string; paymentTerms?: string;
-  items: Item[]; createdAt: string;
-  customerId: { firstName: string; lastName: string; company?: string; email?: string; phone?: string; city?: string; };
-  opportunityId?: { title: string };
+  _id: string;
+  proposalNumber: string;
+  title: string;
+  status: string;
+  validUntil: string;
+  taxRate: number;
+  notes?: string;
+  paymentTerms?: string;
+  items: Item[];
+  createdAt: string;
+  customerId: { firstName: string; lastName: string; company?: string; email?: string; phone?: string; city?: string } | null;
+  opportunityId?: { title: string } | null;
 }
 
-const statusConfig: Record<string, { label: string; bg: string; color: string; border: string }> = {
-  draft:    { label: 'Taslak',       bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
-  sent:     { label: 'Gönderildi',   bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
-  accepted: { label: 'Kabul Edildi', bg: '#ecfdf5', color: '#065f46', border: '#6ee7b7' },
-  rejected: { label: 'Reddedildi',   bg: '#fff1f2', color: '#be123c', border: '#fecdd3' },
-};
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 2 }).format(n);
-
+/* The proposal document is the one paper surface in the app — it prints.
+ * It keeps the app's type and swaps the ground for white, with the scale
+ * darkened so every status still clears 4.5:1 on paper (design.md).
+ *
+ * The old document had a fixed glass toolbar, an emerald glow, gradient
+ * totals and a footer naming spectracrm.com, a domain that does not exist.
+ */
 export default function ProposalDetail() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
+  const authReady = useAuthReady();
   const [proposal, setProposal] = useState<Proposal | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [phase, setPhase] = useState<'loading' | 'ready' | 'missing'>('loading');
 
   useEffect(() => {
-    api.get(`/proposals/${id}`).then(r => setProposal(r.data.data)).finally(() => setLoading(false));
-  }, [id]);
+    if (!authReady) return;
+    api
+      .get(`/proposals/${id}`)
+      .then((r) => {
+        setProposal(r.data.data);
+        setPhase('ready');
+      })
+      .catch(() => setPhase('missing'));
+  }, [id, authReady]);
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen" style={{ background: '#f8fafc' }}>
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-full border-2 border-border border-t-transparent animate-spin" />
-        <p className="text-sm text-muted-foreground">Yükleniyor...</p>
-      </div>
-    </div>
-  );
-
-  if (!proposal) return (
-    <div className="flex items-center justify-center min-h-screen" style={{ background: '#f8fafc' }}>
-      <p className="text-sm text-muted-foreground">Teklif bulunamadı</p>
-    </div>
-  );
+  if (phase !== 'ready' || !proposal) {
+    return (
+      <AppShell>
+        <Page>
+          {phase === 'loading' ? (
+            <div className="animate-pulse space-y-4" role="status" aria-label="Yükleniyor">
+              <div className="h-10 w-64 rounded bg-lift" />
+              <div className="h-[32rem] rounded-[var(--radius-lg)] bg-panel" />
+            </div>
+          ) : (
+            <div className="max-w-md py-16">
+              <p className="label">Bulunamadı</p>
+              <h1 className="mt-3 text-[2.25rem] text-fg">Bu teklif yok.</h1>
+              <Link href="/proposals" className="btn mt-6">
+                Tekliflere dön
+              </Link>
+            </div>
+          )}
+        </Page>
+      </AppShell>
+    );
+  }
 
   const subtotal = proposal.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-  const tax = subtotal * proposal.taxRate / 100;
+  const tax = (subtotal * proposal.taxRate) / 100;
   const total = subtotal + tax;
-  const sc = statusConfig[proposal.status] ?? statusConfig.draft;
-  const isAccepted = proposal.status === 'accepted';
+  const st = PROPOSAL_STATUS[proposal.status] ?? PROPOSAL_STATUS.draft;
+  const c = proposal.customerId;
+
+  const meta: [string, string][] = [
+    ['Başlık', proposal.title],
+    ['Düzenleme', dateLong(proposal.createdAt)],
+    ['Geçerlilik', dateLong(proposal.validUntil)],
+    ...(proposal.opportunityId ? ([['İlgili fırsat', proposal.opportunityId.title]] as [string, string][]) : []),
+  ];
 
   return (
-    <ProtectedRoute>
-      {/* ── Toolbar ─────────────────────────────────── */}
-      <div className="no-print fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
-        style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #f1f5f9', boxShadow: '0 1px 8px rgba(0,0,0,.06)' }}>
-        <button onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Teklifler
-        </button>
-
-        <div className="flex items-center gap-2">
-          {/* Status badge */}
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
-            style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
-            {sc.label}
-          </span>
-          <button onClick={() => router.push(`/proposals/${id}/edit`)}
-            className="btn-secondary text-sm py-2">
-            Düzenle
-          </button>
-          <button onClick={() => window.print()}
-            className="btn-primary text-sm py-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            PDF / Yazdır
-          </button>
-        </div>
-      </div>
-
-      {/* ── Document ────────────────────────────────── */}
-      <div className="print-page pt-16 pb-16 min-h-screen" style={{ background: '#f1f5f9' }}>
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-card rounded-2xl overflow-hidden print:rounded-none print:shadow-none"
-            style={{ boxShadow: '0 4px 40px rgba(0,0,0,.10)' }}>
-
-            {/* ── Document header ───────────────────── */}
-            <div className="relative overflow-hidden px-10 py-8"
-              style={{ background: 'linear-gradient(135deg, #0d1117 0%, #0f172a 100%)' }}>
-              {/* Emerald glow */}
-              <div className="absolute -top-10 -right-10 w-56 h-56 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,.2) 0%, transparent 65%)' }} />
-              <div className="absolute bottom-0 left-0 right-0 h-px"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(16,185,129,.4), transparent)' }} />
-
-              <div className="relative flex items-start justify-between">
-                {/* Brand */}
-                <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg,#059669,#10b981)', boxShadow: '0 0 16px rgba(16,185,129,.4)' }}>
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-white font-bold text-lg tracking-tight">Spectra CRM</p>
-                      <p className="text-[var(--positive)]/70 text-[10px] tracking-widest uppercase">Müşteri İlişkileri</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Proposal title block */}
-                <div className="text-right">
-                  <p className="text-muted-foreground text-xs uppercase tracking-widest mb-1">Satış Teklifi</p>
-                  <p className="text-white font-mono font-bold text-lg">{proposal.proposalNumber}</p>
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
-                    style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: sc.color }} />
-                    {sc.label}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-10 py-8">
-
-              {/* ── Info grid ─────────────────────────── */}
-              <div className="grid grid-cols-2 gap-8 mb-8 pb-8" style={{ borderBottom: '1px solid #f1f5f9' }}>
-                {/* Customer */}
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Müşteri Bilgileri</p>
-                  <p className="font-bold text-foreground text-base mb-1">
-                    {proposal.customerId.firstName} {proposal.customerId.lastName}
-                  </p>
-                  {proposal.customerId.company && (
-                    <p className="text-muted-foreground text-sm font-medium">{proposal.customerId.company}</p>
-                  )}
-                  <div className="mt-2 space-y-0.5">
-                    {proposal.customerId.email && (
-                      <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        {proposal.customerId.email}
-                      </p>
-                    )}
-                    {proposal.customerId.phone && (
-                      <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        {proposal.customerId.phone}
-                      </p>
-                    )}
-                    {proposal.customerId.city && (
-                      <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        </svg>
-                        {proposal.customerId.city}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Proposal meta */}
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Teklif Detayları</p>
-                  <div className="space-y-2">
-                    {[
-                      { label: 'Teklif Başlığı', value: proposal.title },
-                      { label: 'Düzenleme Tarihi', value: new Date(proposal.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) },
-                      { label: 'Geçerlilik Tarihi', value: new Date(proposal.validUntil).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) },
-                      ...(proposal.opportunityId ? [{ label: 'İlgili Fırsat', value: proposal.opportunityId.title }] : []),
-                    ].map(row => (
-                      <div key={row.label} className="flex gap-2">
-                        <span className="text-xs text-muted-foreground w-32 shrink-0 pt-0.5">{row.label}</span>
-                        <span className="text-sm font-medium text-foreground">{row.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Items table ───────────────────────── */}
-              <div className="mb-8">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Ürün / Hizmet Listesi</p>
-                <div className="overflow-hidden rounded-xl" style={{ border: '1px solid #f1f5f9' }}>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr style={{ background: 'linear-gradient(135deg, #0d1117, #0f172a)' }}>
-                        <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-8">#</th>
-                        <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ürün / Hizmet</th>
-                        <th className="text-center py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Birim</th>
-                        <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Miktar</th>
-                        <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Birim Fiyat</th>
-                        <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-[var(--positive)]">Toplam</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {proposal.items.map((item, i) => (
-                        <tr key={i} style={{ background: i % 2 === 0 ? '#ffffff' : '#fafbfc', borderBottom: '1px solid #f8fafc' }}>
-                          <td className="py-3.5 px-4 text-muted-foreground text-xs">{i + 1}</td>
-                          <td className="py-3.5 px-4">
-                            <p className="font-semibold text-foreground">{item.name}</p>
-                            {item.description && <p className="text-muted-foreground text-xs mt-0.5">{item.description}</p>}
-                          </td>
-                          <td className="py-3.5 px-4 text-center text-muted-foreground">{item.unit}</td>
-                          <td className="py-3.5 px-4 text-right text-muted-foreground font-medium">{item.quantity}</td>
-                          <td className="py-3.5 px-4 text-right text-muted-foreground">{fmt(item.unitPrice)}</td>
-                          <td className="py-3.5 px-4 text-right font-bold text-foreground">{fmt(item.quantity * item.unitPrice)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* ── Totals ────────────────────────────── */}
-              <div className="flex justify-end mb-8">
-                <div className="w-80">
-                  <div className="space-y-1 mb-3">
-                    <div className="flex justify-between py-2 text-sm" style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <span className="text-muted-foreground">Ara Toplam</span>
-                      <span className="font-medium text-foreground">{fmt(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between py-2 text-sm" style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <span className="text-muted-foreground">KDV (%{proposal.taxRate})</span>
-                      <span className="font-medium text-foreground">{fmt(tax)}</span>
-                    </div>
-                  </div>
-                  {/* Total card */}
-                  <div className="rounded-xl px-5 py-4 flex items-center justify-between"
-                    style={{ background: isAccepted ? 'linear-gradient(135deg,#059669,#10b981)' : 'linear-gradient(135deg,#0d1117,#0f172a)', boxShadow: isAccepted ? '0 4px 20px rgba(16,185,129,.3)' : '0 4px 20px rgba(0,0,0,.2)' }}>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-white/60">Genel Toplam</p>
-                      {isAccepted && <p className="text-[10px] text-[var(--positive)] mt-0.5">Kabul edildi</p>}
-                    </div>
-                    <p className="text-2xl font-bold text-white">{fmt(total)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Terms & Notes ─────────────────────── */}
-              {(proposal.paymentTerms || proposal.notes) && (
-                <div className="grid grid-cols-2 gap-6 pt-6 mb-8" style={{ borderTop: '1px solid #f1f5f9' }}>
-                  {proposal.paymentTerms && (
-                    <div className="rounded-xl p-4" style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Ödeme Koşulları</p>
-                      <p className="text-sm text-foreground">{proposal.paymentTerms}</p>
-                    </div>
-                  )}
-                  {proposal.notes && (
-                    <div className="rounded-xl p-4" style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Notlar</p>
-                      <p className="text-sm text-foreground whitespace-pre-line">{proposal.notes}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ── Signature ─────────────────────────── */}
-              <div className="grid grid-cols-2 gap-16 pt-8" style={{ borderTop: '1px solid #f1f5f9' }}>
-                {[{ label: 'Hazırlayan / Yetkili İmzası' }, { label: 'Müşteri Onayı / İmzası' }].map(sig => (
-                  <div key={sig.label}>
-                    <div className="h-14 mb-3 rounded-lg" style={{ borderBottom: '1.5px dashed #e2e8f0' }} />
-                    <p className="text-[11px] text-muted-foreground">{sig.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Footer */}
-              <div className="mt-8 pt-5 flex items-center justify-between" style={{ borderTop: '1px solid #f1f5f9' }}>
-                <p className="text-[11px] text-muted-foreground">Spectra CRM · spectracrm.com</p>
-                <p className="text-[11px] text-muted-foreground">{proposal.proposalNumber} · {new Date(proposal.createdAt).toLocaleDateString('tr-TR')}</p>
-              </div>
-
-            </div>
+    <AppShell>
+      <Page>
+        {/* ── Toolbar ── */}
+        <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link href="/proposals" className="btn-ghost -ml-3">
+            <ArrowLeft className="size-4" aria-hidden />
+            Teklifler
+          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <ToneChip tone={st.tone}>{st.label}</ToneChip>
+            <Link href={`/proposals/${proposal._id}/edit`} className="btn-secondary btn-sm">
+              <Pencil className="size-4" aria-hidden />
+              Düzenle
+            </Link>
+            <button type="button" onClick={() => window.print()} className="btn btn-sm">
+              <Printer className="size-4" aria-hidden />
+              Yazdır / PDF
+            </button>
           </div>
         </div>
-      </div>
 
-      <style jsx global>{`
-        @media print {
-          .no-print { display: none !important; }
-          body { background: white !important; }
-          .print-page { padding-top: 0 !important; background: white !important; }
-          @page { margin: 1cm; }
-        }
-      `}</style>
-    </ProtectedRoute>
+        {/* ── Document ── */}
+        <article
+          className="print-page mx-auto max-w-4xl overflow-hidden rounded-[var(--radius-lg)] bg-paper text-paper-ink print:rounded-none"
+          aria-label={`${proposal.proposalNumber} satış teklifi`}
+        >
+          <header className="flex flex-col gap-6 border-b border-paper-line px-6 py-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
+            <div className="flex items-center gap-2.5">
+              <SpectraMark size={20} />
+              <span className="wordmark text-base text-paper-ink">Spectra</span>
+            </div>
+            <div className="sm:text-right">
+              <p className="label text-paper-ink-2">Satış teklifi</p>
+              <p className="readout mt-2 text-[2.75rem] text-paper-ink">{proposal.proposalNumber}</p>
+              <p className="mt-1 text-sm text-paper-ink-2">{st.label}</p>
+            </div>
+          </header>
+
+          <div className="grid gap-8 border-b border-paper-line px-6 py-8 sm:grid-cols-2 sm:px-10">
+            <section>
+              <h2 className="label text-paper-ink-2">Müşteri</h2>
+              {c ? (
+                <div className="mt-3 space-y-0.5 text-sm">
+                  <p className="text-base font-semibold text-paper-ink">
+                    {c.firstName} {c.lastName}
+                  </p>
+                  {c.company && <p className="text-paper-ink">{c.company}</p>}
+                  {c.email && <p className="text-paper-ink-2">{c.email}</p>}
+                  {c.phone && <p className="figure text-paper-ink-2">{c.phone}</p>}
+                  {c.city && <p className="text-paper-ink-2">{c.city}</p>}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-paper-ink-2">Müşteri kaydı silinmiş.</p>
+              )}
+            </section>
+            <section>
+              <h2 className="label text-paper-ink-2">Teklif</h2>
+              <dl className="mt-3 space-y-1.5 text-sm">
+                {meta.map(([k, v]) => (
+                  <div key={k} className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3">
+                    <dt className="text-paper-ink-2">{k}</dt>
+                    <dd className="font-medium text-paper-ink">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          </div>
+
+          <section className="px-6 py-8 sm:px-10" aria-labelledby="doc-items">
+            <h2 id="doc-items" className="label text-paper-ink-2">
+              Ürün ve hizmetler
+            </h2>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[34rem] text-sm">
+                <thead>
+                  <tr className="border-b-2 border-paper-ink text-left">
+                    <th className="label py-2.5 pr-3 text-paper-ink-2">#</th>
+                    <th className="label py-2.5 pr-3 text-paper-ink-2">Kalem</th>
+                    <th className="label py-2.5 pr-3 text-paper-ink-2">Birim</th>
+                    <th className="label py-2.5 pr-3 text-right text-paper-ink-2">Miktar</th>
+                    <th className="label py-2.5 pr-3 text-right text-paper-ink-2">Birim fiyat</th>
+                    <th className="label py-2.5 text-right text-paper-ink-2">Tutar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {proposal.items.map((item, i) => (
+                    <tr key={i} className="border-b border-paper-line align-top">
+                      <td className="figure py-3 pr-3 text-paper-ink-2">{String(i + 1).padStart(2, '0')}</td>
+                      <td className="py-3 pr-3">
+                        <p className="font-medium text-paper-ink">{item.name}</p>
+                        {item.description && <p className="mt-0.5 text-xs text-paper-ink-2">{item.description}</p>}
+                      </td>
+                      <td className="py-3 pr-3 text-paper-ink-2">{item.unit}</td>
+                      <td className="figure py-3 pr-3 text-right text-paper-ink">{item.quantity}</td>
+                      <td className="figure py-3 pr-3 text-right text-paper-ink">{moneyExact(item.unitPrice)}</td>
+                      <td className="figure py-3 text-right text-paper-ink">{moneyExact(item.quantity * item.unitPrice)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <dl className="ml-auto mt-6 max-w-xs space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-paper-ink-2">Ara toplam</dt>
+                <dd className="figure text-paper-ink">{moneyExact(subtotal)}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-paper-ink-2">KDV (%{proposal.taxRate})</dt>
+                <dd className="figure text-paper-ink">{moneyExact(tax)}</dd>
+              </div>
+              <div className="flex items-end justify-between gap-4 border-t-2 border-paper-ink pt-3">
+                <dt className="label text-paper-ink-2">Genel toplam</dt>
+                <dd className="readout text-[2.25rem] text-paper-ink">{moneyExact(total)}</dd>
+              </div>
+            </dl>
+          </section>
+
+          {(proposal.paymentTerms || proposal.notes) && (
+            <div className="grid gap-6 border-t border-paper-line px-6 py-8 sm:grid-cols-2 sm:px-10">
+              {proposal.paymentTerms && (
+                <section>
+                  <h2 className="label text-paper-ink-2">Ödeme koşulları</h2>
+                  <p className="mt-2 text-sm text-paper-ink">{proposal.paymentTerms}</p>
+                </section>
+              )}
+              {proposal.notes && (
+                <section>
+                  <h2 className="label text-paper-ink-2">Notlar</h2>
+                  <p className="mt-2 whitespace-pre-line text-sm text-paper-ink">{proposal.notes}</p>
+                </section>
+              )}
+            </div>
+          )}
+
+          <div className="grid gap-10 border-t border-paper-line px-6 py-10 sm:grid-cols-2 sm:px-10">
+            {['Hazırlayan', 'Müşteri onayı'].map((label) => (
+              <div key={label}>
+                <div className="h-14 border-b border-paper-ink" />
+                <p className="mt-2 text-xs text-paper-ink-2">{label} · imza ve tarih</p>
+              </div>
+            ))}
+          </div>
+
+          <footer className="flex flex-wrap justify-between gap-2 border-t border-paper-line px-6 py-4 text-xs text-paper-ink-2 sm:px-10">
+            <span>Spectra CRM ile hazırlandı</span>
+            <span className="figure">
+              {proposal.proposalNumber} · {dateLong(proposal.createdAt)}
+            </span>
+          </footer>
+        </article>
+      </Page>
+    </AppShell>
   );
 }

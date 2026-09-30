@@ -1,178 +1,169 @@
 # Design — Spectra CRM
 
-A locked design system for this app. Every page redesign reads this file before
-emitting code. Do not regenerate per page — extend or amend this file when the
-system needs to grow.
+Locked design system for every route. Read it before changing a page; amend
+this file when the system needs to grow. Rewritten 2026-09-30 for the dark,
+cinematic rebuild. The earlier Coral / paper system is retired.
+
+## The idea
+
+The product is a sales pipeline, and the name is Spectra, so the system is a
+**spectrum**. Every opportunity sits at a temperature. A lead is cold, a deal
+at the negotiating table is hot, and a closed deal leaves the scale. It is won
+or it is ash.
+
+That one scale is the whole colour system. It runs through the kanban, the
+charts, the badges and the landing page, and it means the same thing
+everywhere. The chrome around it (surfaces, text, buttons) carries no hue at
+all, so the moment colour appears it is saying something.
+
+The type follows the same idea along a different axis: **width**. Hubot Sans
+and Mona Sans are variable in width. Figures and stage names are set
+condensed, like an instrument readout, and the wordmark is set wide. Body text
+sits in the middle.
 
 ## Genre
 
-modern-minimal. A CRM is a B2B tool; the register is Stripe rather than Linear —
-warm, composed, quiet. The tone brief was **soft**, so warmth carries it: warm-grey
-paper, generous radii, hairline rules instead of shadows.
+atmospheric / instrument. Dark ground, bright signal, nothing decorative.
 
-## Macrostructure family
+## Stack
 
-- **App pages** (dashboard, customers, opportunities, tasks, proposals):
-  **Workbench** — the data is the content. Sidebar rail + working surface. Pages
-  vary only in how the working surface is composed (board / table / detail).
-- **Auth pages** (login, register): **Letter** — a single narrow column, no
-  marketing furniture.
-- **Landing page:** **Long Document** — a statement, a plain account of what the
-  tool does as a numbered list separated by rules, and a door into the running
-  app. Not a hero-with-three-cards; the running demo is the proof, so the page's
-  job is to get out of the way and link to it.
+Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind 4 (`@theme`
+tokens in `app/globals.css`), GSAP ScrollTrigger on the landing and auth
+pages, Framer Motion inside the app, next/font. Dark only. The previous light
+theme and its toggle were removed, because a second theme was never designed
+with the same care.
 
-## Theme — Coral
+## Palette
 
-Anchor hue 40–60° (warm). One accent, coral, held to **≤ 3 % of any viewport**.
+### Ground and ink
 
-- `--color-paper`      oklch(97.5% 0.006 60)  — page ground
-- `--color-paper-2`    oklch(95%   0.008 58)  — cards, raised surfaces
-- `--color-paper-3`    oklch(92%   0.010 56)  — hover, inset wells
-- `--color-ink`        oklch(23%   0.014 45)  — primary text
-- `--color-ink-2`      oklch(46%   0.012 48)  — secondary text
-- `--color-ink-3`      oklch(62%   0.010 50)  — labels, meta
-- `--color-rule`       oklch(89%   0.008 55)  — hairlines
-- `--color-accent`     oklch(66%   0.152 32)  — coral, fills and marks
-- `--color-accent-ink` oklch(51%   0.155 32)  — coral as text on paper (contrast)
-- `--color-accent-wash` oklch(95%  0.030 34)  — selected rows, faint tint
-- `--color-focus`      oklch(58%   0.150 32)  — focus rings
+| Token | Value | Job |
+| --- | --- | --- |
+| `ground` | `#0A0B0D` | page |
+| `raised` | `#111317` | rail, top bar, auth form side |
+| `panel` | `#171A1F` | cards, popovers, table body |
+| `lift` | `#1F232A` | hover, pressed, selected row |
+| `well` | `#0E1013` | recessed: kanban column, inputs |
+| `line` | `#252932` | hairlines |
+| `line-strong` | `#343944` | input borders, table head rule |
+| `fg` | `#EEF0F3` | text: 15.3 on panel |
+| `fg-2` | `#AAB0BA` | secondary text: 8.0 on panel |
+| `fg-3` | `#8A919D` | labels, meta: 5.5 on panel, 4.97 on lift |
 
-### Data states
+### The temperature scale
 
-Deliberately low-chroma so the coral accent stays the only loud thing on screen.
-**Lost deals are grey, not red** — an alarm colour on a normal business outcome is
-noise, and red would compete with the accent.
+| Token | Value | Means | On panel |
+| --- | --- | --- | --- |
+| `cold` | `#5B9BFF` | stage **Aday**; low priority; prospect | 6.29 |
+| `cool` | `#34D1D8` | stage **Nitelikli** | 9.35 |
+| `warm` | `#F7C948` | stage **Teklif**; medium priority; proposal sent | 11.13 |
+| `hot` | `#FF7B3A` | stage **Müzakere**; high priority | 6.77 |
+| `won` | `#52E08A` | **Kazanıldı**; active customer; accepted; done | 10.29 |
+| `ash` | `#737A86` | **Kaybedildi**; inactive; rejected; draft | 4.03, marks only |
+| `danger` | `#FF5C5C` | the destructive confirm step, nothing else | 5.76 |
 
-- `--color-positive`   oklch(56% 0.085 160)  — won, completed
-- `--color-caution`    oklch(72% 0.095 80)   — pending, due soon
-- `--color-quiet`      oklch(52% 0.020 45)   — lost, inactive, archived
+- All six pass 3:1 as marks on every surface. Five pass 4.5:1 as text on
+  every surface. `ash` is never used as text; a lost label is `fg-2`.
+- Ground text on any scale fill is at least 4.55:1, so a filled chip can
+  carry a dark label.
+- Colour is **never alone**. Every stage colour sits next to its stage name.
+  Every bar has a figure, and every chart has a table behind a disclosure.
+  Under deuteranopia `warm`, `hot` and `won` converge, and under tritanopia
+  `cold`, `cool` and `won` converge. The labels and the fixed stage order
+  carry identity there.
 
-## Charts
+### Chrome is colourless
 
-Charts are hand-built SVG. No charting library — a library would fight these
-tokens and add a dependency for three figures.
-
-Both palettes were **computed and validated**, not chosen by eye. The values and
-their check results live in `tokens.css`.
-
-- **Ordinal** (pipeline by stage) — one hue, five monotone lightness steps.
-- **Categorical** (won vs lost) — coral and blue, ΔE 17.6 under protanopia.
-
-### The badge palette is not the chart palette
-
-`--color-quiet` is right for a "lost" badge and wrong for a "lost" series. At
-chroma 0.019 it is under the 0.10 floor a categorical colour needs, and paired
-with `--color-positive` it measures ΔE 3.9 under deutan vision — indistinguishable.
-Lost stays grey in badges and becomes blue in charts. Two different jobs.
-
-### Honesty rules
-
-- Never invent a data point to fill a chart. If the dataset cannot support a
-  form, change the form. The demo carries one opportunity per stage, so a
-  *count* chart of stages would be six identical bars — the stage chart plots
-  **value**, which is real and varied. There is no won/lost time series because
-  one win and one loss is not a series.
-- A headline number is a stat tile, not a chart.
-- Every figure is `--font-mono`, tabular.
+- Primary button: `fg` fill, ground text (17.25), a pill.
+- Secondary: `panel` fill, `line-strong` hairline, `fg` text.
+- Focus: a 2 px `fg` ring, offset 2 px, on every surface. It never animates.
+- Active navigation: an `fg` bar that slides between items (a shared layout
+  animation), not a colour.
 
 ## Typography
 
-Three faces, which is the ceiling under the 2+1 rule.
+| Role | Face | Setting |
+| --- | --- | --- |
+| Display, figures, stage names | **Hubot Sans** | 700–800, `font-stretch: 75%` (condensed) |
+| Wordmark | Hubot Sans | 800, `font-stretch: 125%`, tracked +0.04em |
+| UI and body | **Mona Sans** | 400–600, normal width |
+| Data, codes, dates, labels | **Martian Mono** | 400–500, `font-stretch: 87.5%`, tabular |
 
-- **Display:** Instrument Serif 400, tracking `-0.015em`. Headings only — `h1`,
-  `h2`, or anything with `.display`. One weight ships, so the weight is pinned
-  at 400: asking for 600 makes the browser synthesise a bold and smears the
-  contrast the face was chosen for. Size and colour carry the hierarchy.
-- **Body and controls:** Geist 400–500.
+- Roman only. No italic inside a heading, ever.
+- Every figure in a table is Martian Mono, tabular, right-aligned.
+- Headline figures (the dashboard's open pipeline, a stage total) are Hubot
+  condensed at display size. The readout look comes from that.
+- Labels (`.label`) are Martian Mono, 11 px, uppercase, +0.08em, `fg-3`.
+- Inter, Geist and Space Grotesk are out: the first two are the most
+  predictable faces on a Next.js app, and the third was the previous build.
 
-Geist was doing both jobs and carried no voice at heading size — and on a
-Next.js app on Vercel it is the most predictable typeface there is. Serif for
-headings, sans for the dense data, never the reverse. Small headings inside
-data panels stay in the sans via `.ui-heading`; a serif at 14px semibold in a
-table header reads as a mistake.
-- **Mono:** Geist Mono, 400–500 — every figure, currency amount, date, ID and
-  table numeral. Tabular numerals are mandatory in tables so columns align.
-- Type scale anchor: `--text-display` = `clamp(2rem, 1.4rem + 2vw, 2.75rem)`
+## Macrostructure
 
-Inter is banned in this project. It was the previous default and is the single
-most recognisable generated-UI tell.
+- **Landing — Narrative Workflow with a spectrum opening.** The first screen
+  is a readout: every opportunity in the demo dataset as a vertical line,
+  grouped by stage, with height set by amount. Below it the page walks the
+  five stages in order (01 Aday → 05 Kapanış). Each stage has its own band,
+  colour rule and the real demo deals that sit in it. Then an index of the
+  screens, a spec sheet of the stack, and a statement footer.
+  Nav: N1 wordmark + two links. Footer: Ft5 statement.
+- **Auth — split readout.** Left: the same readout, compact, with the stage
+  legend. Right: the form on `raised`. Below `lg` the readout folds away and
+  only the form remains.
+- **App — Workbench.** A rail with the navigation and a working surface. Pages
+  differ only in how the surface is composed (board, table, detail,
+  document). Below `lg` the rail becomes a top bar plus a five-item bottom
+  tab bar.
 
-## Spacing
+## Surfaces and shape
 
-4-point named scale, values in `tokens.css`. Pages must use named tokens
-(`var(--space-md)`), never raw values.
-
-## Radii
-
-Soft, but not uniformly round — uniform `rounded-2xl` on everything is a tell.
-
-- Buttons: full pill (`--radius-pill`)
-- Cards, panels: `--radius-lg` (14px)
-- Inputs, chips, table wells: `--radius-md` (10px)
+- Hairlines separate; shadows do not. The one shadow is on floating layers
+  (menus, dialogs, toasts), where it signals elevation.
+- Radii: controls and chips 6 px, cards 10 px, buttons full pill.
+- Kanban columns are `well` with a 2 px top rule in the stage colour. Cards
+  are `panel` with a 2 px left edge in the stage colour.
+- The proposal document is the one light surface in the app. It is paper
+  because it prints. It uses the same type; its status is written out, not
+  coloured, so it survives a black-and-white printer.
 
 ## Motion
 
-The project ships no motion library and will not gain one. Motion is CSS only.
+Landing and auth (GSAP):
+- Headline lines rise behind a mask on load, 90 ms apart.
+- Readout lines grow from the baseline, cold to hot, staggered, once.
+- Each stage band's colour rule sweeps left to right as it enters. Section
+  titles rise word by word once.
+- A thin spectrum rail on the left edge fills stage by stage while the reader
+  is inside the workflow section (desktop only).
+- Magnetic pull on the primary CTA, fine pointers only.
 
-- Easings: `--ease-out` `cubic-bezier(0.16, 1, 0.3, 1)`, `--ease-in-out`
-  `cubic-bezier(0.4, 0, 0.2, 1)`
-- Reveal pattern: fade only, 180 ms. No slide-up on route change — it makes a
-  data table feel like a marketing page.
-- Animate `transform` and `opacity` only.
-- `prefers-reduced-motion: reduce` collapses everything to a ≤ 150 ms opacity
-  crossfade. Focus rings never animate.
+App (Framer Motion, restrained):
+- Route content fades in and rises 6 px, 220 ms. Nothing slides sideways.
+- Headline figures count up once on first render.
+- Stage bars grow from zero once. The motion explains the number.
+- Kanban cards animate to their new column (layout animation) when their
+  stage changes. Every drag has a menu equivalent ("Aşamaya taşı"), because
+  drag and drop reaches neither a keyboard nor a touch screen.
+- The active nav bar slides between items.
+- Toasts enter from below and leave by fading.
 
-## Microinteractions stance
+`prefers-reduced-motion`: all of the above off; content is simply there.
+Colour and opacity feedback on controls stays. Not used: custom cursors,
+grain, looping animation, scroll hijacking, parallax inside the app.
 
-- Silent success. A saved record updates in place; no celebratory toast.
-- Optimistic update + Undo over confirmation dialogs.
-- Hover tooltips delay 800 ms; focus tooltips 0 ms.
-- Buttons do not lift on hover. The previous build's `translateY(-1px)` on every
-  button is restless in a tool people use all day.
+## Honesty
 
-## CTA voice
+- No invented numbers. The landing readout and stage ledger mirror the demo
+  seed (`server/src/seed.ts`). `lib/demo.ts` says so, and the two change
+  together. The page labels them "demo veri seti".
+- A chart never plots what the data cannot support. There is no time series,
+  because the demo has no history.
+- CTA copy promises only what exists: "Demoyu aç" opens a signed-in demo.
+- No fake browser chrome, no fake device frames.
 
-- **Primary:** flat coral fill, pill, no gradient, no shadow. Label is a verb and
-  its object — "Fırsat ekle", never "Gönder".
-- **Secondary:** paper-2 fill, hairline rule, pill, ink text.
-- **Destructive:** no red fill. Ink text, hairline rule, coral only on the
-  confirm step.
+## Bans
 
-## What pages MUST share
-
-- The wordmark and the sidebar rail.
-- Coral, at ≤ 3 % per viewport, only on: active nav item, primary button, focus
-  ring, the single most important figure on the page.
-- Geist + Geist Mono, with mono on every number.
-- Button shape and padding rhythm.
-- Hairline rules as the separator language — **no drop shadows on cards**.
-
-## What pages MAY differ on
-
-- How the working surface is composed: board, table, split detail, form.
-- Which figure is promoted to display size.
-
-## Per-page allowances
-
-App pages MUST NOT use hero enrichment. Function carries the page.
-
-## Bans specific to this project
-
-Carried over from what the previous build got wrong:
-
-- `linear-gradient` on buttons, badges or stat cards. Gradients are gone.
-- Five parallel gradient utilities (`.bg-gradient-brand/success/warning/info/rose`).
-- Tailwind's stock `emerald` and `slate` ramps as brand colour.
-- `rounded-2xl` applied uniformly to every surface.
-- Drop shadows as the card-separation device.
-- Emoji as icons.
-- **Gradient text** (`bg-clip-text text-transparent`). It was on the landing
-  headline and half the words fell to ink-on-ink — unreadable as well as a tell.
-- **Radial colour blooms** behind headings and rails.
-- **Glass** — `backdrop-blur` over a solid background is a blurred rectangle.
-- **Invented numbers.** The landing page claimed "3.2x more sales · 94%
-  satisfaction · 2 min setup" for a demo with one account. If a figure cannot be
-  read out of the database, it does not go on the page.
-- CTA copy that promises something that does not exist. "Ücretsiz Başla" implied
-  a signup product; the honest label is "Demoyu aç".
+Gradients on buttons, badges or cards · gradient text · radial blooms ·
+glass · emoji as icons · Tailwind stock palette literals · hex values in
+components (tokens only) · `window.confirm()` · a colour used for two
+unrelated meanings · red on a lost deal (lost is ash: a normal outcome, not an
+alarm).

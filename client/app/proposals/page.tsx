@@ -1,203 +1,267 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import AppShell from '@/components/AppShell';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import api from '@/lib/axios';
-import { toast } from '@/components/Toast';
+import { useRouter } from 'next/navigation';
+import { Ellipsis, Eye, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import AppShell from '@/components/AppShell';
+import PageHead, { Page } from '@/components/app/PageHead';
+import ToneChip, { ToneDot } from '@/components/app/ToneChip';
 import EmptyState from '@/components/EmptyState';
+import ConfirmDelete from '@/components/ConfirmDelete';
+import { toast } from '@/components/Toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import api from '@/lib/axios';
+import { useAuthReady } from '@/lib/store';
+import { PROPOSAL_STATUS } from '@/lib/stages';
+import { date, money, moneyShort } from '@/lib/format';
 
+type Status = 'draft' | 'sent' | 'accepted' | 'rejected';
 interface Proposal {
-  _id: string; proposalNumber: string; title: string;
-  customerId: { firstName: string; lastName: string; company?: string };
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';
-  validUntil: string; items: { unitPrice: number; quantity: number }[]; taxRate: number; createdAt: string;
+  _id: string;
+  proposalNumber: string;
+  title: string;
+  customerId: { firstName: string; lastName: string; company?: string } | null;
+  status: Status;
+  validUntil: string;
+  items: { unitPrice: number; quantity: number }[];
+  taxRate: number;
 }
 
-const statusLabel: Record<string, string> = { draft: 'Taslak', sent: 'Gönderildi', accepted: 'Kabul', rejected: 'Red' };
-const statusStyle: Record<string, { badge: string; dot: string }> = {
-  draft:    { badge: 'badge-quiet',    dot: 'var(--quiet)' },
-  sent:     { badge: 'badge-accent',   dot: 'var(--chart-2)' },
-  accepted: { badge: 'badge-positive', dot: 'var(--positive)' },
-  rejected: { badge: 'badge-quiet',    dot: 'var(--quiet)' },
-};
-
-const fmt = (n: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(n);
-const calcTotal = (p: Proposal) => p.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0) * (1 + p.taxRate / 100);
+const total = (p: Proposal) => p.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0) * (1 + p.taxRate / 100);
+const ORDER: Status[] = ['sent', 'accepted', 'rejected', 'draft'];
 
 export default function Proposals() {
+  const router = useRouter();
+  const authReady = useAuthReady();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [filter, setFilter] = useState<'all' | Status>('all');
+  const [pendingDelete, setPendingDelete] = useState<Proposal | null>(null);
+  // Read once: "expired" is judged against when the page was opened.
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
-    api.get('/proposals').then(r => setProposals(r.data.data)).finally(() => setLoading(false));
-  }, []);
+    if (!authReady) return;
+    api
+      .get('/proposals')
+      .then((r) => setProposals(r.data.data))
+      .catch(() => toast.error('Teklifler yüklenemedi'))
+      .finally(() => setLoading(false));
+  }, [authReady]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Bu teklifi silmek istediğinize emin misiniz?')) return;
-    await api.delete(`/proposals/${id}`);
-    setProposals(p => p.filter(x => x._id !== id));
-    toast.success('Teklif silindi');
+  const groups = useMemo(() => {
+    const g: Record<string, { count: number; value: number }> = { all: { count: 0, value: 0 } };
+    for (const p of proposals) {
+      g[p.status] ??= { count: 0, value: 0 };
+      g[p.status].count += 1;
+      g[p.status].value += total(p);
+      g.all.count += 1;
+      g.all.value += total(p);
+    }
+    return g;
+  }, [proposals]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLocaleLowerCase('tr');
+    return proposals.filter(
+      (p) =>
+        (filter === 'all' || p.status === filter) &&
+        (!q ||
+          `${p.title} ${p.proposalNumber} ${p.customerId?.firstName ?? ''} ${p.customerId?.lastName ?? ''} ${p.customerId?.company ?? ''}`
+            .toLocaleLowerCase('tr')
+            .includes(q)),
+    );
+  }, [proposals, search, filter]);
+
+  const setStatus = async (p: Proposal, status: Status) => {
+    const before = proposals;
+    setProposals((list) => list.map((x) => (x._id === p._id ? { ...x, status } : x)));
+    try {
+      await api.put(`/proposals/${p._id}`, { status });
+      toast.success(`${p.proposalNumber} → ${PROPOSAL_STATUS[status].label}`);
+    } catch {
+      setProposals(before);
+      toast.error('Durum güncellenemedi');
+    }
   };
 
-  const handleStatusChange = async (id: string, status: string) => {
-    await api.put(`/proposals/${id}`, { status });
-    setProposals(p => p.map(x => x._id === id ? { ...x, status: status as any } : x));
-    toast.success('Durum güncellendi');
+  /* window.confirm() is gone here too: it cannot name the document it is
+     about to destroy, and some browsers let the user suppress it. */
+  const remove = async () => {
+    if (!pendingDelete) return;
+    const target = pendingDelete;
+    setPendingDelete(null);
+    try {
+      await api.delete(`/proposals/${target._id}`);
+      setProposals((list) => list.filter((x) => x._id !== target._id));
+      toast.success('Teklif silindi');
+    } catch {
+      toast.error('Silme başarısız');
+    }
   };
 
-  const filtered = proposals.filter(p => {
-    const q = `${p.title} ${p.proposalNumber} ${p.customerId.firstName} ${p.customerId.lastName} ${p.customerId.company || ''}`.toLowerCase();
-    return (search === '' || q.includes(search.toLowerCase())) &&
-           (statusFilter === 'all' || p.status === statusFilter);
-  });
-
-  const acceptedTotal = proposals.filter(p => p.status === 'accepted').reduce((s, p) => s + calcTotal(p), 0);
-  const sentTotal = proposals.filter(p => p.status === 'sent').reduce((s, p) => s + calcTotal(p), 0);
 
   return (
     <AppShell>
-      <div className="animate-fade-in">
-
-        {/* ── Page header ─────────────────────────── */}
-        <div className="relative overflow-hidden px-8 pt-7 pb-8"
-          style={{ background: 'linear-gradient(135deg, #0d1117 0%, #0f172a 60%, #06336422 100%)' }}>
-          <div className="absolute top-0 right-0 w-72 h-40 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at top right, rgba(167,139,250,.1) 0%, transparent 65%)' }} />
-          <div className="relative max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <p className="label mb-1">Belgeler</p>
-              <h1 className="text-2xl font-bold text-white tracking-tight">Satış Teklifleri</h1>
-              <p className="text-muted-foreground text-sm mt-1">{proposals.length} teklif · {fmt(acceptedTotal)} kabul edildi</p>
-            </div>
-            <Link href="/proposals/new" className="btn-primary self-start md:self-auto">
-              + Yeni Teklif
+      <Page>
+        <PageHead
+          label="Belgeler"
+          title="Teklifler"
+          meta={`${proposals.length} teklif · ${money(groups.accepted?.value ?? 0)} kabul edildi`}
+          actions={
+            <Link href="/proposals/new" className="btn btn-sm">
+              <Plus className="size-4" aria-hidden />
+              Yeni teklif
             </Link>
-          </div>
+          }
+        />
+
+        {/* The summary is the filter: each cell narrows the list to its status. */}
+        <div
+          role="group"
+          aria-label="Duruma göre süz"
+          className="grid grid-cols-2 overflow-hidden rounded-[var(--radius-lg)] border border-line bg-panel sm:grid-cols-5"
+        >
+          {(['all', ...ORDER] as const).map((k, i) => {
+            const g = groups[k] ?? { count: 0, value: 0 };
+            const pressed = filter === k;
+            return (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={pressed}
+                onClick={() => setFilter(pressed && k !== 'all' ? 'all' : k)}
+                className={`relative px-4 py-4 text-left transition-colors ${pressed ? 'bg-lift' : 'hover:bg-lift/60'} ${
+                  i > 0 ? 'border-line max-sm:border-t sm:border-l' : 'max-sm:col-span-2'
+                } ${i % 2 === 0 && i > 0 ? 'max-sm:border-l' : ''}`}
+              >
+                {pressed && <span className="absolute inset-x-0 top-0 h-[2px] bg-fg" aria-hidden />}
+                <span className="flex items-center gap-2">
+                  {k !== 'all' && <ToneDot tone={PROPOSAL_STATUS[k].tone} />}
+                  <span className="label">{k === 'all' ? 'Tümü' : PROPOSAL_STATUS[k].label}</span>
+                </span>
+                <span className="readout mt-2 block text-[2rem] text-fg">{g.count}</span>
+                <span className="figure mt-1 block text-xs text-fg-2">{moneyShort(g.value)}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="px-8 py-6 max-w-6xl mx-auto space-y-5">
+        <div className="relative mt-5 max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-fg-3" aria-hidden />
+          <label htmlFor="p-search" className="sr-only">
+            Teklif ara
+          </label>
+          <input
+            id="p-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Numara, başlık ya da müşteri"
+            className="input pl-9"
+          />
+        </div>
 
-          {/* ── Summary pills ───────────────────────── */}
-          {!loading && proposals.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {/* Hex literals — #3b82f6, #10b981 — could not follow the theme,
-                  and colouring each label a different hue turned four filter
-                  buttons into a rainbow that carried no information. Selection
-                  is shown by the ring, which is what selection means everywhere
-                  else in the app. */}
-              {[
-                { key: 'all',      label: 'Toplam',     count: proposals.length,                                      value: proposals.reduce((s, p) => s + calcTotal(p), 0) },
-                { key: 'sent',     label: 'Gönderildi', count: proposals.filter(p => p.status === 'sent').length,     value: sentTotal },
-                { key: 'accepted', label: 'Kabul',      count: proposals.filter(p => p.status === 'accepted').length, value: acceptedTotal },
-                { key: 'rejected', label: 'Red',        count: proposals.filter(p => p.status === 'rejected').length, value: proposals.filter(p => p.status === 'rejected').reduce((s, p) => s + calcTotal(p), 0) },
-              ].map(s => (
-                <button
-                  key={s.key}
-                  onClick={() => setStatusFilter(statusFilter === s.key ? 'all' : s.key)}
-                  aria-pressed={statusFilter === s.key}
-                  className={`card px-4 py-3 text-left transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    statusFilter === s.key ? 'border-ring ring-1 ring-ring' : 'hover:border-ring/40'
-                  }`}
-                >
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="label">{s.label}</span>
-                    <span className="figure text-lg font-medium text-foreground">{s.count}</span>
-                  </div>
-                  <p className="figure text-xs text-muted-foreground">{fmt(s.value)}</p>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* ── Filters ─────────────────────────────── */}
-          <div className="flex gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Teklif ara..." className="input pl-10" />
-            </div>
-          </div>
-
-          {/* ── Table ───────────────────────────────── */}
+        <div className="mt-6">
           {loading ? (
-            <div className="card overflow-hidden">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex gap-6 px-5 py-4 border-b border-border animate-pulse">
-                  <div className="h-3 bg-muted rounded w-24" />
-                  <div className="h-3 bg-muted rounded flex-1" />
-                  <div className="h-3 bg-muted rounded w-20" />
+            <div className="table-wrap" role="status" aria-label="Yükleniyor">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex animate-pulse gap-6 border-b border-line px-4 py-5 last:border-0">
+                  <div className="h-3 w-24 rounded bg-lift" />
+                  <div className="h-3 flex-1 rounded bg-lift" />
+                  <div className="h-3 w-20 rounded bg-lift" />
                 </div>
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <EmptyState variant="proposals" ctaLabel="İlk teklifi oluştur" ctaHref="/proposals/new" />
+            <EmptyState
+              variant={proposals.length ? 'search' : 'proposals'}
+              ctaLabel="Yeni teklif"
+              ctaHref={proposals.length ? undefined : '/proposals/new'}
+            />
           ) : (
-            <div className="card overflow-hidden">
-              <table className="min-w-full data-table">
+            <div className="table-wrap">
+              <table className="data-table stack">
                 <thead>
                   <tr>
-                    <th>Teklif No</th>
-                    <th>Başlık</th>
+                    <th>Teklif</th>
                     <th>Müşteri</th>
-                    <th>Tutar</th>
+                    <th className="num">Tutar</th>
                     <th>Durum</th>
                     <th>Geçerlilik</th>
-                    <th />
+                    <th>
+                      <span className="sr-only">İşlemler</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(p => {
-                    const s = statusStyle[p.status];
-                    const isExpired = new Date(p.validUntil) < new Date() && p.status !== 'accepted';
+                  {filtered.map((p) => {
+                    const st = PROPOSAL_STATUS[p.status] ?? PROPOSAL_STATUS.draft;
+                    const expired = new Date(p.validUntil).getTime() < now && (p.status === 'sent' || p.status === 'draft');
                     return (
-                      <tr key={p._id} className="group">
-                        <td>
-                          <Link href={`/proposals/${p._id}`}
-                            className="text-xs font-mono font-bold hover:underline"
-                            style={{ color: '#7c3aed' }}>
-                            {p.proposalNumber}
+                      <tr key={p._id}>
+                        <td className="pr-12 md:pr-4">
+                          <Link href={`/proposals/${p._id}`} className="group block">
+                            <span className="figure block text-xs text-fg-3 group-hover:text-fg-2">{p.proposalNumber}</span>
+                            <span className="block font-medium text-fg underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-fg-3">
+                              {p.title}
+                            </span>
                           </Link>
                         </td>
-                        <td>
-                          <p className="text-sm font-medium text-foreground">{p.title}</p>
+                        <td data-label="Müşteri" className="text-fg-2">
+                          {p.customerId ? `${p.customerId.firstName} ${p.customerId.lastName}` : '—'}
+                          {p.customerId?.company && <span className="block text-xs text-fg-3">{p.customerId.company}</span>}
                         </td>
-                        <td className="text-sm text-muted-foreground">
-                          {p.customerId.firstName} {p.customerId.lastName}
-                          {p.customerId.company && <div className="text-xs text-muted-foreground">{p.customerId.company}</div>}
+                        <td data-label="Tutar" className="num text-fg">
+                          {money(total(p))}
                         </td>
-                        <td className="figure text-sm font-medium text-foreground">{fmt(calcTotal(p))}</td>
-                        <td>
-                          {/* Dot for the status, plain control for the change —
-                              the same split as the opportunities table. */}
-                          <div className="flex items-center gap-2">
-                            <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.dot }} />
-                            <select
-                              value={p.status}
-                              onChange={e => handleStatusChange(p._id, e.target.value)}
-                              aria-label={`${p.title} durumu`}
-                              className="cursor-pointer rounded-md border border-border bg-transparent py-0.5 pl-1.5 pr-6 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        <td data-label="Durum">
+                          <ToneChip tone={st.tone}>{st.label}</ToneChip>
+                        </td>
+                        <td data-label="Geçerlilik" className="figure text-fg-2">
+                          {date(p.validUntil)}
+                          {expired && <span className="block font-sans text-xs text-fg-3">süresi doldu</span>}
+                        </td>
+                        <td className="row-actions text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              aria-label={`${p.proposalNumber} için işlemler`}
+                              className="inline-flex size-8 items-center justify-center rounded-[var(--radius-md)] text-fg-3 transition-colors hover:bg-lift hover:text-fg data-[state=open]:bg-lift"
                             >
-                              {Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                            </select>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`text-sm ${isExpired ? 'text-[var(--caution)] font-medium' : 'text-muted-foreground'}`}>
-                            {new Date(p.validUntil).toLocaleDateString('tr-TR')}
-                          </span>
-                          {isExpired && <div className="text-[10px] text-[var(--caution)]">Süresi doldu</div>}
-                        </td>
-                        <td className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Link href={`/proposals/${p._id}`} className="btn-ghost text-xs">Görüntüle</Link>
-                            <Link href={`/proposals/${p._id}/edit`} className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-lg transition">Düzenle</Link>
-                            <button onClick={() => handleDelete(p._id)} className="btn-ghost text-xs">Sil</button>
-                          </div>
+                              <Ellipsis className="size-4" aria-hidden />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="min-w-52">
+                              <DropdownMenuItem onSelect={() => router.push(`/proposals/${p._id}`)}>
+                                <Eye aria-hidden />
+                                Belgeyi aç
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => router.push(`/proposals/${p._id}/edit`)}>
+                                <Pencil aria-hidden />
+                                Düzenle
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel>Durumu değiştir</DropdownMenuLabel>
+                              {ORDER.filter((s) => s !== p.status).map((s) => (
+                                <DropdownMenuItem key={s} onSelect={() => setStatus(p, s)}>
+                                  <ToneDot tone={PROPOSAL_STATUS[s].tone} />
+                                  {PROPOSAL_STATUS[s].label}
+                                </DropdownMenuItem>
+                              ))}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem variant="destructive" onSelect={() => setTimeout(() => setPendingDelete(p), 0)}>
+                                <Trash2 aria-hidden />
+                                Sil
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     );
@@ -207,7 +271,15 @@ export default function Proposals() {
             </div>
           )}
         </div>
-      </div>
+      </Page>
+
+      <ConfirmDelete
+        target={pendingDelete}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={remove}
+        name={(p) => p.proposalNumber}
+        detail={(p) => `“${p.title}” teklifi ve kalemleri kaldırılır.`}
+      />
     </AppShell>
   );
 }
